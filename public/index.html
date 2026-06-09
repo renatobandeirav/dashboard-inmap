@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard InMap - Ativações e Reativações</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f3f6fa;
+      color: #1f2937;
+      padding: 24px;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 6px;
+      color: #0f172a;
+    }
+
+    .subtitulo {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+
+    .card h2 {
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .card .numero {
+      font-size: 32px;
+      font-weight: 700;
+      color: #0f766e;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .box {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      overflow-x: auto;
+    }
+
+    .box h2 {
+      font-size: 18px;
+      margin-bottom: 14px;
+      color: #0f172a;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #0f766e;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tr:hover {
+      background: #f8fafc;
+    }
+
+    .tabela-container {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      overflow-x: auto;
+    }
+
+    .tabela-container h2 {
+      font-size: 18px;
+      margin-bottom: 14px;
+      color: #0f172a;
+    }
+
+    .badge {
+      display: inline-block;
+      min-width: 26px;
+      text-align: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #d1fae5;
+      color: #065f46;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .loading {
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      color: #64748b;
+    }
+
+    .erro {
+      padding: 16px;
+      background: #fee2e2;
+      color: #991b1b;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+
+      .linha-agendada {
+        background: #dbeafe;
+      }
+
+      .linha-reagendada {
+        background: #f3e8ff;
+      }
+
+      .linha-aberta {
+        background: #fff7ed;
+      }
+
+      .linha-finalizada {
+        background: #e5e7eb;
+        color: #111827;
+        font-weight: 600;
+}
+
+      .tabs {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+
+      .tab-btn {
+        border: 0;
+        background: #e2e8f0;
+        color: #0f172a;
+        padding: 10px 14px;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .tab-btn.active {
+        background: #0f766e;
+        color: white;
+      }
+
+        .copia-box {
+          background: #ffffff;
+          border-radius: 14px;
+          padding: 18px;
+          margin-bottom: 24px;
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+
+        .copia-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 14px;
+        }
+
+        .btn-copiar {
+          border: 0;
+          background: #0f766e;
+          color: white;
+          padding: 10px 14px;
+          border-radius: 8px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .lista-copy {
+          background: #f8fafc;
+          border: 1px solid #e5e7eb;
+          border-radius: 10px;
+          padding: 14px;
+          white-space: pre-wrap;
+          font-size: 13px;
+          line-height: 1.6;
+        }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      body {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Dashboard InMap - Ativações e Reativações</h1>
+    <p class="subtitulo">Acompanhamento operacional por vendedor, técnico, situação e grade.</p>
+  </header>
+
+  <div id="conteudo">
+    <div class="loading">Carregando dados do IXC...</div>
+  </div>
+
+  <script>
+    async function carregarDashboard() {
+      const conteudo = document.getElementById("conteudo");
+
+      try {
+        const resposta = await fetch("/api/ativacoes");
+        const dados = await resposta.json();
+
+        if (!resposta.ok || dados.erro) {
+          throw new Error(dados.mensagem || "Erro ao carregar dados.");
+        }
+
+        const ativacoes = dados.ativacoes || dados.ordens || [];
+        dadosGlobais = ativacoes;
+        const resumoVendedores = dados.resumo_vendedores || [];
+        const resumoTecnicos = dados.resumo_tecnicos || [];
+        const resumoSituacoes = dados.resumo_situacoes || [];
+        const resumoGrades = dados.resumo_grades || [];
+
+        const totalAgendadas = contarPorSituacao(ativacoes, "AGENDADA");
+        const totalFinalizadas = contarPorSituacao(ativacoes, "FINALIZADA");
+        const totalAbertas = contarPorSituacao(ativacoes, "O.S. DE ATIVAÇÃO ABERTA");
+        const totalReagendadas =
+          contarPorSituacao(ativacoes, "REAGENDADA") +
+          contarPorSituacao(ativacoes, "AGUARDANDO REAGENDAMENTO");
+        const gradeHoje = filtrarPorAba(ativacoes, "hoje");
+        const gradeAmanha = filtrarPorAba(ativacoes, "amanha");
+        const abertas = filtrarPorAba(ativacoes, "abertas");
+        const reagendadas = filtrarPorAba(ativacoes, "reagendadas");
+        const finalizadas = filtrarPorAba(ativacoes, "finalizadas");
+
+          conteudo.innerHTML = `
+          <section class="cards">
+            <div class="card">
+              <h2>Total de O.S. monitoradas</h2>
+              <div class="numero">${dados.total}</div>
+            </div>
+
+            <div class="card">
+              <h2>Agendadas</h2>
+              <div class="numero">${totalAgendadas}</div>
+            </div>
+
+            <div class="card">
+              <h2>Finalizadas do dia</h2>
+              <div class="numero">${totalFinalizadas}</div>
+            </div>
+
+            <div class="card">
+              <h2>Aguardando agendamento</h2>
+              <div class="numero">${totalAbertas}</div>
+            </div>
+
+            <div class="card">
+              <h2>Reagendadas</h2>
+              <div class="numero">${totalReagendadas}</div>
+            </div>
+          </section>
+
+          <section class="grid">
+            <div class="box">
+              <h2>Resumo por vendedor</h2>
+              ${gerarResumoVendedoresPorAba(ativacoes)}
+            </div>
+
+            <div class="box">
+              <h2>Resumo por técnico</h2>
+              ${gerarTabelaResumo(resumoTecnicos, "Técnico")}
+            </div>
+          </section>
+
+          <section class="grid">
+            <div class="box">
+              <h2>Resumo por situação</h2>
+              ${gerarTabelaResumo(resumoSituacoes, "Situação")}
+            </div>
+
+            <div class="box">
+              <h2>Resumo por grade</h2>
+              ${gerarTabelaResumo(resumoGrades, "Grade")}
+            </div>
+          </section>
+
+          <section class="tabela-container">
+            <div class="tabs tabs-principal">
+            <button class="tab-btn active" onclick="trocarAba('hoje')">
+              Grade de Hoje (${gradeHoje.length})
+            </button>
+            <button class="tab-btn" onclick="trocarAba('amanha')">
+              Grade do Dia Seguinte (${gradeAmanha.length})
+            </button>
+            <button class="tab-btn" onclick="trocarAba('abertas')">
+              Aguardando Agendamento (${abertas.length})
+            </button>
+            <button class="tab-btn" onclick="trocarAba('reagendadas')">
+              Reagendadas (${reagendadas.length})
+            </button>
+            <button class="tab-btn" onclick="trocarAba('finalizadas')">
+              Finalizadas do Dia (${finalizadas.length})
+            </button>
+          </div>
+
+          <div id="areaTabela">
+            ${gerarTabelaAtivacoes(gradeHoje)}
+          </div>
+        </section>
+        <section class="tabela-container">
+
+        <div class="tabs tabs-confirmacao">
+          <button
+            class="tab-btn active"
+            onclick="mostrarConfirmacao()"
+          >
+            Lista de Confirmação
+          </button>
+
+          <button
+            class="tab-btn"
+            onclick="copiarListaConfirmacao()"
+          >
+            Copiar Lista
+          </button>
+        </div>
+
+        <div id="areaConfirmacao" style="display:none;">
+          <div class="lista-copy" id="listaConfirmacao">
+            ${gerarListaConfirmacao(gradeAmanha)}
+          </div>
+        </div>
+
+      </section>
+        `;
+      } catch (erro) {
+        conteudo.innerHTML = `
+          <div class="erro">
+            Erro ao carregar o dashboard: ${erro.message}
+          </div>
+        `;
+      }
+    }
+
+    function obterHora(dataHora) {
+  if (!dataHora || dataHora === "-") return null;
+
+  const partes = dataHora.split(" ");
+  if (partes.length < 2) return null;
+
+  return partes[1];
+}
+
+function ehTurnoManha(dataHora) {
+  const hora = obterHora(dataHora);
+  if (!hora) return false;
+
+  const [h, m] = hora.split(":").map(Number);
+  const minutos = h * 60 + m;
+
+  return minutos >= 8 * 60 && minutos < 12 * 60;
+}
+
+function ehTurnoTarde(dataHora) {
+  const hora = obterHora(dataHora);
+  if (!hora) return false;
+
+  const [h, m] = hora.split(":").map(Number);
+  const minutos = h * 60 + m;
+
+  return minutos >= 12 * 60 + 30 && minutos <= 20 * 60;
+}
+
+function primeiroNome(nome) {
+  if (!nome) return "";
+
+  return nome
+    .trim()
+    .split(" ")[0]
+    .toUpperCase();
+}
+
+function gerarLinhaConfirmacao(item) {
+
+  if (
+    !item.tecnico ||
+    item.tecnico === "TERCERIZADOS"
+  ) {
+    return null;
+  }
+
+  const vendedor = primeiroNome(item.vendedor);
+  const tecnico = primeiroNome(item.tecnico);
+
+  return `• ${item.cliente} | [b]Vendedor: ${vendedor}[/b] | Técnico: ${tecnico}`;
+}
+
+function gerarListaConfirmacao(lista) { 
+
+  lista = lista.filter(item =>
+    item.tecnico &&
+    item.tecnico !== "TERCERIZADOS"
+  );
+
+  const manha = lista.filter(item =>
+    ehTurnoManha(item.data_agenda)
+  );
+
+  const tarde = lista.filter(item =>
+    ehTurnoTarde(item.data_agenda)
+  );
+
+  const linhasManha = manha
+    .map(gerarLinhaConfirmacao)
+    .filter(Boolean);
+
+  const linhasTarde = tarde
+    .map(gerarLinhaConfirmacao)
+    .filter(Boolean);
+
+return [
+  "MANHÃ",
+  "",
+  linhasManha.length ? linhasManha.join("\n") : "Sem clientes",
+  "",
+  "TARDE",
+  "",
+  linhasTarde.length ? linhasTarde.join("\n") : "Sem clientes"
+].join("\n");
+}
+
+function copiarListaConfirmacao() {
+  const texto = document.getElementById("listaConfirmacao").innerText;
+
+  navigator.clipboard.writeText(texto).then(() => {
+    alert("Lista copiada com sucesso!");
+  });
+}
+
+function mostrarConfirmacao() {
+
+  const area = document.getElementById("areaConfirmacao");
+
+  if (area.style.display === "none") {
+    area.style.display = "block";
+  } else {
+    area.style.display = "none";
+  }
+
+}
+
+    let dadosGlobais = [];
+
+    function trocarAba(aba) {
+      const areaTabela = document.getElementById("areaTabela");
+      const botoes = document.querySelectorAll(".tabs-principal .tab-btn");
+
+      botoes.forEach(botao => botao.classList.remove("active"));
+
+      const botaoClicado = [...botoes].find(botao =>
+        botao.getAttribute("onclick") === `trocarAba('${aba}')`
+      );
+
+      if (botaoClicado) {
+        botaoClicado.classList.add("active");
+      }
+
+      const listaFiltrada = filtrarPorAba(dadosGlobais, aba);
+      areaTabela.innerHTML = gerarTabelaAtivacoes(listaFiltrada);
+}
+
+    function contarPorSituacao(lista, situacao) {
+      return lista.filter(item => item.situacao_os === situacao).length;
+    }
+
+    function gerarTabelaResumo(lista, titulo) {
+      if (!lista.length) {
+        return "<p>Nenhum dado encontrado.</p>";
+      }
+
+      return `
+        <table>
+          <thead>
+            <tr>
+              <th>${titulo}</th>
+              <th>Quantidade</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${lista.map(item => `
+              <tr>
+                <td>${item.nome}</td>
+                <td><span class="badge">${item.quantidade}</span></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+}
+
+function gerarResumoVendedoresPorAba(lista) {
+  return `
+    <div class="tabs tabs-vendedor">
+      <button class="tab-btn active" onclick="trocarAbaVendedor('gradeHoje')">Grade hoje</button>
+      <button class="tab-btn" onclick="trocarAbaVendedor('gradeAmanha')">Grade dia seguinte</button>
+      <button class="tab-btn" onclick="trocarAbaVendedor('execucao')">Instalando no dia</button>
+      <button class="tab-btn" onclick="trocarAbaVendedor('reagendadas')">Reagendados</button>
+      <button class="tab-btn" onclick="trocarAbaVendedor('finalizadas')">Finalizadas</button>
+    </div>
+
+    <div id="resumoVendedorTabela">
+      ${gerarTabelaVendedorPorTipo(lista, "gradeHoje")}
+    </div>
+  `;
+}
+
+function filtrarVendedorPorTipo(lista, tipo) {
+  if (tipo === "gradeHoje") {
+    return lista.filter(item =>
+      item.grade === "GRADE DE HOJE"
+    );
+  }
+
+  if (tipo === "gradeAmanha") {
+    return lista.filter(item =>
+      item.grade === "GRADE DO DIA SEGUINTE"
+    );
+  }
+
+  if (tipo === "execucao") {
+    return lista.filter(item =>
+      item.grade === "GRADE DE HOJE" &&
+      (
+        item.situacao_os === "EXECUÇÃO" ||
+        item.situacao_os === "FINALIZADA"
+      )
+    );
+  }
+
+  if (tipo === "reagendadas") {
+    return lista.filter(item =>
+      item.situacao_os === "REAGENDADA" ||
+      item.situacao_os === "AGUARDANDO REAGENDAMENTO"
+    );
+  }
+
+  if (tipo === "finalizadas") {
+    return lista.filter(item =>
+      item.situacao_os === "FINALIZADA" &&
+      item.grade === "GRADE DE HOJE"
+    );
+  }
+
+  return lista;
+}
+
+          function gerarTabelaVendedorPorTipo(lista, tipo) {
+            const filtrados = filtrarVendedorPorTipo(lista, tipo);
+
+            const resumo = Object.entries(
+              filtrados.reduce((acc, item) => {
+                acc[item.vendedor] = (acc[item.vendedor] || 0) + 1;
+                return acc;
+              }, {})
+            )
+              .map(([vendedor, quantidade]) => ({ vendedor, quantidade }))
+              .sort((a, b) => b.quantidade - a.quantidade);
+
+            if (!resumo.length) {
+              return "<p>Nenhum dado encontrado para esta aba.</p>";
+            }
+
+            return `
+              <table>
+                <thead>
+                  <tr>
+                    <th>Vendedor</th>
+                    <th>Quantidade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${resumo.map(item => `
+                    <tr>
+                      <td>${item.vendedor}</td>
+                      <td><span class="badge">${item.quantidade}</span></td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            `;
+          }
+
+            function trocarAbaVendedor(tipo) {
+              const area = document.getElementById("resumoVendedorTabela");
+              const botoes = document.querySelectorAll(".tabs-vendedor .tab-btn");
+
+              botoes.forEach(botao => botao.classList.remove("active"));
+
+              const botaoClicado = [...botoes].find(botao =>
+                botao.getAttribute("onclick") === `trocarAbaVendedor('${tipo}')`
+              );
+
+              if (botaoClicado) {
+                botaoClicado.classList.add("active");
+              }
+
+              area.innerHTML = gerarTabelaVendedorPorTipo(dadosGlobais, tipo);
+            }
+
+      function prioridadeLinha(item) {
+
+        if (item.situacao_os === "AGENDADA" &&
+            item.grade === "GRADE DE HOJE") return 1;
+
+        if (
+          item.situacao_os === "REAGENDADA" ||
+          item.situacao_os === "AGUARDANDO REAGENDAMENTO"
+        ) return 2;
+
+        if (
+          item.situacao_os === "AGENDADA" &&
+          item.grade === "GRADE DO DIA SEGUINTE"
+        ) return 3;
+
+        if (
+          item.situacao_os === "AGENDADA" &&
+          item.grade === "AGENDA FUTURA"
+        ) return 4;
+
+        if (item.situacao_os === "O.S. DE ATIVAÇÃO ABERTA") return 5;
+
+        if (item.situacao_os === "FINALIZADA") return 6;
+
+        return 7;
+      }
+
+      function classeLinha(item) {
+  if (item.situacao_os === "AGENDADA") {
+    return "linha-agendada";
+  }
+
+  if (
+    item.situacao_os === "REAGENDADA" ||
+    item.situacao_os === "AGUARDANDO REAGENDAMENTO"
+  ) {
+    return "linha-reagendada";
+  }
+
+  if (item.situacao_os === "O.S. DE ATIVAÇÃO ABERTA") {
+    return "linha-aberta";
+  }
+
+  if (item.situacao_os === "FINALIZADA") {
+    return "linha-finalizada";
+  }
+
+  return "";
+}
+
+      function filtrarPorAba(lista, aba) {
+        if (aba === "hoje") {
+          return lista.filter(item => item.grade === "GRADE DE HOJE");
+        }
+
+        if (aba === "amanha") {
+          return lista.filter(item => item.grade === "GRADE DO DIA SEGUINTE");
+        }
+
+        if (aba === "abertas") {
+          return lista.filter(item => item.situacao_os === "O.S. DE ATIVAÇÃO ABERTA");
+        }
+
+        if (aba === "reagendadas") {
+          return lista.filter(item =>
+            item.situacao_os === "REAGENDADA" ||
+            item.situacao_os === "AGUARDANDO REAGENDAMENTO"
+          );
+        }
+
+        if (aba === "finalizadas") {
+          return lista.filter(item => item.situacao_os === "FINALIZADA");
+        }
+
+        return lista;
+}
+
+    function gerarTabelaAtivacoes(lista) {
+
+  if (!lista.length) {
+    return "<p>Nenhuma O.S. encontrada.</p>";
+  }
+
+  const listaOrdenada = [...lista].sort((a, b) => {
+    const prioridadeA = prioridadeLinha(a);
+    const prioridadeB = prioridadeLinha(b);
+
+    if (prioridadeA !== prioridadeB) {
+      return prioridadeA - prioridadeB;
+    }
+
+    return String(a.data_agenda || "")
+      .localeCompare(String(b.data_agenda || ""));
+  });
+
+  return `
+    <table>
+      <thead>
+        <tr>
+          <th>OS</th>
+          <th>Tipo</th>
+          <th>Cliente</th>
+          <th>Vendedor</th>
+          <th>Técnico</th>
+          <th>Situação</th>
+          <th>Grade</th>
+          <th>Último reagendamento</th>
+          <th>Início</th>
+          <th>Fim</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        ${listaOrdenada.map(item => `
+          <tr class="${classeLinha(item)}">
+            <td>${item.os}</td>
+            <td>${item.tipo_os || "-"}</td>
+            <td>${item.cliente}</td>
+            <td>${item.vendedor}</td>
+            <td>${item.tecnico}</td>
+            <td>${item.situacao_os}</td>
+            <td>${item.grade}</td>
+            <td>${item.data_reagendar || "-"}</td>
+            <td>${item.data_agenda || "-"}</td>
+            <td>${item.data_agenda_final || "-"}</td>
+            </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+    carregarDashboard();
+    setInterval(carregarDashboard, 60000);
+  </script>
+</body>
+</html>
