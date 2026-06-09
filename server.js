@@ -352,6 +352,19 @@ app.get("/api/ativacoes", async (req, res) => {
   }
 });
 
+app.get("/api/ativacoes", async (req, res) => {
+  try {
+    const dados = await listarOrdensMonitoradas();
+    res.json(dados);
+  } catch (erro) {
+    res.status(500).json({
+      erro: true,
+      status: erro.response?.status || null,
+      mensagem: erro.response?.data || erro.message
+    });
+  }
+});
+
 app.get("/api/debug", async (req, res) => {
   try {
     const retorno = await buscar(
@@ -369,5 +382,11 @@ app.get("/api/debug", async (req, res) => {
     });
   }
 });
+
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
+  });
+}
 
 module.exports = app;
