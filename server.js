@@ -352,23 +352,22 @@ app.get("/api/ativacoes", async (req, res) => {
   }
 });
 
-app.get("/api/ativacoes", async (req, res) => {
+app.get("/api/debug", async (req, res) => {
   try {
-    const dados = await listarOrdensMonitoradas();
-    res.json(dados);
+    const retorno = await buscar(
+      "su_oss_chamado",
+      "su_oss_chamado.id_assunto",
+      "137",
+      "5"
+    );
+
+    res.json(retorno);
   } catch (erro) {
     res.status(500).json({
       erro: true,
-      status: erro.response?.status || null,
       mensagem: erro.response?.data || erro.message
     });
   }
 });
-
-if (process.env.NODE_ENV !== "production") {
-  app.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
-  });
-}
 
 module.exports = app;
