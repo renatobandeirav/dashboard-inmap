@@ -67,6 +67,327 @@ function exigirLogin(req, res, next) {
   });
 }
 
+
+function limparDocumento(valor) {
+  return String(valor || "").replace(/\D/g, "");
+}
+
+function primeirosDigitosDocumento(valor, tamanho = 6) {
+  return limparDocumento(valor).slice(0, tamanho);
+}
+
+function normalizarEmail(valor) {
+  return String(valor || "").trim().toLowerCase();
+}
+
+function podeGerenciarPortalCliente(req) {
+  const usuario = req.session?.usuario || {};
+  const permissoes = usuario.permissoes || [];
+
+  return (
+    usuario.perfil === "super_admin" ||
+    usuario.perfil === "gerencial" ||
+    usuario.perfil === "backoffice" ||
+    usuario.perfil === "supervisao_midia" ||
+    permissoes.includes("gerenciar_portal_cliente")
+  );
+}
+
+async function buscarClientePortalPorEmailDocumento(email, documentoParcial) {
+  const emailNormalizado = normalizarEmail(email);
+  const docParcial = limparDocumento(documentoParcial);
+
+  if (!emailNormalizado || docParcial.length < 6) {
+    return null;
+  }
+
+  const retorno = await buscar(
+    "cliente",
+    "cliente.email",
+    emailNormalizado,
+    "20"
+  );
+
+  const clientes = retorno.registros || [];
+
+  return clientes.find(cliente => {
+    const emailCliente = normalizarEmail(cliente.email || cliente.email_cobranca || "");
+    const documentoCliente = primeirosDigitosDocumento(
+      cliente.cnpj_cpf || cliente.cpf_cnpj || cliente.cpf || cliente.cnpj || ""
+    );
+
+    return (
+      emailCliente === emailNormalizado &&
+      documentoCliente === docParcial.slice(0, 6)
+    );
+  }) || null;
+}
+
+async function buscarInstalacoesPendentesPortal(clienteId) {
+  const retorno = await buscar(
+    "su_oss_chamado",
+    "su_oss_chamado.id_cliente",
+    String(clienteId),
+    "100"
+  );
+
+  const ordens = retorno.registros || [];
+
+  return ordens
+    .filter(os => {
+      const status = String(os.status || "");
+      const assunto = String(os.id_assunto || "");
+
+      return (
+        status !== "F" &&
+        ["137", "599", "591", "247", "2"].includes(assunto)
+      );
+    })
+    .map(os => ({
+      os_id: os.id,
+      contrato_id: os.id_contrato_kit || os.id_contrato || os.contrato || null,
+      assunto_id: os.id_assunto,
+      status: os.status,
+      data_abertura: os.data_abertura || os.data_inicio || null,
+      endereco: os.endereco || os.endereco_padrao_cliente || null,
+      bairro: os.bairro || null,
+      cidade: os.cidade || null
+    }));
+}
+
+app.post("/api/portal-cliente/login", async (req, res) => {
+  try {
+    const { email, documento } = req.body || {};
+
+    const cliente = await buscarClientePortalPorEmailDocumento(email, documento);
+
+    if (!cliente) {
+      return res.status(401).json({
+        erro: true,
+        mensagem: "Cliente não localizado. Confira o e-mail e os 6 primeiros dígitos do CPF/CNPJ."
+      });
+    }
+
+    req.session.portalCliente = {
+      cliente_ixc_id: String(cliente.id),
+      nome: cliente.razao || cliente.nome || cliente.fantasia || "Cliente",
+      email: normalizarEmail(cliente.email || email),
+      documento_parcial: limparDocumento(documento).slice(0, 6),
+      telefone: cliente.telefone_celular || cliente.fone || cliente.telefone || null,
+      cidade: cliente.cidade || null,
+      bairro: cliente.bairro || null,
+      endereco: cliente.endereco || null
+    };
+
+    return res.json({
+      sucesso: true,
+      cliente: req.session.portalCliente
+    });
+
+  } catch (erro) {
+    return res.status(500).json({
+      erro: true,
+      mensagem: erro.message
+    });
+  }
+});
+
+
+
+app.get("/api/portal-cliente/me", async (req, res) => {
+  const cliente = req.session?.portalCliente;
+
+  if (!cliente) {
+    return res.status(401).json({
+      erro: true,
+      mensagem: "Sessão do cliente não encontrada."
+    });
+  }
+
+  return res.json({
+    sucesso: true,
+    cliente
+  });
+});
+
+app.post("/api/portal-cliente/logout", async (req, res) => {
+  if (req.session) {
+    delete req.session.portalCliente;
+  }
+
+  return res.json({
+    sucesso: true
+  });
+});
+
+app.get("/api/portal-cliente/minhas-instalacoes", async (req, res) => {
+  try {
+    const cliente = req.session?.portalCliente;
+
+    if (!cliente) {
+      return res.status(401).json({
+        erro: true,
+        mensagem: "Faça login novamente."
+      });
+    }
+
+    const instalacoes = await buscarInstalacoesPendentesPortal(cliente.cliente_ixc_id);
+
+    const [solicitacoes] = await db.query(
+      `
+      SELECT *
+      FROM portal_cliente_agendamentos
+      WHERE cliente_ixc_id = ?
+      ORDER BY criado_em DESC
+      `,
+      [cliente.cliente_ixc_id]
+    );
+
+    return res.json({
+      sucesso: true,
+      cliente,
+      instalacoes,
+      solicitacoes
+    });
+
+  } catch (erro) {
+    return res.status(500).json({
+      erro: true,
+      mensagem: erro.message
+    });
+  }
+});
+
+app.post("/api/portal-cliente/agendamento", async (req, res) => {
+  try {
+    const cliente = req.session?.portalCliente;
+
+    if (!cliente) {
+      return res.status(401).json({
+        erro: true,
+        mensagem: "Faça login novamente."
+      });
+    }
+
+    const {
+      os_id,
+      contrato_id,
+      data_solicitada,
+      turno_solicitado,
+      observacao_cliente
+    } = req.body || {};
+
+    if (!data_solicitada || !turno_solicitado) {
+      return res.status(400).json({
+        erro: true,
+        mensagem: "Informe a data e o turno desejado."
+      });
+    }
+
+    if (!["MANHA", "TARDE"].includes(String(turno_solicitado))) {
+      return res.status(400).json({
+        erro: true,
+        mensagem: "Turno inválido."
+      });
+    }
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const dataEscolhida = new Date(`${data_solicitada}T00:00:00`);
+
+    if (dataEscolhida < hoje) {
+      return res.status(400).json({
+        erro: true,
+        mensagem: "Escolha uma data futura."
+      });
+    }
+
+    await db.query(
+      `
+      INSERT INTO portal_cliente_agendamentos
+        (
+          cliente_ixc_id,
+          contrato_id,
+          os_id,
+          cliente_nome,
+          email,
+          documento_parcial,
+          telefone,
+          cidade,
+          bairro,
+          endereco,
+          data_solicitada,
+          turno_solicitado,
+          status,
+          observacao_cliente
+        )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SOLICITADO', ?)
+      `,
+      [
+        cliente.cliente_ixc_id,
+        contrato_id || null,
+        os_id || null,
+        cliente.nome || null,
+        cliente.email || null,
+        cliente.documento_parcial || null,
+        cliente.telefone || null,
+        cliente.cidade || null,
+        cliente.bairro || null,
+        cliente.endereco || null,
+        data_solicitada,
+        turno_solicitado,
+        observacao_cliente || null
+      ]
+    );
+
+    return res.json({
+      sucesso: true,
+      mensagem: "Solicitação enviada com sucesso. Nossa equipe irá validar a disponibilidade."
+    });
+
+  } catch (erro) {
+    return res.status(500).json({
+      erro: true,
+      mensagem: erro.message
+    });
+  }
+});
+
+app.get("/api/portal-cliente/solicitacoes", exigirLogin, async (req, res) => {
+  try {
+    if (!podeGerenciarPortalCliente(req)) {
+      return res.status(403).json({
+        erro: true,
+        mensagem: "Você não tem permissão para gerenciar solicitações do portal."
+      });
+    }
+
+    const status = req.query.status || "SOLICITADO";
+
+    const [solicitacoes] = await db.query(
+      `
+      SELECT *
+      FROM portal_cliente_agendamentos
+      WHERE status = ?
+      ORDER BY data_solicitada ASC, criado_em ASC
+      `,
+      [status]
+    );
+
+    return res.json({
+      sucesso: true,
+      solicitacoes
+    });
+
+  } catch (erro) {
+    return res.status(500).json({
+      erro: true,
+      mensagem: erro.message
+    });
+  }
+});
+
 app.use("/api", (req, res, next) => {
   if (
         req.path === "/login" ||
@@ -265,11 +586,20 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-app.post("/api/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.json({
-      sucesso: true
-    });
+app.use("/api", (req, res, next) => {
+  if (
+    req.path === "/login" ||
+    req.path === "/teste-login-db" ||
+    req.path.startsWith("/portal-cliente/")
+  ) {
+    return next();
+  }
+
+  if (req.session?.logado) return next();
+
+  return res.status(401).json({
+    erro: true,
+    mensagem: "Acesso não autorizado."
   });
 });
 
@@ -6962,6 +7292,189 @@ app.get("/api/relatorio-reversao/equipe", exigirLogin, async (req, res) => {
       periodo: { inicio, fim },
       total: resultado.length,
       relatorios: resultado
+    });
+
+  } catch (erro) {
+    return res.status(500).json({
+      erro: true,
+      mensagem: erro.message
+    });
+  }
+});
+
+// COMEÇO DO CÓDIGO DO PORTAL DO CLIENTE //
+
+
+
+
+app.patch("/api/portal-cliente/solicitacoes/:id/aprovar", exigirLogin, async (req, res) => {
+  try {
+    if (!podeGerenciarPortalCliente(req)) {
+      return res.status(403).json({
+        erro: true,
+        mensagem: "Você não tem permissão para aprovar solicitações do portal."
+      });
+    }
+
+    const {
+      data_aprovada,
+      turno_aprovado,
+      observacao_interna
+    } = req.body || {};
+
+    if (!data_aprovada || !turno_aprovado) {
+      return res.status(400).json({
+        erro: true,
+        mensagem: "Informe data e turno aprovados."
+      });
+    }
+
+    if (!["MANHA", "TARDE"].includes(String(turno_aprovado))) {
+      return res.status(400).json({
+        erro: true,
+        mensagem: "Turno aprovado inválido."
+      });
+    }
+
+    await db.query(
+      `
+      UPDATE portal_cliente_agendamentos
+      SET
+        status = 'APROVADO',
+        data_aprovada = ?,
+        turno_aprovado = ?,
+        observacao_interna = ?,
+        aprovado_por_usuario_id = ?,
+        aprovado_por_nome = ?,
+        aprovado_em = NOW()
+      WHERE id = ?
+      `,
+      [
+        data_aprovada,
+        turno_aprovado,
+        observacao_interna || null,
+        req.session.usuario?.id || null,
+        req.session.usuario?.nome || req.session.usuario?.usuario || null,
+        req.params.id
+      ]
+    );
+
+    return res.json({
+      sucesso: true,
+      mensagem: "Solicitação aprovada. Nesta primeira versão, ainda não atualizamos o IXC automaticamente."
+    });
+
+  } catch (erro) {
+    return res.status(500).json({
+      erro: true,
+      mensagem: erro.message
+    });
+  }
+});
+
+app.patch("/api/portal-cliente/solicitacoes/:id/recusar", exigirLogin, async (req, res) => {
+  try {
+    if (!podeGerenciarPortalCliente(req)) {
+      return res.status(403).json({
+        erro: true,
+        mensagem: "Você não tem permissão para recusar solicitações do portal."
+      });
+    }
+
+    const { motivo_recusa } = req.body || {};
+
+    if (!String(motivo_recusa || "").trim()) {
+      return res.status(400).json({
+        erro: true,
+        mensagem: "Informe o motivo da recusa."
+      });
+    }
+
+    await db.query(
+      `
+      UPDATE portal_cliente_agendamentos
+      SET
+        status = 'RECUSADO',
+        motivo_recusa = ?,
+        observacao_interna = ?,
+        aprovado_por_usuario_id = ?,
+        aprovado_por_nome = ?,
+        aprovado_em = NOW()
+      WHERE id = ?
+      `,
+      [
+        String(motivo_recusa).trim(),
+        String(motivo_recusa).trim(),
+        req.session.usuario?.id || null,
+        req.session.usuario?.nome || req.session.usuario?.usuario || null,
+        req.params.id
+      ]
+    );
+
+    return res.json({
+      sucesso: true,
+      mensagem: "Solicitação recusada."
+    });
+
+  } catch (erro) {
+    return res.status(500).json({
+      erro: true,
+      mensagem: erro.message
+    });
+  }
+});
+
+app.get("/api/debug-portal-cliente-login", async (req, res) => {
+  try {
+    const email = normalizarEmail(req.query.email);
+    const documento = limparDocumento(req.query.documento).slice(0, 6);
+
+    const retornoEmail = await buscar(
+      "cliente",
+      "cliente.email",
+      email,
+      "20"
+    );
+
+    const clientesEmail = retornoEmail.registros || [];
+
+    const analisados = clientesEmail.map(cliente => {
+      const docIXC = limparDocumento(
+        cliente.cnpj_cpf ||
+        cliente.cpf_cnpj ||
+        cliente.cpf ||
+        cliente.cnpj ||
+        ""
+      );
+
+      const emailIXC = normalizarEmail(
+        cliente.email ||
+        cliente.email_cobranca ||
+        ""
+      );
+
+      return {
+        id: cliente.id,
+        nome: cliente.razao || cliente.nome || cliente.fantasia,
+        email_ixc: emailIXC,
+        documento_ixc_mascarado: docIXC
+          ? `${docIXC.slice(0, 6)}******`
+          : null,
+        documento_parcial_ixc: docIXC.slice(0, 6),
+        documento_parcial_informado: documento,
+        email_bate: emailIXC === email,
+        documento_bate: docIXC.slice(0, 6) === documento,
+        campos_disponiveis: Object.keys(cliente)
+      };
+    });
+
+    return res.json({
+      sucesso: true,
+      email_informado: email,
+      documento_parcial_informado: documento,
+      total_encontrado_por_email: clientesEmail.length,
+      analisados,
+      bruto_primeiro_cliente: clientesEmail[0] || null
     });
 
   } catch (erro) {

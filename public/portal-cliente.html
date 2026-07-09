@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Portal do Cliente - Agendamento</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f3f6fa;
+      color: #1f2937;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 32px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 920px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 12px 35px rgba(15, 23, 42, 0.12);
+      margin-bottom: 18px;
+    }
+
+    .logo {
+      max-width: 180px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+    }
+
+    p {
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin: 14px 0 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      font-size: 15px;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 18px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .btn-primary {
+      background: #111827;
+      color: white;
+      margin-top: 16px;
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+      margin-top: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .instalacao {
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .erro {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+
+    .sucesso {
+      background: #dcfce7;
+      color: #166534;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+
+    .oculto {
+      display: none;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f8fafc;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="card" id="cardLogin">
+      <img src="/assets/vellon-logo-preto.png" class="logo" alt="Vellon">
+
+      <h1>Agendamento de Instalação</h1>
+      <p>Informe seus dados para consultar instalações pendentes e solicitar o melhor turno para atendimento.</p>
+
+      <label>E-mail cadastrado</label>
+      <input id="emailCliente" type="email" placeholder="seuemail@exemplo.com">
+
+      <label>6 primeiros dígitos do CPF/CNPJ</label>
+      <input id="documentoCliente" maxlength="6" inputmode="numeric" placeholder="Ex: 123456">
+
+      <button class="btn-primary" onclick="loginPortalCliente()">Entrar</button>
+
+      <div id="mensagemLogin"></div>
+    </div>
+
+    <div class="card oculto" id="cardPortal">
+      <h1 id="tituloCliente">Olá</h1>
+      <p>Escolha abaixo a instalação pendente e solicite o melhor turno para atendimento.</p>
+
+      <button class="btn-secondary" onclick="sairPortalCliente()">Sair</button>
+    </div>
+
+    <div id="areaPortal" class="oculto"></div>
+  </div>
+
+  <script>
+    let clientePortal = null;
+    let instalacaoSelecionada = null;
+
+    function hojeISOPortal() {
+      const hoje = new Date();
+      const ano = hoje.getFullYear();
+      const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+      const dia = String(hoje.getDate()).padStart(2, "0");
+      return `${ano}-${mes}-${dia}`;
+    }
+
+    function mostrarMensagem(id, texto, tipo = "erro") {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      el.innerHTML = texto
+        ? `<div class="${tipo}">${texto}</div>`
+        : "";
+    }
+
+    async function loginPortalCliente() {
+      const email = document.getElementById("emailCliente").value.trim();
+      const documento = document.getElementById("documentoCliente").value.trim();
+
+      mostrarMensagem("mensagemLogin", "");
+
+      try {
+        const resposta = await fetch("/api/portal-cliente/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email, documento })
+        });
+
+        const dados = await resposta.json();
+
+        if (!resposta.ok || dados.erro) {
+          throw new Error(dados.mensagem || "Erro ao entrar.");
+        }
+
+        clientePortal = dados.cliente;
+
+        document.getElementById("cardLogin").classList.add("oculto");
+        document.getElementById("cardPortal").classList.remove("oculto");
+        document.getElementById("areaPortal").classList.remove("oculto");
+        document.getElementById("tituloCliente").textContent = `Olá, ${clientePortal.nome}`;
+
+        await carregarPortalCliente();
+
+      } catch (erro) {
+        mostrarMensagem("mensagemLogin", erro.message, "erro");
+      }
+    }
+
+    async function carregarPortalCliente() {
+      const area = document.getElementById("areaPortal");
+
+      area.innerHTML = `<div class="card"><p>Carregando informações...</p></div>`;
+
+      try {
+        const resposta = await fetch("/api/portal-cliente/minhas-instalacoes");
+        const dados = await resposta.json();
+
+        if (!resposta.ok || dados.erro) {
+          throw new Error(dados.mensagem || "Erro ao carregar informações.");
+        }
+
+        area.innerHTML = `
+          <div class="card">
+            <h1>Instalações pendentes</h1>
+            ${
+              dados.instalacoes.length
+                ? dados.instalacoes.map(gerarCardInstalacao).join("")
+                : "<p>Nenhuma instalação pendente encontrada para este cadastro.</p>"
+            }
+          </div>
+
+          <div class="card">
+            <h1>Minhas solicitações</h1>
+            ${gerarTabelaSolicitacoesCliente(dados.solicitacoes || [])}
+          </div>
+        `;
+
+      } catch (erro) {
+        area.innerHTML = `<div class="card"><div class="erro">${erro.message}</div></div>`;
+      }
+    }
+
+    function gerarCardInstalacao(instalacao) {
+      return `
+        <div class="instalacao">
+          <span class="badge">O.S. ${instalacao.os_id || "-"}</span>
+
+          <p><strong>Contrato:</strong> ${instalacao.contrato_id || "-"}</p>
+          <p><strong>Bairro:</strong> ${instalacao.bairro || clientePortal?.bairro || "-"}</p>
+          <p><strong>Cidade:</strong> ${instalacao.cidade || clientePortal?.cidade || "-"}</p>
+
+          <button class="btn-primary" onclick='abrirFormularioAgendamento(${JSON.stringify(instalacao)})'>
+            Solicitar agendamento
+          </button>
+        </div>
+      `;
+    }
+
+    function abrirFormularioAgendamento(instalacao) {
+      instalacaoSelecionada = instalacao;
+
+      const area = document.getElementById("areaPortal");
+
+      area.insertAdjacentHTML("afterbegin", `
+        <div class="card" id="cardFormularioAgendamento">
+          <h1>Solicitar agendamento</h1>
+          <p>O.S. ${instalacao.os_id || "-"} | Contrato ${instalacao.contrato_id || "-"}</p>
+
+          <div class="grid">
+            <div>
+              <label>Data desejada</label>
+              <input id="dataSolicitadaPortal" type="date" min="${hojeISOPortal()}">
+            </div>
+
+            <div>
+              <label>Turno desejado</label>
+              <select id="turnoSolicitadoPortal">
+                <option value="">Selecione</option>
+                <option value="MANHA">Manhã</option>
+                <option value="TARDE">Tarde</option>
+              </select>
+            </div>
+          </div>
+
+          <label>Observação</label>
+          <textarea id="observacaoPortal" placeholder="Ex: só posso pela manhã, referência do endereço, ponto de localização..."></textarea>
+
+          <button class="btn-primary" onclick="enviarSolicitacaoAgendamentoPortal()">
+            Enviar solicitação
+          </button>
+
+          <button class="btn-secondary" onclick="document.getElementById('cardFormularioAgendamento').remove()">
+            Cancelar
+          </button>
+
+          <div id="mensagemAgendamentoPortal"></div>
+        </div>
+      `);
+
+      document.getElementById("cardFormularioAgendamento").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+
+    async function enviarSolicitacaoAgendamentoPortal() {
+      const data = document.getElementById("dataSolicitadaPortal").value;
+      const turno = document.getElementById("turnoSolicitadoPortal").value;
+      const observacao = document.getElementById("observacaoPortal").value.trim();
+
+      try {
+        const resposta = await fetch("/api/portal-cliente/agendamento", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            os_id: instalacaoSelecionada?.os_id || null,
+            contrato_id: instalacaoSelecionada?.contrato_id || null,
+            data_solicitada: data,
+            turno_solicitado: turno,
+            observacao_cliente: observacao
+          })
+        });
+
+        const dados = await resposta.json();
+
+        if (!resposta.ok || dados.erro) {
+          throw new Error(dados.mensagem || "Erro ao enviar solicitação.");
+        }
+
+        mostrarMensagem("mensagemAgendamentoPortal", dados.mensagem, "sucesso");
+
+        setTimeout(() => {
+          carregarPortalCliente();
+        }, 1000);
+
+      } catch (erro) {
+        mostrarMensagem("mensagemAgendamentoPortal", erro.message, "erro");
+      }
+    }
+
+    function gerarTabelaSolicitacoesCliente(lista) {
+      if (!lista.length) {
+        return "<p>Nenhuma solicitação enviada ainda.</p>";
+      }
+
+      return `
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Turno</th>
+              <th>Status</th>
+              <th>Retorno</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${lista.map(item => `
+              <tr>
+                <td>${String(item.data_solicitada || "").slice(0, 10)}</td>
+                <td>${item.turno_solicitado === "MANHA" ? "Manhã" : "Tarde"}</td>
+                <td>${item.status}</td>
+                <td>${item.motivo_recusa || item.observacao_interna || "-"}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    async function sairPortalCliente() {
+      await fetch("/api/portal-cliente/logout", {
+        method: "POST"
+      });
+
+      location.reload();
+    }
+  </script>
+</body>
+</html>
