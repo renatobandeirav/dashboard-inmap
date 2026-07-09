@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atualizações do Dashboard InMap</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 18px;
+      padding: 32px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 32px;
+    }
+
+    .subtitulo {
+      color: #64748b;
+      margin-bottom: 32px;
+    }
+
+    .versao {
+      border-left: 5px solid #0f8b7e;
+      padding-left: 18px;
+      margin-bottom: 32px;
+    }
+
+    .versao h2 {
+      margin-bottom: 4px;
+    }
+
+    .data {
+      color: #64748b;
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>Atualizações do Dashboard Comercial InMap</h1>
+    <p class="subtitulo">
+      Histórico de melhorias, correções e novas funcionalidades do sistema.
+    </p>
+
+    <section class="versao">
+      <h2>v1.10.0</h2>
+      <p class="data">Julho/2026</p>
+
+      <ul>
+        <li>Criação do ambiente de desenvolvimento separado da produção.</li>
+        <li>Criação do banco MariaDB exclusivo para testes.</li>
+        <li>Publicação automatizada com backup antes de subir atualizações.</li>
+        <li>Correção da lista de confirmação após 9h30.</li>
+        <li>Melhoria no processo de reagendamento de clientes.</li>
+        <li>Ajustes no Ranking Churn e na apuração histórica de junho.</li>
+        <li>Melhoria nas permissões individuais de usuários.</li>
+      </ul>
+    </section>
+
+<section class="versao">
+  <h2>v1.11.0</h2>
+  <p class="data">03/07/2026</p>
+
+  <ul>
+    <li>Implementada separação visual das grades operacionais entre Técnicos MEI e Técnicos CLT, facilitando a gestão das equipes.</li>
+    <li>Corrigido o funcionamento do botão <strong>Limpar lista</strong> na aba <strong>Confirmações</strong>.</li>
+    <li>Padronizada a confirmação da limpeza utilizando o modal nativo do Dashboard.</li>
+    <li>Ajustado o processo de limpeza para remover corretamente os registros pendentes e confirmados da lista atual.</li>
+  </ul>
+  
+</section>
+
+<section class="versao">  
+<h3>v1.14.0 - Ranking BackOffice com Auditoria de Penalidades</h3>
+ <p class="data">06/07/2026</p>
+<ul>
+  <li>Implementado controle de penalidades no Ranking BackOffice.</li>
+  <li>Penalidades agora ficam registradas mesmo que a O.S. seja corrigida posteriormente.</li>
+  <li>Supervisão pode desconsiderar penalidades mediante motivo obrigatório.</li>
+  <li>Adicionada permissão: editar_penalidades_backoffice.</li>
+  <li>Ranking agora exibe Cadastros, Penalidades e Pontuação Líquida.</li>
+  <li>Modal de detalhes passou a exibir penalidades, clientes, contratos, boletos e cadastros finalizados.</li>
+  <li>Ajustado fechamento automático de O.S. pelo ID IXC do usuário BackOffice logado.</li>
+  <li>Ajustada regra da lista de confirmações para sábado, domingo e segunda-feira.</li>
+</ul>
+
+</section>
+
+<section class="versao">  
+<h3>v1.14.1 - Abertura de O.S mediante a contrato Assinado</h3>
+<ul>
+  <li>Adicionado a regra do pagamento do boleto</li>
+  <li>O.S de Ativação só abre se o sistema identificar que o Status está Ativo.</li>
+</ul>
+
+</section>
+
+<section class="versao">  
+<h3>v1.14.2 - Atualização da Dashboard de Pagamento</h3>
+<ul>
+  <li>Respeitando o pagamento, versão melhorada.</li>
+</ul>
+
+</section>
+
+
+<section class="versao">  
+<h3>v1.14.3 - Atualização da Dashboard de Pagamento</h3>
+<ul>
+  <li>Lista de Confirmação</li>
+</ul>
+
+<li>- Reestruturação da lógica da Lista de Confirmação.</li>
+<li>- Corrigido problema de troca automática da lista na virada do dia.</li>
+<li>- Lista ativa passa a ser substituída somente no horário de sincronização (15h e sábado às 10h).</li>
+<li>- Ajustada sincronização entre Grade e Lista de Confirmação.</li>
+<li>- Corrigida rota /api/lista-confirmacao.</li>
+<li>- Melhorado fluxo de recuperação de confirmações.</li>
+<li>- Correções gerais de estabilidade.</li>
+</section>
+
+<section class="versao">  
+<h3>v1.15.0 - Dashboard Executivo de Link Dedicado</h3>
+<ul>
+  <li>Link Dedicado</li>
+</ul>
+
+  <li>- Criação do módulo executivo de Link Dedicado.</li>
+  <li>- Nova tela inicial com layout premium e identidade visual exclusiva.</li>
+  <li>- Inclusão do painel executivo com indicadores da carteira.</li>
+  <li>- Implementado Top 10 maiores contratos por receita.</li>
+  <li>- Nova aba Clientes com lista executiva compacta.</li>
+  <li>- Adicionados filtros por cliente, tipo, vendedor, cidade e ordenação.</li>
+  <li>- Implementada paginação de clientes (25 registros por página).</li>
+  <li>- Nova aba Contratos a Vencer com layout executivo.</li>
+  <li>- Adicionados filtros por faixa de vencimento, vendedor, tipo e pesquisa.</li>
+  <li>- Implementada paginação dos contratos a vencer (25 registros por página).</li>
+  <li>- Reestruturada a sincronização utilizando regras oficiais do IXC.</li>
+  <li>- Sincronização baseada em Status Ativo, Acesso Ativo, Tipo de Cliente e Motivo de Inclusão.</li>
+  <li>- Corrigida a classificação automática entre carteiras Atacado e Corporativo.</li>
+  <li>- Ajustado cálculo da receita para utilizar prioritariamente o valor real do contrato.</li>
+  <li>- Incluídos novos campos de sincronização: Cidade, ID da Cidade, Tipo de Cliente e Carteira de Cobrança.</li>
+  <li>- Melhorias gerais de performance, organização visual e estabilidade do módulo.</li>
+</section>
+
+<section class="versao">
+<h3>v1.15.1 - Módulo Link Dedicado</h3>
+<ul>
+  <li>Link Dedicado</li>
+</ul>
+
+ <li>- Criada nova aba "Clientes" com visão agrupada por cliente.</li>
+ <li>- Aba anterior renomeada para "Contratos".</li>
+ <li>- Implementada paginação nas listagens de Clientes e Contratos.</li>
+ <li>- Criada aba "Cidades" com mapa interativo utilizando coordenadas do IXC.</li>
+ <li>- Adicionada sincronização automática de latitude e longitude dos clientes.</li>
+ <li>- Implementada sincronização automática da tabela de colaboradores do Link Dedicado.</li>
+ <li>- Corrigida contabilização da carteira utilizando apenas contratos ativos e internet ativa.</li>
+ <li>- Ajustados indicadores para refletir corretamente a carteira de Link Dedicado.</li>
+ <li>- Melhorias gerais de desempenho, organização e estabilidade do módulo.</li>
+</section>
+
+<section class="versao">
+<h3>v1.15.2 - Ranking BackOffice</h3>
+<ul>
+  <li>Penalidades Backoffice</li>
+</ul>
+ <li>- Ajuste no Ranking BackOffice.</li>
+  <li>- Automatização das penalidades</li>
+</section>
+
+<section class="versao">
+<h3>v1.15.3 - Relatório Reversão</h3>
+<ul>
+  <li>Relatório de Atendimento ao setor do Mídia Digital</li>
+
+  </main>
+</body>
+</html>

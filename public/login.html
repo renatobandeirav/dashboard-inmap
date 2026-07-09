@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Dashboard Vellon</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    html, body {
+        width: 100%;
+        height: 100%;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      body {
+        background-color: #00101f;
+        background-image:
+          linear-gradient(90deg, rgba(0, 10, 24, 0.30), rgba(0, 20, 35, 0.12)),
+          url("/assets/login-bg.png");
+
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-size: 100vw 100vh;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+      }
+
+    .login-card {
+      width: 430px;
+      max-width: 92%;
+      padding: 38px 34px;
+      border-radius: 26px;
+      background: rgba(5, 18, 32, 0.82);
+      border: 1px solid rgba(72, 255, 148, 0.35);
+      box-shadow: 0 0 40px rgba(0, 170, 255, 0.25);
+      backdrop-filter: blur(14px);
+      text-align: center;
+    }
+
+    .logo {
+      width: 220px;
+      margin-bottom: 18px;
+    }
+
+    .login-card h2 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .login-card p {
+      color: #cbd5e1;
+      font-size: 14px;
+      margin-bottom: 26px;
+      line-height: 1.5;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .input-group svg {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+    }
+
+    input {
+      width: 100%;
+      padding: 16px 16px 16px 52px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(2, 6, 23, 0.55);
+      color: white;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input::placeholder {
+      color: #94a3b8;
+    }
+
+    input:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+    }
+
+    button {
+      width: 100%;
+      margin-top: 4px;
+      padding: 16px;
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #008cff, #4ade80);
+      color: white;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    .seguro {
+      margin-top: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+
+          .rodape-icons {
+            position: fixed;
+            left: 50%;
+            bottom: 34px;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 58px;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 900;
+            text-align: center;
+            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.95);
+            z-index: 2;
+          }
+
+          .rodape-icons div {
+            min-width: 95px;
+          }
+
+          .rodape-icons svg {
+            display: block;
+            margin: 0 auto 9px;
+            color: #38bdf8;
+            width: 42px;
+            height: 42px;
+            filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.95));
+          }
+
+          .rodape-icons div:nth-child(3) svg {
+            color:  #38bdf8;
+            filter: drop-shadow(0 0 12px rgba(74, 222, 128, 0.95));
+          }
+
+    @media (max-width: 800px) {
+      .rodape-icons {
+        display: none;
+      }
+
+      body {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <form id="formLogin" class="login-card">
+    <img src="/assets/logo-vellon-branco.png" class="logo" alt="Vellon">
+
+    <h2>Bem-vindo!</h2>
+    <p>Acesse o dashboard para acompanhar resultados, equipes e operações.</p>
+
+    <div class="input-group">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M20 21a8 8 0 0 0-16 0"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      <input id="usuario" placeholder="Usuário" autocomplete="username">
+    </div>
+
+    <div class="input-group">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      <input id="senha" type="password" placeholder="Senha" autocomplete="current-password">
+    </div>
+
+    <button type="submit">Entrar</button>
+
+    <div class="seguro">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      </svg>
+      Sistema de Integração via IXC.
+    </div>
+  </form>
+
+  <div class="rodape-icons">
+    <div>
+      <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M5 13a10 10 0 0 1 14 0"></path>
+        <path d="M8.5 16.5a5 5 0 0 1 7 0"></path>
+        <circle cx="12" cy="20" r="1"></circle>
+      </svg>
+      CONECTIVIDADE
+    </div>
+
+    <div>
+      <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      PESSOAS
+    </div>
+
+        <div>
+          <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M12 2v20" />
+            <path d="M17 6c0-2-2-3-5-3s-5 1.5-5 4 2 3.5 5 4 5 1.5 5 4-2 4-5 4-5-1-5-3" />
+          </svg>
+          VENDAS
+        </div>
+
+    <div>
+      <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9c.3.6.9 1 1.6 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"></path>
+      </svg>
+      OPERAÇÕES
+    </div>
+  </div>
+
+
+  <script>
+    document.getElementById("formLogin").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await login();
+    });
+
+    async function login() {
+      const usuario = document.getElementById("usuario").value.trim();
+      const senha = document.getElementById("senha").value.trim();
+
+      const resposta = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          usuario,
+          senha
+        })
+      });
+
+      const dados = await resposta.json();
+
+      if (!resposta.ok || dados.erro) {
+        alert(dados.mensagem || "Usuário ou senha inválidos.");
+        return;
+      }
+
+      window.location.href = "/";
+    }
+  </script>
+</body>
+</html>
