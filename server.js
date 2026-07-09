@@ -303,6 +303,45 @@ app.post("/api/portal-cliente/agendamento", async (req, res) => {
       });
     }
 
+
+    const dataSolicitadaObj = new Date(`${data_solicitada}T00:00:00`);
+    const hojeBase = new Date();
+    hojeBase.setHours(0, 0, 0, 0);
+
+    const amanha = new Date(hojeBase);
+    amanha.setDate(amanha.getDate() + 1);
+
+    const limite = new Date(hojeBase);
+    limite.setDate(limite.getDate() + 15);
+
+    if (isNaN(dataSolicitadaObj.getTime())) {
+      return res.status(400).json({
+        erro: true,
+        mensagem: "Data solicitada inválida."
+      });
+    }
+
+    if (dataSolicitadaObj < amanha) {
+      return res.status(400).json({
+        erro: true,
+        mensagem: "Escolha uma data a partir de amanhã."
+      });
+    }
+
+    if (dataSolicitadaObj > limite) {
+      return res.status(400).json({
+        erro: true,
+        mensagem: "Escolha uma data dentro dos próximos 15 dias."
+      });
+    }
+
+    if (dataSolicitadaObj.getDay() === 0) {
+      return res.status(400).json({
+        erro: true,
+        mensagem: "Não realizamos instalações aos domingos."
+      });
+    }
+
     await db.query(
       `
       INSERT INTO portal_cliente_agendamentos

@@ -183,13 +183,23 @@
     let clientePortal = null;
     let instalacaoSelecionada = null;
 
-    function hojeISOPortal() {
-      const hoje = new Date();
-      const ano = hoje.getFullYear();
-      const mes = String(hoje.getMonth() + 1).padStart(2, "0");
-      const dia = String(hoje.getDate()).padStart(2, "0");
-      return `${ano}-${mes}-${dia}`;
-    }
+        function dataMinimaPortal() {
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+
+            hoje.setDate(hoje.getDate() + 1);
+
+            return hoje.toISOString().split("T")[0];
+        }
+
+        function dataMaximaPortal() {
+            const hoje = new Date();
+            hoje.setHours(0,0,0,0);
+
+            hoje.setDate(hoje.getDate() + 15);
+
+            return hoje.toISOString().split("T")[0];
+        }
 
     function mostrarMensagem(id, texto, tipo = "erro") {
       const el = document.getElementById(id);
@@ -298,7 +308,13 @@
           <div class="grid">
             <div>
               <label>Data desejada</label>
-              <input id="dataSolicitadaPortal" type="date" min="${hojeISOPortal()}">
+              <input
+                id="dataSolicitadaPortal"
+                type="date"
+                min="${dataMinimaPortal()}"
+                max="${dataMaximaPortal()}"
+                onchange="validarDataPortal()"
+            >
             </div>
 
             <div>
@@ -398,6 +414,30 @@
         </table>
       `;
     }
+
+
+    function validarDataPortal() {
+
+    const campo = document.getElementById("dataSolicitadaPortal");
+
+    if (!campo.value)
+        return;
+
+    const data = new Date(campo.value + "T00:00:00");
+
+    const diaSemana = data.getDay();
+
+    // Domingo
+    if (diaSemana === 0) {
+
+        alert("Não realizamos instalações aos domingos.");
+
+        campo.value = "";
+
+        return;
+    }
+
+}
 
     async function sairPortalCliente() {
       await fetch("/api/portal-cliente/logout", {
