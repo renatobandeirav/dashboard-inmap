@@ -4630,17 +4630,17 @@ tbody tr:hover{
               ⚙️ Operacional
             </button>
 
-            <button id="btnRanking"
-                    class="tab-btn"
-                    onclick="abrirTelaRanking()">
-              🏆 Ranking
-            </button>
-
             <button id="btnRelatorioReversao"
                     class="tab-btn"
                     onclick="abrirTelaRelatorioReversao()"
                     style="display:none;">
               📝 Reversão
+            </button>
+
+            <button id="btnRanking"
+                    class="tab-btn"
+                    onclick="abrirTelaRanking()">
+              🏆 Ranking
             </button>
 
             <button id="btnRankingChurn"
@@ -4753,6 +4753,45 @@ tbody tr:hover{
   <!-- =========================================================
        HTML 04 - MODAIS DO SISTEMA
        ========================================================= -->
+
+
+       <div id="modalAprovarPortalCliente" class="modal-overlay">
+  <div class="modal-card">
+    <h3>Aprovar solicitação</h3>
+
+    <p id="textoAprovarPortalCliente"></p>
+
+    <input
+      id="dataAprovadaPortalCliente"
+      type="date"
+      class="input-modal"
+    >
+
+    <select id="turnoAprovadoPortalCliente" class="input-modal">
+      <option value="MANHA">Manhã</option>
+      <option value="TARDE">Tarde</option>
+    </select>
+
+    <textarea
+      id="observacaoAprovacaoPortalCliente"
+      class="input-modal"
+      rows="4"
+      placeholder="Observação interna..."
+    ></textarea>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="fecharModalAprovarPortalCliente()">
+        Cancelar
+      </button>
+
+      <button class="btn btn-primary" onclick="confirmarAprovacaoPortalCliente()">
+        Aprovar
+      </button>
+    </div>
+  </div>
+</div>
+
+
       <div id="modalConfirmacaoOS" class="modal-overlay">
       <div class="modal-card">
         <h3>Confirmar abertura de O.S.</h3>
@@ -5619,6 +5658,11 @@ const reagendadas = filtrarPorAba(ativacoes, "reagendadas");
 const finalizadas = filtrarPorAba(ativacoes, "finalizadas");
 const pendentesPagamento = filtrarPorAba(ativacoes, "pendentesPagamento");
 
+const podeGerenciarPortalAssinante =
+  usuarioLogado?.perfil === "super_admin" ||
+  usuarioLogado?.perfil === "gerencial" ||
+  (usuarioLogado?.permissoes || []).includes("gerenciar_portal_cliente");
+
 const telaOperacionalHTML = `
   <div class="layout-principal">
     
@@ -5669,6 +5713,15 @@ const telaOperacionalHTML = `
       <button class="menu-btn ${abaPrincipalAtiva === "relatorios" ? "active" : ""}" onclick="trocarAba('relatorios')">
           Relatórios
         </button>
+        ${podeGerenciarPortalAssinante? ` <button class="menu-btn ${abaPrincipalAtiva === "portalCliente" ? "active" : ""}"
+                  onclick="trocarAba('portalCliente')"
+                >
+                  Portal do Cliente
+                </button>
+              `
+              : ""
+          }
+                </button>
     </aside>
 
     <main class="conteudo-principal">
@@ -5711,6 +5764,15 @@ conteudo.innerHTML =
   telaComercialAtiva === "operacional"
     ? telaOperacionalCache
     : telaVendasCache;
+
+    if (
+  telaComercialAtiva === "operacional" &&
+  abaPrincipalAtiva === "portalCliente"
+) {
+  setTimeout(() => {
+    carregarSolicitacoesPortalCliente();
+  }, 0);
+}
 
 atualizarBotoesTelaComercial();
 
@@ -6265,6 +6327,12 @@ function copiarTextoFallback(texto) {
         cidade: "todos",
         ordenacao: "maior_receita"
       };
+      let statusPortalClienteAtual = "SOLICITADO";
+      let solicitacaoPortalClienteSelecionada = null;
+
+
+
+      //FIM DAS VARIÁVEIS GLOBAIS // 
 
       
 
@@ -6925,6 +6993,10 @@ function gerarTabelaRankingChurn(ranking) {
                   carregarRelatorioReagendamentos();
                     return "<p>Carregando relatório de reagendamentos...</p>";
                   }
+
+              if (aba === "portalCliente") {
+                return "<p>Carregando solicitações do Portal do Assinante...</p>";
+              }
             if (aba === "historico") {
               return gerarHistoricoAlertasTabela();
             }
@@ -7278,6 +7350,22 @@ function gerarTextoBitrixConfirmacao(lista) {
           abaPrincipalAtiva = aba;
           localStorage.setItem("abaPrincipalAtiva", aba);
 
+          if (aba === "portalCliente") {
+            const podeAcessar =
+              usuarioLogado?.perfil === "super_admin" ||
+              usuarioLogado?.perfil === "gerencial" ||
+              (usuarioLogado?.permissoes || []).includes("gerenciar_portal_cliente");
+
+            if (!podeAcessar) {
+              mostrarToastPadrao(
+                "Acesso restrito",
+                "Seu usuário não possui permissão para gerenciar o Portal do Assinante.",
+                "erro"
+              );
+              return;
+            }
+          }
+
           if (!abasComFiltroTecnico(aba)) {
             tecnicoFiltroAtivo = null;
           }
@@ -7290,10 +7378,14 @@ function gerarTextoBitrixConfirmacao(lista) {
           const areaTabela = document.getElementById("areaTabela");
           if (!areaTabela) return;
 
-          areaTabela.innerHTML = gerarAreaTabelaPrincipal(
-            dadosGlobais,
-            abaPrincipalAtiva
-          );
+            areaTabela.innerHTML = gerarAreaTabelaPrincipal(
+              dadosGlobais,
+              abaPrincipalAtiva
+            );
+
+            if (abaPrincipalAtiva === "portalCliente") {
+              carregarSolicitacoesPortalCliente();
+            }
 
           const botoes = document.querySelectorAll(".tabs-principal .tab-btn, .menu-lateral .menu-btn");
 
@@ -7308,6 +7400,263 @@ function gerarTextoBitrixConfirmacao(lista) {
           }
         }
 
+async function carregarSolicitacoesPortalCliente() {
+  const area = document.getElementById("areaTabela");
+  const selectStatus = document.getElementById("statusSolicitacoesPortalCliente");
+
+  if (selectStatus) {
+    statusPortalClienteAtual = selectStatus.value;
+  }
+
+  const status = statusPortalClienteAtual || "SOLICITADO";
+
+  if (!area) return;
+
+  area.innerHTML = "<p>Carregando solicitações do Portal do Cliente...</p>";
+
+  try {
+    const resposta = await fetch(`/api/portal-cliente/solicitacoes?status=${status}`);
+    const dados = await resposta.json();  
+
+    if (!resposta.ok || dados.erro) {
+      throw new Error(dados.mensagem || "Erro ao carregar solicitações.");
+    }
+
+    const lista = dados.solicitacoes || [];
+
+const filtroStatusHTML = `
+  <div style="margin:16px 0; max-width:260px;">
+    <label style="font-weight:800; display:block; margin-bottom:6px;">Status</label>
+
+    <select
+      id="statusSolicitacoesPortalCliente"
+      class="input-modal"
+      onchange="carregarSolicitacoesPortalCliente()"
+    >
+      <option value="SOLICITADO" ${status === "SOLICITADO" ? "selected" : ""}>Solicitado</option>
+      <option value="APROVADO" ${status === "APROVADO" ? "selected" : ""}>Aprovado</option>
+      <option value="RECUSADO" ${status === "RECUSADO" ? "selected" : ""}>Recusado</option>
+      <option value="ENVIADO_IXC" ${status === "ENVIADO_IXC" ? "selected" : ""}>Enviado IXC</option>
+      <option value="ERRO_IXC" ${status === "ERRO_IXC" ? "selected" : ""}>Erro IXC</option>
+    </select>
+  </div>
+`;
+
+      if (!lista.length) {
+        area.innerHTML = `
+          <div class="box">
+            <h2>Portal do Cliente</h2>
+            <p class="subtitulo">Solicitações de agendamento enviadas pelos clientes.</p>
+            ${filtroStatusHTML}
+            <p>Nenhuma solicitação encontrada para este status.</p>
+          </div>
+        `;
+        return;
+      }
+
+      area.innerHTML = `
+        <div class="box">
+          <h2>Portal do Cliente</h2>
+          <p class="subtitulo">Solicitações de agendamento enviadas pelos clientes.</p>
+          ${filtroStatusHTML}
+
+        <table style="margin-top:16px;">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Contrato</th>
+              <th>O.S.</th>
+              <th>Data</th>
+              <th>Turno</th>
+              <th>Bairro</th>
+              <th>Observação</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${lista.map(item => `
+              <tr>
+                <td>${item.cliente_nome || "-"}</td>
+                <td>${item.contrato_id || "-"}</td>
+                <td>${item.os_id || "-"}</td>
+                <td>${formatarDataBR(String(item.data_solicitada || "").slice(0, 10))}</td>
+                <td>${item.turno_solicitado === "MANHA" ? "Manhã" : "Tarde"}</td>
+                <td>${item.bairro || "-"}</td>
+                <td>${item.observacao_cliente || "-"}</td>
+                    <td>
+                      ${
+                        item.status === "SOLICITADO"
+                          ? `
+                            <button class="btn btn-primary btn-small"
+                              onclick='abrirModalAprovarPortalCliente(${JSON.stringify(item)})'>
+                              Aprovar
+                            </button>
+
+                            <button class="btn btn-danger btn-small"
+                              onclick="recusarSolicitacaoPortalCliente(${item.id})">
+                              Recusar
+                            </button>
+                          `
+                          : `<span class="badge">${item.status}</span>`
+                      }
+                    </td>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+  } catch (erro) {
+    area.innerHTML = `<div class="erro">Erro: ${erro.message}</div>`;
+  }
+}
+
+function abrirModalAprovarPortalCliente(item) {
+  solicitacaoPortalClienteSelecionada = item;
+
+  document.getElementById("textoAprovarPortalCliente").innerHTML = `
+    <strong>Cliente:</strong> ${item.cliente_nome || "-"}<br>
+    <strong>Contrato:</strong> ${item.contrato_id || "-"}<br>
+    <strong>O.S.:</strong> ${item.os_id || "-"}<br><br>
+    <strong>Data solicitada:</strong> ${formatarDataBR(String(item.data_solicitada || "").slice(0, 10))}<br>
+    <strong>Turno solicitado:</strong> ${item.turno_solicitado === "MANHA" ? "Manhã" : "Tarde"}
+  `;
+
+  document.getElementById("dataAprovadaPortalCliente").value =
+    String(item.data_solicitada || "").slice(0, 10);
+
+  document.getElementById("turnoAprovadoPortalCliente").value =
+    item.turno_solicitado || "MANHA";
+
+  document.getElementById("observacaoAprovacaoPortalCliente").value =
+    "Solicitação aprovada pela equipe operacional.";
+
+  document.getElementById("modalAprovarPortalCliente").style.display = "flex";
+}
+
+function fecharModalAprovarPortalCliente() {
+  solicitacaoPortalClienteSelecionada = null;
+  document.getElementById("modalAprovarPortalCliente").style.display = "none";
+}
+
+async function confirmarAprovacaoPortalCliente() {
+  const item = solicitacaoPortalClienteSelecionada;
+  if (!item) return;
+
+  const data = document.getElementById("dataAprovadaPortalCliente").value;
+  const turno = document.getElementById("turnoAprovadoPortalCliente").value;
+  const observacao = document.getElementById("observacaoAprovacaoPortalCliente").value.trim();
+
+  if (!data || !turno) {
+    mostrarToastPadrao("Dados obrigatórios", "Informe a data e o turno aprovado.", "erro");
+    return;
+  }
+
+  try {
+    const resposta = await fetch(`/api/portal-cliente/solicitacoes/${item.id}/aprovar`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        data_aprovada: data,
+        turno_aprovado: turno,
+        observacao_interna: observacao
+      })
+    });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || dados.erro) {
+      throw new Error(dados.mensagem || "Erro ao aprovar solicitação.");
+    }
+
+    fecharModalAprovarPortalCliente();
+
+    mostrarToastPadrao(
+      "Solicitação aprovada",
+      dados.mensagem || "Agendamento aprovado com sucesso."
+    );
+
+    await carregarSolicitacoesPortalCliente();
+
+  } catch (erro) {
+    mostrarToastPadrao("Erro", erro.message, "erro");
+  }
+}
+
+async function aprovarSolicitacaoPortalCliente(id, dataSolicitada, turnoSolicitado) {
+  const data = prompt("Data aprovada:", dataSolicitada);
+
+  if (!data) return;
+
+  const turno = prompt("Turno aprovado: MANHA ou TARDE", turnoSolicitado || "MANHA");
+
+  if (!turno) return;
+
+  const observacao = prompt("Observação interna:", "Solicitação aprovada pela equipe operacional.") || "";
+
+  try {
+    const resposta = await fetch(`/api/portal-cliente/solicitacoes/${id}/aprovar`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        data_aprovada: data,
+        turno_aprovado: turno.toUpperCase(),
+        observacao_interna: observacao
+      })
+    });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || dados.erro) {
+      throw new Error(dados.mensagem || "Erro ao aprovar solicitação.");
+    }
+
+    mostrarToastPadrao("Solicitação aprovada", dados.mensagem || "Agendamento aprovado.");
+    await carregarSolicitacoesPortalCliente();
+
+  } catch (erro) {
+    mostrarToastPadrao("Erro", erro.message, "erro");
+  }
+}
+
+async function recusarSolicitacaoPortalCliente(id) {
+  const motivo = prompt("Informe o motivo da recusa:");
+
+  if (!motivo || !motivo.trim()) return;
+
+  try {
+    const resposta = await fetch(`/api/portal-cliente/solicitacoes/${id}/recusar`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        motivo_recusa: motivo.trim()
+      })
+    });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || dados.erro) {
+      throw new Error(dados.mensagem || "Erro ao recusar solicitação.");
+    }
+
+    mostrarToastPadrao("Solicitação recusada", dados.mensagem || "Solicitação recusada.");
+    await carregarSolicitacoesPortalCliente();
+
+  } catch (erro) {
+    mostrarToastPadrao("Erro", erro.message, "erro");
+  }
+}
+
+      
         function abasComFiltroTecnico(aba) {
             return ["hoje", "amanha", "finalizadas"].includes(aba);
           }
@@ -9143,16 +9492,20 @@ function gerarTabelaUsuarios(lista) {
                             <div style="display:flex; flex-direction:column; gap:6px;">
                               ${gerarCheckboxPermissao(user, "ver_comercial_vendas", "Comercial - Vendas")}
                               ${gerarCheckboxPermissao(user, "ver_comercial_operacional", "Comercial - Operacional")}
+                              ${gerarCheckboxPermissao(user, "ver_ranking_geral", "Ranking geral")}
                               ${gerarCheckboxPermissao(user, "ver_ranking_comercial", "Ranking Comercial")}
                               ${gerarCheckboxPermissao(user, "ver_ranking_churn", "Ranking Churn")}
                               ${gerarCheckboxPermissao(user, "ver_ranking_backoffice", "Ranking BackOffice")}
                               ${gerarCheckboxPermissao(user, "ver_link_dedicado", "Link Dedicado")}
+                              ${gerarCheckboxPermissao(user, "operar_os", "Operar O.S.")}
+                              ${gerarCheckboxPermissao(user, "finalizar_pagamento_ativacao", "Finalizar Pagamento de Ativação")}
+                              ${gerarCheckboxPermissao(user, "gerenciar_portal_cliente", "Gerenciar Portal do Assinante")}
                               ${gerarCheckboxPermissao(user, "ver_relatorio_reversao", "Relatório de Reversão")}
                               ${gerarCheckboxPermissao(user, "ver_relatorio_reversao_equipe", "Relatório de Reversão - Equipe")}
-                              ${gerarCheckboxPermissao(user, "editar_penalidades_backoffice", "Editar Penalidades BackOffice")}
+                              ${gerarCheckboxPermissao(user, "editar_penalidades_backoffice", "Editar Penalidades BackOffice")}                              
                               ${gerarCheckboxPermissao(user, "gerenciar_metas", "Metas/Regras")}
                               ${gerarCheckboxPermissao(user, "gerenciar_usuarios", "Usuários")}
-                              ${gerarCheckboxPermissao(user, "ver_ranking_geral", "Ranking geral")}
+                              ${gerarCheckboxPermissao(user, "sincronizar_dados", "Sincronizar Dados")}                              
                             </div>
                           </td>
 

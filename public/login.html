@@ -171,6 +171,95 @@
         padding: 18px;
       }
     }
+
+    .toast-login {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+
+  max-width: 380px;
+  padding: 14px 18px;
+
+  border-radius: 12px;
+  background: #1f2937;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-12px);
+
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    visibility 0.25s ease;
+}
+
+.toast-login.ativo {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.toast-login.erro {
+  background: #b91c1c;
+}
+
+.toast-login.sucesso {
+  background: #047857;
+}
+
+.toast-login.aviso {
+  background: #b45309;
+}
+
+@media (max-width: 600px) {
+  .toast-login {
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    max-width: none;
+  }
+}
+
+.assinatura-sistema{
+    margin-top:28px;
+    text-align:center;
+}
+
+.assinatura-sistema .linha{
+    width:100%;
+    height:1px;
+    background:rgba(255,255,255,.08);
+    margin-bottom:16px;
+}
+
+.assinatura-sistema .titulo-versao{
+    font-size:13px;
+    color:rgba(255,255,255,.78);
+    font-weight:600;
+    letter-spacing:.3px;
+}
+
+.assinatura-sistema .titulo-versao span{
+    color:#38bdf8;
+    font-weight:700;
+    margin-left:8px;
+}
+
+.assinatura-sistema .autor{
+    margin-top:6px;
+    font-size:11px;
+    color:rgba(255,255,255,.45);
+}
+
+
   </style>
 </head>
 
@@ -199,12 +288,26 @@
 
     <button type="submit">Entrar</button>
 
-    <div class="seguro">
+      <div class="seguro">
+
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
       </svg>
       Sistema de Integração via IXC.
     </div>
+    <div class="assinatura-sistema">
+    <div class="linha"></div>
+
+        <div class="titulo-versao">
+            Dashboard Comercial           
+              <span>v1.15.6</span>
+        </div>
+
+        <div class="autor">
+            © 2026 Renato Bandeira • Todos os direitos reservados
+        </div>
+    </div>
+
   </form>
 
   <div class="rodape-icons">
@@ -244,37 +347,96 @@
     </div>
   </div>
 
+      <div id="toastLogin" class="toast-login"></div>
 
-  <script>
-    document.getElementById("formLogin").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      await login();
-    });
+      <script>
+        let timerToastLogin = null;
 
-    async function login() {
-      const usuario = document.getElementById("usuario").value.trim();
-      const senha = document.getElementById("senha").value.trim();
+        function mostrarToast(mensagem, tipo = "aviso") {
+          const toast = document.getElementById("toastLogin");
 
-      const resposta = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          usuario,
-          senha
-        })
-      });
+          if (!toast) {
+            console.warn("Toast de login não encontrado:", mensagem);
+            return;
+          }
 
-      const dados = await resposta.json();
+          if (timerToastLogin) {
+            clearTimeout(timerToastLogin);
+          }
 
-      if (!resposta.ok || dados.erro) {
-        alert(dados.mensagem || "Usuário ou senha inválidos.");
-        return;
-      }
+          toast.textContent = String(mensagem || "Ocorreu um erro.");
+          toast.className = `toast-login ${tipo} ativo`;
 
-      window.location.href = "/";
-    }
-  </script>
+          timerToastLogin = setTimeout(() => {
+            toast.classList.remove("ativo");
+          }, 5000);
+        }
+
+        async function login() {
+          const usuario = document.getElementById("usuario").value.trim();
+          const senha = document.getElementById("senha").value.trim();
+
+          if (!usuario || !senha) {
+            mostrarToast(
+              "Informe o usuário e a senha.",
+              "aviso"
+            );
+            return;
+          }
+
+          try {
+            const resposta = await fetch("/api/login", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                usuario,
+                senha
+              })
+            });
+
+            let dados = {};
+
+            try {
+              dados = await resposta.json();
+            } catch {
+              dados = {};
+            }
+
+            if (!resposta.ok) {
+              mostrarToast(
+                dados.mensagem || "Não foi possível entrar no sistema.",
+                "erro"
+              );
+              return;
+            }
+
+            mostrarToast(
+              "Login realizado com sucesso.",
+              "sucesso"
+            );
+
+            setTimeout(() => {
+              window.location.href = "/";
+            }, 500);
+
+          } catch (erro) {
+            console.error("Erro ao conectar com o servidor:", erro);
+
+            mostrarToast(
+              "Não foi possível conectar ao servidor.",
+              "erro"
+            );
+          }
+        }
+
+        document
+          .getElementById("formLogin")
+          .addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            await login();
+          });
+      </script>
 </body>
 </html>

@@ -147,6 +147,19 @@
     th {
       background: #f8fafc;
     }
+
+    .aviso-agendamento {
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        color: #9a3412;
+        padding: 14px;
+        border-radius: 10px;
+        margin-top: 16px;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+
   </style>
 </head>
 
@@ -155,8 +168,8 @@
     <div class="card" id="cardLogin">
       <img src="/assets/vellon-logo-preto.png" class="logo" alt="Vellon">
 
-      <h1>Agendamento de Instalação</h1>
-      <p>Informe seus dados para consultar instalações pendentes e solicitar o melhor turno para atendimento.</p>
+      <h1>Portal do Assinante</h1>
+      <p>Consulte sua instalação pendente e informe sua preferência de data e turno para atendimento.</p>
 
       <label>E-mail cadastrado</label>
       <input id="emailCliente" type="email" placeholder="seuemail@exemplo.com">
@@ -171,7 +184,7 @@
 
     <div class="card oculto" id="cardPortal">
       <h1 id="tituloCliente">Olá</h1>
-      <p>Escolha abaixo a instalação pendente e solicite o melhor turno para atendimento.</p>
+      <p>Selecione sua instalação pendente e informe a data e o turno de sua preferência.</p>
 
       <button class="btn-secondary" onclick="sairPortalCliente()">Sair</button>
     </div>
@@ -289,7 +302,7 @@
           <p><strong>Cidade:</strong> ${instalacao.cidade || clientePortal?.cidade || "-"}</p>
 
           <button class="btn-primary" onclick='abrirFormularioAgendamento(${JSON.stringify(instalacao)})'>
-            Solicitar agendamento
+            Informar preferência
           </button>
         </div>
       `;
@@ -302,12 +315,12 @@
 
       area.insertAdjacentHTML("afterbegin", `
         <div class="card" id="cardFormularioAgendamento">
-          <h1>Solicitar agendamento</h1>
+          <h1>Preferência de agendamento</h1>
           <p>O.S. ${instalacao.os_id || "-"} | Contrato ${instalacao.contrato_id || "-"}</p>
 
           <div class="grid">
             <div>
-              <label>Data desejada</label>
+              <label>Data de preferência</label>
               <input
                 id="dataSolicitadaPortal"
                 type="date"
@@ -318,7 +331,7 @@
             </div>
 
             <div>
-              <label>Turno desejado</label>
+              <label>Turno de preferência</label>
               <select id="turnoSolicitadoPortal">
                 <option value="">Selecione</option>
                 <option value="MANHA">Manhã</option>
@@ -329,6 +342,10 @@
 
           <label>Observação</label>
           <textarea id="observacaoPortal" placeholder="Ex: só posso pela manhã, referência do endereço, ponto de localização..."></textarea>
+
+          <div class="aviso-agendamento">
+            Esta é uma solicitação de preferência. A data e o turno serão confirmados após análise da disponibilidade da equipe técnica.
+          </div>
 
           <button class="btn-primary" onclick="enviarSolicitacaoAgendamentoPortal()">
             Enviar solicitação
@@ -374,7 +391,11 @@
           throw new Error(dados.mensagem || "Erro ao enviar solicitação.");
         }
 
-        mostrarMensagem("mensagemAgendamentoPortal", dados.mensagem, "sucesso");
+        mostrarMensagem(
+          "mensagemAgendamentoPortal",
+          "Sua preferência foi enviada com sucesso. Nossa equipe analisará a disponibilidade e retornará com a confirmação do agendamento.",
+          "sucesso"
+        );
 
         setTimeout(() => {
           carregarPortalCliente();
