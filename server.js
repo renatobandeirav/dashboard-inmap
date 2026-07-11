@@ -8,16 +8,60 @@ const bcrypt = require("bcrypt");
 const db = require("./db");
 const path = require("path");
 const multer = require("multer");
+const rateLimit = require("express-rate-limit");
 
 
 const app = express();
-app.use(express.json());
+app.use(express.json({
+  limit: "1mb"
+}));
+
+const limitadorLoginSistema = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: {
+    erro: true,
+    mensagem: "Muitas tentativas de login. Aguarde alguns minutos e tente novamente."
+  }
+});
+
+const limitadorLoginPortal = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: {
+    erro: true,
+    mensagem: "Muitas tentativas de acesso. Aguarde alguns minutos e tente novamente."
+  }
+});
+
+if (!process.env.SESSION_SECRET) {
+  throw new Error("SESSION_SECRET não configurado no arquivo .env.");
+}
+
+if (process.env.SESSION_SECRET.length < 32) {
+  throw new Error("SESSION_SECRET precisa ter pelo menos 32 caracteres.");
+}
+
+app.disable("x-powered-by");
+
+app.set("trust proxy", 1);
 
 app.use(session({
-  secret: process.env.SESSION_SECRET || "troque-essa-chave",
+  name: "inmap.sid",
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  rolling: true,
   cookie: {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     maxAge: 1000 * 60 * 60 * 8
   }
 }));
@@ -65,6 +109,168 @@ function exigirLogin(req, res, next) {
     erro: true,
     mensagem: "Acesso não autorizado."
   });
+}
+
+function exigirSuperAdmin(req, res, next) {
+  const usuario = req.session?.usuario;
+
+  if (!usuario || usuario.perfil !== "super_admin") {
+    return res.status(403).json({
+      erro: true,
+      mensagem: "Acesso não autorizado."
+    });
+  }
+
+  return next();
+}
+
+function registrarDebugGet(caminho, ...handlers) {
+  if (process.env.NODE_ENV !== "production") {
+    app.get(caminho, exigirLogin, exigirSuperAdmin, ...handlers);
+  }
+}
+
+function registrarDebugPost(caminho, ...handlers) {
+  if (process.env.NODE_ENV !== "production") {
+    app.post(caminho, exigirLogin, exigirSuperAdmin, ...handlers);
+  }
+}
+
+
+function exigirPermissao(permissao) {
+  return function (req, res, next) {
+    const usuario = req.session?.usuario;
+
+    if (!usuario) {
+        console.warn("[ACESSO NEGADO - PERMISSAO]", {
+          usuario_id: usuario.id || null,
+          usuario: usuario.usuario || null,
+          nome: usuario.nome || null,
+          perfil: usuario.perfil || null,
+          equipe: usuario.equipe || null,
+          rota: req.originalUrl,
+          metodo: req.method,
+          ip: req.ip,
+          user_agent: req.get("User-Agent") || null,
+          referer: req.get("Referer") || null,
+          permissao_exigida: permissao,
+          permissoes_usuario: permissoes,
+          data_hora: new Date().toISOString()
+        });
+
+      return res.status(401).json({
+        erro: true,
+        mensagem: "Usuário não autenticado."
+      });
+    }
+
+    if (usuario.perfil === "super_admin") {
+      return next();
+    }
+
+    const permissoes = Array.isArray(usuario.permissoes)
+      ? usuario.permissoes
+      : [];
+
+    if (permissoes.includes(permissao)) {
+      return next();
+    }
+
+    console.warn("[ACESSO NEGADO - PERMISSAO]", {
+      usuario_id: usuario.id || null,
+      usuario: usuario.usuario || null,
+      nome: usuario.nome || null,
+      perfil: usuario.perfil || null,
+      equipe: usuario.equipe || null,
+      rota: req.originalUrl,
+      metodo: req.method,
+      ip: req.ip,
+      permissao_exigida: permissao,
+      permissoes_usuario: permissoes,
+      data_hora: new Date().toISOString()
+    });
+
+    return res.status(403).json({
+      erro: true,
+      mensagem: "Você não possui permissão para esta operação."
+    });
+  };
+}
+
+function responderErroInterno(req, res, erro, contexto = "Erro interno") {
+  const codigoErro = `ERR-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)
+    .toUpperCase()}`;
+
+  console.error(`[${codigoErro}] ${contexto}`, {
+    usuario_id: req.session?.usuario?.id || null,
+    usuario: req.session?.usuario?.usuario || null,
+    perfil: req.session?.usuario?.perfil || null,
+    metodo: req.method,
+    rota: req.originalUrl,
+    mensagem: erro?.message || null,
+    status_externo: erro?.response?.status || null,
+    retorno_externo: erro?.response?.data || null,
+    stack: erro?.stack || null
+  });
+
+  return res.status(500).json({
+    erro: true,
+    mensagem: "Não foi possível concluir a operação.",
+    codigo: codigoErro
+  });
+}
+
+async function buscarUsuarioAlvoProtegido(req, res) {
+  const usuarioLogado = req.session?.usuario;
+  const usuarioAlvoId = Number(req.params.id);
+
+  const [rows] = await db.query(
+    `
+    SELECT id, usuario, nome, perfil, ativo
+    FROM usuarios_dashboard
+    WHERE id = ?
+    LIMIT 1
+    `,
+    [usuarioAlvoId]
+  );
+
+  if (!rows.length) {
+    res.status(404).json({
+      erro: true,
+      mensagem: "Usuário não encontrado."
+    });
+
+    return null;
+  }
+
+  const usuarioAlvo = rows[0];
+
+  if (
+    usuarioAlvo.perfil === "super_admin" &&
+    usuarioLogado?.perfil !== "super_admin"
+  ) {
+    console.warn("[TENTATIVA DE ALTERAR SUPER ADMIN]", {
+      usuario_executor: usuarioLogado?.usuario || null,
+      perfil_executor: usuarioLogado?.perfil || null,
+      usuario_alvo: usuarioAlvo.usuario,
+      usuario_alvo_id: usuarioAlvo.id,
+      metodo: req.method,
+      rota: req.originalUrl,
+      ip: req.ip,
+      data_hora: new Date().toISOString()
+    });
+
+    res.status(403).json({
+      erro: true,
+      mensagem: "Somente outro superadministrador pode alterar um superadministrador."
+    });
+
+    return null;
+  }
+
+  return usuarioAlvo;
 }
 
 
@@ -155,7 +361,7 @@ async function buscarInstalacoesPendentesPortal(clienteId) {
     }));
 }
 
-app.post("/api/portal-cliente/login", async (req, res) => {
+app.post("/api/portal-cliente/login", limitadorLoginPortal, async (req, res) => {
   try {
     const { email, documento } = req.body || {};
 
@@ -427,21 +633,6 @@ app.get("/api/portal-cliente/solicitacoes", exigirLogin, async (req, res) => {
   }
 });
 
-app.use("/api", (req, res, next) => {
-  if (
-        req.path === "/login" ||
-        req.path === "/teste-login-db"
-      ) {
-        return next();
-      }
-
-  if (req.session?.logado) return next();
-
-  return res.status(401).json({
-    erro: true,
-    mensagem: "Acesso não autorizado."
-  });
-});
 
 function montarUsuarioSeguro(usuario) {
   return {
@@ -501,43 +692,7 @@ function montarUsuarioSeguro(usuario) {
               );
             }
 
-app.post("/api/teste-login-db", async (req, res) => {
-  try {
-    const { usuario, senha } = req.body || {};
-
-    if (!usuario || !senha) {
-      return res.status(400).json({
-        erro: true,
-        mensagem: "Usuário e senha são obrigatórios.",
-        body_recebido: req.body
-      });
-    }
-
-    const userBanco = await autenticarUsuario(usuario, senha);
-
-    return res.json({
-      sucesso: !!userBanco,
-      usuario_encontrado: userBanco
-        ? {
-            id: userBanco.id,
-            usuario: userBanco.usuario,
-            nome: userBanco.nome,
-            perfil: userBanco.perfil
-          }
-        : null
-    });
-
-  } catch (erro) {
-    console.error("Erro teste login DB:", erro);
-
-    return res.status(500).json({
-      erro: true,
-      mensagem: erro.message
-    });
-  }
-});
-
-app.post("/api/login", async (req, res) => {  
+app.post("/api/login", limitadorLoginSistema, async (req, res) => {  
   try {
     const { usuario, senha } = req.body || {};
 
@@ -628,7 +783,6 @@ app.post("/api/login", async (req, res) => {
 app.use("/api", (req, res, next) => {
   if (
     req.path === "/login" ||
-    req.path === "/teste-login-db" ||
     req.path.startsWith("/portal-cliente/")
   ) {
     return next();
@@ -724,7 +878,7 @@ app.use("/api", (req, res, next) => {
         }
       });
 
-app.get("/api/usuarios", exigirLogin, async (req, res) => {
+app.get("/api/usuarios", exigirLogin, exigirPermissao("gerenciar_usuarios"), async (req, res) => {
         try {
           const usuarioLogado = req.session.usuario;
 
@@ -769,46 +923,102 @@ app.get("/api/usuarios", exigirLogin, async (req, res) => {
             usuarios: usuariosComPermissoes
           });
 
-        } catch (erro) {
-          res.status(500).json({
-            erro: true,
-            mensagem: erro.message
-          });
-        }
+      } catch (erro) {
+        return responderErroInterno(
+          req,
+          res,
+          erro,
+          "Erro ao listar usuários"
+        );
+      }
       });
 
-  app.patch("/api/usuarios/:id/status", exigirLogin, async (req, res) => {
-  try {
-    const usuarioLogado = req.session.usuario;
+app.patch("/api/usuarios/:id/status", exigirLogin, exigirPermissao("gerenciar_usuarios"), async (req, res) => {
+    try {
+      const usuarioLogado = req.session.usuario;
 
-    if (!podeGerenciarUsuarios(usuarioLogado)) {
-      return res.status(403).json({
-        erro: true,
-        mensagem: "Acesso negado."
+      if (!podeGerenciarUsuarios(usuarioLogado)) {
+        return res.status(403).json({
+          erro: true,
+          mensagem: "Acesso negado."
+        });
+      }
+
+      const { ativo } = req.body;
+      const usuarioAlvoId = Number(req.params.id);
+
+      if (
+        usuarioAlvoId === Number(usuarioLogado?.id) &&
+        !Boolean(ativo)
+      ) {
+        return res.status(400).json({
+          erro: true,
+          mensagem: "Você não pode inativar o próprio usuário."
+        });
+      }
+
+      const [usuariosAlvo] = await db.query(
+        `
+        SELECT id, usuario, nome, perfil, ativo
+        FROM usuarios_dashboard
+        WHERE id = ?
+        LIMIT 1
+        `,
+        [usuarioAlvoId]
+      );
+
+      if (!usuariosAlvo.length) {
+        return res.status(404).json({
+          erro: true,
+          mensagem: "Usuário não encontrado."
+        });
+      }
+
+      const usuarioAlvo = usuariosAlvo[0];
+
+      if (
+        usuarioAlvo.perfil === "super_admin" &&
+        usuarioLogado?.perfil !== "super_admin"
+      ) {
+        console.warn("[TENTATIVA DE ALTERAR SUPER ADMIN]", {
+          usuario_executor: usuarioLogado?.usuario || null,
+          perfil_executor: usuarioLogado?.perfil || null,
+          usuario_alvo: usuarioAlvo.usuario,
+          usuario_alvo_id: usuarioAlvo.id,
+          acao: Boolean(ativo) ? "ATIVAR" : "INATIVAR",
+          rota: req.originalUrl,
+          ip: req.ip,
+          data_hora: new Date().toISOString()
+        });
+
+        return res.status(403).json({
+          erro: true,
+          mensagem: "Somente outro superadministrador pode alterar o status de um superadministrador."
+        });
+      }
+
+      await db.query(
+        "UPDATE usuarios_dashboard SET ativo = ? WHERE id = ?",
+        [Boolean(ativo) ? 1 : 0, usuarioAlvoId]
+      );
+
+      return res.json({
+        sucesso: true,
+        mensagem: "Status do usuário atualizado com sucesso."
       });
+
+    } catch (erro) {
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao alterar status do usuário"
+      );
     }
-
-    const { ativo } = req.body;
-
-    await db.query(
-      "UPDATE usuarios_dashboard SET ativo = ? WHERE id = ?",
-      [ativo ? 1 : 0, req.params.id]
-    );
-
-    res.json({
-      sucesso: true,
-      mensagem: "Status do usuário atualizado com sucesso."
-    });
-
-  } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      mensagem: erro.message
-    });
   }
-});
+);
 
-app.patch("/api/usuarios/:id", exigirLogin, async (req, res) => {
+app.patch("/api/usuarios/:id", exigirLogin,  exigirPermissao("gerenciar_usuarios"), async (req, res) => {
   try {
     const usuarioLogado = req.session.usuario;
 
@@ -821,6 +1031,32 @@ app.patch("/api/usuarios/:id", exigirLogin, async (req, res) => {
 
     const { id } = req.params;
     const { nome, perfil, equipe, vendedor_id } = req.body || {};
+
+    const usuarioAlvo = await buscarUsuarioAlvoProtegido(req, res);
+
+      if (!usuarioAlvo) {
+        return;
+      }
+
+    if (
+      perfil === "super_admin" &&
+      req.session.usuario?.perfil !== "super_admin"
+    ) {
+      return res.status(403).json({
+        erro: true,
+        mensagem: "Somente um superadministrador pode definir este perfil."
+      });
+    }
+
+    if (
+      Number(id) === Number(req.session.usuario?.id) &&
+      perfil !== req.session.usuario?.perfil
+    ) {
+      return res.status(400).json({
+        erro: true,
+        mensagem: "Você não pode alterar o próprio perfil."
+      });
+    }
 
     if (!nome || !perfil) {
       return res.status(400).json({
@@ -850,14 +1086,16 @@ app.patch("/api/usuarios/:id", exigirLogin, async (req, res) => {
     });
 
   } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      mensagem: erro.message
-    });
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao editar usuário"
+      );
   }
 });
 
-app.patch("/api/usuarios/:id/permissoes", exigirLogin, async (req, res) => {
+app.patch("/api/usuarios/:id/permissoes", exigirLogin,   exigirPermissao("gerenciar_usuarios"), async (req, res) => {
   try {
     const usuarioLogado = req.session.usuario;
 
@@ -870,6 +1108,30 @@ app.patch("/api/usuarios/:id/permissoes", exigirLogin, async (req, res) => {
 
     const { id } = req.params;
     const { permissoes } = req.body || {};
+
+    const usuarioAlvo = await buscarUsuarioAlvoProtegido(req, res);
+
+    if (!usuarioAlvo) {
+      return;
+    }
+
+    
+    if (
+  Number(id) === Number(req.session.usuario?.id) &&
+        req.session.usuario?.perfil === "super_admin"
+      ) {
+        return res.status(400).json({
+          erro: true,
+          mensagem: "O superadministrador não pode alterar as próprias permissões por esta rota."
+        });
+      }
+
+      if (Number(id) === Number(req.session.usuario?.id)) {
+  return res.status(400).json({
+    erro: true,
+    mensagem: "Você não pode alterar as próprias permissões."
+  });
+}
 
     if (!Array.isArray(permissoes)) {
       return res.status(400).json({
@@ -898,15 +1160,17 @@ app.patch("/api/usuarios/:id/permissoes", exigirLogin, async (req, res) => {
     });
 
   } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      mensagem: erro.message
-    });
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao alterar permissões do usuário"
+      );
   }
 });
 
 
-  app.post("/api/usuarios", exigirLogin, async (req, res) => {
+  app.post("/api/usuarios", exigirLogin,   exigirPermissao("gerenciar_usuarios"), async (req, res) => {
   try {
     const usuarioLogado = req.session.usuario;
 
@@ -926,6 +1190,16 @@ app.patch("/api/usuarios/:id/permissoes", exigirLogin, async (req, res) => {
       vendedor_id,
       permissoes
     } = req.body || {};
+
+    if (
+  perfil === "super_admin" &&
+      req.session.usuario?.perfil !== "super_admin"
+    ) {
+      return res.status(403).json({
+        erro: true,
+        mensagem: "Somente um superadministrador pode criar outro superadministrador."
+      });
+    }
 
     if (!usuario || !nome || !senha || !perfil) {
       return res.status(400).json({
@@ -1005,14 +1279,16 @@ app.patch("/api/usuarios/:id/permissoes", exigirLogin, async (req, res) => {
       });
     }
 
-    return res.status(500).json({
-      erro: true,
-      mensagem: erro.message
-    });
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao cadastrar usuário"
+      );
   }
 });
 
-app.patch("/api/usuarios/:id/resetar-senha", exigirLogin, async (req, res) => {
+app.patch("/api/usuarios/:id/resetar-senha", exigirLogin,   exigirPermissao("gerenciar_usuarios"), async (req, res) => {
   try {
     const usuarioLogado = req.session.usuario;
 
@@ -1021,6 +1297,12 @@ app.patch("/api/usuarios/:id/resetar-senha", exigirLogin, async (req, res) => {
         erro: true,
         mensagem: "Acesso negado."
       });
+    }
+
+    const usuarioAlvo = await buscarUsuarioAlvoProtegido(req, res);
+
+    if (!usuarioAlvo) {
+      return;
     }
 
     const { id } = req.params;
@@ -1053,10 +1335,12 @@ app.patch("/api/usuarios/:id/resetar-senha", exigirLogin, async (req, res) => {
     });
 
   } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      mensagem: erro.message
-    });
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao resetar senha do usuário"
+      );
   }
 });
 
@@ -1292,19 +1576,23 @@ async function buscarContratoCache(idContrato) {
 }
 
 async function limparAlertaCliente(idCliente) {
-  const cliente = await buscarCliente(idCliente);
-
-  if (!cliente) {
-    throw new Error("Cliente não encontrado para limpar alerta.");
+  if (!idCliente || String(idCliente) === "0") {
+    throw new Error("ID do cliente inválido para limpar alerta.");
   }
 
-  cliente.alerta = "";
+  const payload = {
+    alerta: ""
+  };
 
-  const response = await api.put(`/cliente/${idCliente}`, cliente, {
-    headers: {
-      ixcsoft: "editar"
+  const response = await api.put(
+    `/cliente/${idCliente}`,
+    payload,
+    {
+      headers: {
+        ixcsoft: "editar"
+      }
     }
-  });
+  );
 
   return response.data;
 }
@@ -1704,13 +1992,14 @@ app.get("/api/ativacoes", exigirLogin, async (req, res) => {
       atualizado_em: new Date(cacheAtivacoesCriadoEm).toLocaleString("pt-BR")
     });
 
-  } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      status: erro.response?.status || null,
-      mensagem: erro.response?.data || erro.message
-    });
-  }
+      } catch (erro) {
+        return responderErroInterno(
+          req,
+          res,
+          erro,
+          "Erro ao consultar ativações"
+        );
+      }
 });
 
 async function atualizarCacheAtivacoes() {
@@ -1731,7 +2020,7 @@ async function atualizarCacheAtivacoes() {
 }
 
 
-app.post("/api/os/:id/mensagem", exigirLogin, async (req, res) => {
+app.post("/api/os/:id/mensagem", exigirLogin,  exigirPermissao("operar_os"), async (req, res) => {
   try {
     const { mensagem, idTecnico } = req.body;
 
@@ -1767,15 +2056,16 @@ app.post("/api/os/:id/mensagem", exigirLogin, async (req, res) => {
     });
     
   } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      status: erro.response?.status || null,
-      mensagem: erro.response?.data || erro.message
-    });
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao adicionar mensagem na O.S."
+      );
   }
 });
 
-app.post("/api/os/:id/descricao-confirmacao", exigirLogin, async (req, res) => {
+app.post("/api/os/:id/descricao-confirmacao", exigirLogin,   exigirPermissao("operar_os"), async (req, res) => {
   try {
     const idOS = req.params.id;
     const { observacao } = req.body || {};
@@ -1854,15 +2144,16 @@ app.post("/api/os/:id/descricao-confirmacao", exigirLogin, async (req, res) => {
     });
 
   } catch (erro) {
-    return res.status(500).json({
-      erro: true,
-      status: erro.response?.status || null,
-      mensagem: erro.response?.data || erro.message
-    });
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao atualizar descrição da O.S."
+      );
   }
 });
 
-app.post("/api/os/:id/reagendar", exigirLogin, async (req, res) => {
+app.post("/api/os/:id/reagendar", exigirLogin, exigirPermissao("operar_os"), async (req, res) => {
   try {
     const idOS = req.params.id;
     const { motivo } = req.body;
@@ -1995,15 +2286,17 @@ app.post("/api/os/:id/reagendar", exigirLogin, async (req, res) => {
           });
 
   } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      status: erro.response?.status || null,
-      mensagem: erro.response?.data || erro.message
-    });
+        return responderErroInterno(
+          req,
+          res,
+          erro,
+          "Erro ao reagendar O.S."
+        );
   }
 });
 
-app.get("/api/debug-os/:id", exigirLogin, async (req, res) => {
+if (process.env.NODE_ENV !== "production") {
+app.get("/api/debug-os/:id", exigirLogin, exigirSuperAdmin, async (req, res) => {
   try {
     const retorno = await buscar(
       "su_oss_chamado",
@@ -2022,7 +2315,7 @@ app.get("/api/debug-os/:id", exigirLogin, async (req, res) => {
 });
 
 
-app.get("/api/debug-ranking-contratos", exigirLogin, async (req, res) => {
+app.get("/api/debug-ranking-contratos", exigirLogin, exigirSuperAdmin, async (req, res) => {
   try {
     const dataInicial = req.query.inicio || "2026-06-20";
     const dataFinal = req.query.fim || "2026-06-20";
@@ -2053,7 +2346,7 @@ app.get("/api/debug-ranking-contratos", exigirLogin, async (req, res) => {
   }
 });
 
-app.get("/api/debug-plano/:id", exigirLogin, async (req, res) => {
+app.get("/api/debug-plano/:id", exigirLogin, exigirSuperAdmin, async (req, res) => {
   try {
     const id = req.params.id;
 
@@ -2074,6 +2367,8 @@ app.get("/api/debug-plano/:id", exigirLogin, async (req, res) => {
     });
   }
 });
+
+}
 
 
 function numeroIXC(valor) {
@@ -2600,7 +2895,8 @@ async function obterPlanoChurnPorNome(nomePlano) {
 }
 
 
-app.get("/api/debug-os-churn", exigirLogin, async (req, res) => {
+if (process.env.NODE_ENV !== "production") {
+app.get("/api/debug-os-churn", exigirLogin, exigirSuperAdmin, async (req, res) => {
   try {
     const dataInicial = req.query.inicio;
     const dataFinal = req.query.fim;
@@ -2652,6 +2948,7 @@ app.get("/api/debug-os-churn", exigirLogin, async (req, res) => {
     });
   }
 });
+} 
 
 async function montarRespostaRankingChurnPorApuracao(dataInicial, dataFinal) {
   const mesRanking = dataInicial.slice(0, 7);
@@ -2798,7 +3095,7 @@ async function montarRespostaRankingChurnPorApuracao(dataInicial, dataFinal) {
   return resposta;
 }
 
-app.post("/api/ranking-churn/importar-apuracao", exigirLogin, async (req, res) => {
+app.post("/api/ranking-churn/importar-apuracao", exigirLogin, exigirPermissao("gerenciar_metas"), async (req, res) => {
   try {
     const { mes } = req.body || {};
 
@@ -2951,10 +3248,12 @@ app.post("/api/ranking-churn/importar-apuracao", exigirLogin, async (req, res) =
     });
 
   } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      mensagem: erro.response?.data || erro.message
-    });
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao importar apuração Churn"
+      );
   }
 });
 
@@ -3791,7 +4090,7 @@ async function executarSyncPenalidadesBackofficeAtual() {
   }
 }
 
-app.get("/api/ranking-backoffice/penalidades-teste", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/ranking-backoffice/penalidades-teste", async (req, res) => {
   try {
     const inicio = req.query.inicio;
     const fim = req.query.fim;
@@ -4004,7 +4303,7 @@ app.get("/api/ranking-backoffice/penalidades-teste", exigirLogin, async (req, re
 });
 
 
-app.get("/api/metas-vendedores", exigirLogin, async (req, res) => {
+app.get("/api/metas-vendedores", exigirLogin, exigirPermissao("gerenciar_metas"), async (req, res) => {
   try {
     const mes = req.query.mes;
 
@@ -4057,14 +4356,16 @@ app.get("/api/metas-vendedores", exigirLogin, async (req, res) => {
     res.json({ mes, metas });
 
   } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      mensagem: erro.message
-    });
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao salvar meta de vendedor"
+      );
   }
 });
 
-app.post("/api/metas-vendedores", exigirLogin, async (req, res) => {
+app.post("/api/metas-vendedores", exigirLogin, exigirPermissao("gerenciar_metas"), async (req, res) => {
   try {
     const usuarioLogado = req.session.usuario;
 
@@ -4101,14 +4402,16 @@ app.post("/api/metas-vendedores", exigirLogin, async (req, res) => {
     });
 
   } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      mensagem: erro.message
-    });
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao remover meta de vendedor"
+      );
   }
 });
 
-app.delete("/api/metas-vendedores/:vendedorId/:mes", exigirLogin, async (req, res) => {
+app.delete("/api/metas-vendedores/:vendedorId/:mes", exigirLogin, exigirPermissao("gerenciar_metas"), async (req, res) => {
   try {
     const usuarioLogado = req.session.usuario;
 
@@ -4137,7 +4440,7 @@ app.delete("/api/metas-vendedores/:vendedorId/:mes", exigirLogin, async (req, re
   }
 });
 
-app.patch("/api/metas-vendedores/:vendedorId/:mes/status", exigirLogin, async (req, res) => {
+app.patch("/api/metas-vendedores/:vendedorId/:mes/status", exigirLogin, exigirPermissao("gerenciar_metas"), async (req, res) => {
   try {
     const usuarioLogado = req.session.usuario;
 
@@ -4161,10 +4464,12 @@ app.patch("/api/metas-vendedores/:vendedorId/:mes/status", exigirLogin, async (r
     });
 
   } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      mensagem: erro.message
-    });
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao alterar status da meta"
+      );
   }
 });
 
@@ -4629,7 +4934,7 @@ const receitaOutros = ativos
 
 }
 
-app.get("/api/debug-link-dedicado-campos/:contratoId", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/debug-link-dedicado-campos/:contratoId", async (req, res) => {
   try {
     const contratoId = req.params.contratoId;
 
@@ -4715,7 +5020,7 @@ app.get("/api/link-dedicado", exigirLogin, async (req, res) => {
   }
 });
 
-app.get("/api/debug-link-dedicado-contrato/:vendedorId", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/debug-link-dedicado-contrato/:vendedorId", async (req, res) => {
   try {
     const vendedorId = req.params.vendedorId;
 
@@ -4740,7 +5045,7 @@ app.get("/api/debug-link-dedicado-contrato/:vendedorId", exigirLogin, async (req
   }
 });
 
-app.get("/api/debug-link-dedicado-planos", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/debug-link-dedicado-planos", async (req, res) => {
   try {
     const [colaboradores] = await db.query(`
       SELECT vendedor_ixc_id, nome
@@ -4843,7 +5148,7 @@ function classificarPlanoLinkDedicado(nomePlano) {
   return "CORPORATIVO";
 }
 
-app.post("/api/sync/planos-link-dedicado", exigirLogin, async (req, res) => {
+app.post("/api/sync/planos-link-dedicado", exigirLogin, exigirPermissao("sincronizar_dados"), async (req, res) => {
   try {
     const usuarioLogado = req.session.usuario;
 
@@ -5087,7 +5392,7 @@ async function sincronizarLinkDedicadoBanco() {
 }
 
 
-app.post("/api/sync/link-dedicado", exigirLogin, async (req, res) => {
+app.post("/api/sync/link-dedicado", exigirLogin, exigirPermissao("sincronizar_dados"), async (req, res) => {
   try {
     const usuarioLogado = req.session.usuario;
 
@@ -5115,14 +5420,16 @@ app.post("/api/sync/link-dedicado", exigirLogin, async (req, res) => {
       });
 
   } catch (erro) {
-    return res.status(500).json({
-      erro: true,
-      mensagem: erro.response?.data || erro.message
-    });
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao sincronizar Link Dedicado"
+      );
   }
 });
 
-app.get("/api/debug-link-dedicado-financeiro", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/debug-link-dedicado-financeiro", async (req, res) => {
   try {
     const dados = await montarLinkDedicado();
 
@@ -5159,7 +5466,7 @@ app.get("/api/debug-link-dedicado-financeiro", exigirLogin, async (req, res) => 
 });
 
 
-app.get("/api/debug-link-dedicado-regra/:contratoId", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/debug-link-dedicado-regra/:contratoId", async (req, res) => {
   try {
     const contratoId = req.params.contratoId;
 
@@ -5734,7 +6041,7 @@ async function atualizarCacheTodosVendedores() {
   }
 }
 
-app.get("/api/debug/os-cadastro/:clienteId", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/debug/os-cadastro/:clienteId", async (req, res) => {
   const retorno = await buscar(
     "su_oss_chamado",
     "su_oss_chamado.id_cliente",
@@ -5745,7 +6052,7 @@ app.get("/api/debug/os-cadastro/:clienteId", exigirLogin, async (req, res) => {
   res.json(retorno.registros || []);
 });
 
-app.get("/api/debug/venda-real/:clienteId", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/debug/venda-real/:clienteId", async (req, res) => {
   try {
     const clienteId = req.params.clienteId;
 
@@ -5777,7 +6084,7 @@ app.get("/api/debug/venda-real/:clienteId", exigirLogin, async (req, res) => {
   }
 });
 
-app.get("/api/debug/primeiro-contrato-vendedor", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/debug/primeiro-contrato-vendedor", async (req, res) => {
   try {
     const usuario = req.session.usuario || {};
     const vendedorId = String(usuario.vendedor_id || "");
@@ -5799,7 +6106,7 @@ app.get("/api/debug/primeiro-contrato-vendedor", exigirLogin, async (req, res) =
   }
 });
 
-app.get("/api/debug-churn", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/debug-churn", async (req, res) => {
   try {
 
     const inicio = req.query.inicio;
@@ -5860,7 +6167,7 @@ app.get("/api/debug-churn", exigirLogin, async (req, res) => {
   }
 });
 
-app.get("/api/debug-churn-os", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/debug-churn-os", async (req, res) => {
   try {
     const retorno = await buscar(
       "su_oss_chamado",
@@ -5884,7 +6191,7 @@ app.get("/api/debug-churn-os", exigirLogin, async (req, res) => {
 });
 
 
-app.get("/api/debug-mensagens-os/:id", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/debug-mensagens-os/:id", async (req, res) => {
   try {
     const retorno = await buscar(
       "su_oss_chamado_mensagem",
@@ -5902,7 +6209,7 @@ app.get("/api/debug-mensagens-os/:id", exigirLogin, async (req, res) => {
   }
 });
 
-app.get("/api/debug-os-completo/:id", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/debug-os-completo/:id", async (req, res) => {
   try {
     const os = await buscar(
       "su_oss_chamado",
@@ -6097,7 +6404,7 @@ app.get("/api/pagamentos-ativacao", exigirLogin, async (req, res) => {
   }
 });
 
-app.get("/api/debug-link-cliente/:clienteId", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/debug-link-cliente/:clienteId", async (req, res) => {
   try {
     const clienteId = req.params.clienteId;
 
@@ -6568,7 +6875,7 @@ app.post("/api/lista-confirmacao/limpar", exigirLogin, async (req, res) => {
   }
 });
 
-app.post("/api/os/:id/teste-finalizar-pagamento", exigirLogin, async (req, res) => {
+registrarDebugPost("/api/os/:id/teste-finalizar-pagamento", async (req, res) => {
   try {
     const idOS = req.params.id;
 
@@ -6627,7 +6934,7 @@ app.post("/api/os/:id/teste-finalizar-pagamento", exigirLogin, async (req, res) 
   }
 });
 
-app.post("/api/os/:id/finalizar-pagamento-ativacao", exigirLogin, async (req, res) => {
+app.post("/api/os/:id/finalizar-pagamento-ativacao", exigirLogin, exigirPermissao("finalizar_pagamento_ativacao"), async (req, res) => {
   try {
     const idOS = req.params.id;
     let { mensagem } = req.body;
@@ -6735,16 +7042,16 @@ app.post("/api/os/:id/finalizar-pagamento-ativacao", exigirLogin, async (req, re
       });
     }
 
-    let retornoLimpezaAlerta = null;
+      let retornoLimpezaAlerta = null;
 
-    try {
-      retornoLimpezaAlerta = await limparAlertaCliente(os.id_cliente);
-    } catch (erroLimpeza) {
-      retornoLimpezaAlerta = {
-        erro: true,
-        mensagem: erroLimpeza.response?.data || erroLimpeza.message
-      };
-    }
+      try {
+        retornoLimpezaAlerta = await limparAlertaCliente(os.id_cliente);
+      } catch (erroLimpeza) {
+        retornoLimpezaAlerta = {
+          erro: true,
+          mensagem: erroLimpeza.response?.data || erroLimpeza.message
+        };
+      }
 
     await registrarLogSistema(req, {
         acao: "FINALIZOU_PAGAMENTO_ATIVACAO",
@@ -6769,11 +7076,12 @@ app.post("/api/os/:id/finalizar-pagamento-ativacao", exigirLogin, async (req, re
         });
 
   } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      status: erro.response?.status || null,
-      mensagem: erro.response?.data || erro.message
-    });
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao finalizar pagamento de ativação"
+      );
   }
 });
 
@@ -6842,7 +7150,7 @@ app.get("/api/relatorios/logs-sistema", exigirLogin, async (req, res) => {
   }
 });
 
-app.get("/api/debug-ranking-churn-classificacao", exigirLogin, async (req, res) => {
+registrarDebugGet("/api/debug-ranking-churn-classificacao", async (req, res) => {
   try {
     const dataInicial = req.query.inicio;
     const dataFinal = req.query.fim;
@@ -6918,7 +7226,7 @@ app.get("/api/debug-ranking-churn-classificacao", exigirLogin, async (req, res) 
   }
 });
 
-app.get("/api/regras-receita-ranking", exigirLogin, async (req, res) => {
+app.get("/api/regras-receita-ranking", exigirLogin, exigirPermissao("gerenciar_metas"), async (req, res) => {
   try {
     const mes = req.query.mes;
 
@@ -6951,14 +7259,16 @@ app.get("/api/regras-receita-ranking", exigirLogin, async (req, res) => {
     res.json({ mes, regras: rows });
 
   } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      mensagem: erro.message
-    });
+        return responderErroInterno(
+          req,
+          res,
+          erro,
+          "Erro ao consultar regras de receita"
+        );
   }
 });
 
-app.post("/api/regras-receita-ranking", exigirLogin, async (req, res) => {
+app.post("/api/regras-receita-ranking", exigirLogin, exigirPermissao("gerenciar_metas"), async (req, res) => {
   try {
     const usuarioLogado = req.session.usuario;
 
@@ -7014,10 +7324,12 @@ app.post("/api/regras-receita-ranking", exigirLogin, async (req, res) => {
     });
 
   } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      mensagem: erro.message
-    });
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao salvar regra de receita"
+      );
   }
 });
 
