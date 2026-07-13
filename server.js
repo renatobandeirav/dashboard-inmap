@@ -16,6 +16,8 @@ app.use(express.json({
   limit: "1mb"
 }));
 
+
+
 const limitadorLoginSistema = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 5,
@@ -272,6 +274,46 @@ async function buscarUsuarioAlvoProtegido(req, res) {
 
   return usuarioAlvo;
 }
+
+
+// TESTE API PIPER RUN //
+
+const {
+  buscarDeals
+} = require("./integracoes/piperun/client");
+
+const {
+  transformarListaDeals
+} = require("./integracoes/piperun/service");
+
+const {
+  criarSincronizadorPiperun
+} = require("./integracoes/piperun/sync");
+
+const {
+  criarAgendadorPiperun
+} = require("./integracoes/piperun/scheduler");
+
+const {
+  criarRotasPiperun
+} = require("./integracoes/piperun/routes");
+
+const piperunSync = criarSincronizadorPiperun(db);
+
+const piperunScheduler = criarAgendadorPiperun({
+  sincronizarPerdidos: piperunSync.sincronizarPerdidos,
+  intervaloMs: 10 * 60 * 1000,
+  atrasoInicialMs: 30 * 1000
+});
+
+const piperunRoutes = criarRotasPiperun({
+  db,
+  exigirLogin,
+  exigirPermissao,
+  responderErroInterno
+});
+
+// FIM DO CÓDIGO DO PIPER //
 
 
 function limparDocumento(valor) {
@@ -1463,6 +1505,30 @@ app.get("/login", (req, res) => {
   }
 
   res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
+app.post("/api/logout", exigirLogin, (req, res) => {
+  req.session.destroy((erro) => {
+    if (erro) {
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao encerrar sessão"
+      );
+    }
+
+    res.clearCookie("inmap.sid", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production"
+    });
+
+    return res.json({
+      sucesso: true,
+      mensagem: "Sessão encerrada com sucesso."
+    });
+  });
 });
 
 
@@ -7837,7 +7903,11 @@ app.get("/api/debug-portal-cliente-login", async (req, res) => {
 });
 
 
+piperunRoutes.registrar(app);
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Servidor rodando em http://10.1.103.94:${PORT}`);
+
+  piperunScheduler.iniciar();
+
 });

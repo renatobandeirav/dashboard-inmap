@@ -598,11 +598,12 @@ tbody tr:hover{
   margin-bottom: 24px;
       }
 
-      .topbar-actions {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
+      .topbar-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+  }
 
       .usuario-logado {
         font-size: 13px;
@@ -4599,6 +4600,564 @@ tbody tr:hover{
   }
 }
 
+/* ===== MENU DE MÓDULOS ===== */
+
+.menu-modulo{
+  position:relative;
+}
+
+.menu-modulo-btn{
+  min-width:150px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+
+.menu-modulo-list{
+  min-width:240px;
+}
+
+.menu-modulo-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.menu-item-bloqueado{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+.menu-item-em-breve{
+  font-size:11px;
+  color:#888;
+  margin-left:10px;
+}
+
+/* =========================================================
+   CSS 15 - CRM PIPERUN
+   ========================================================= */
+
+.crm-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.crm-cabecalho {
+  background: #ffffff;
+  border: 1px solid #e7edf5;
+  border-radius: 18px;
+  padding: 22px 24px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+
+  box-shadow: 0 8px 20px rgba(15, 23, 42, .05);
+}
+
+.crm-eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: #0d7b73;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .09em;
+}
+
+.crm-cabecalho h1 {
+  margin: 0 0 5px;
+  color: #0f172a;
+  font-size: 27px;
+}
+
+.crm-cabecalho p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.crm-sync {
+  margin-top: 7px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.crm-sync strong {
+  color: #0d7b73;
+}
+
+.crm-filtros-periodo {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.crm-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.crm-campo label {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.crm-campo input {
+  width: 180px;
+  height: 42px;
+  padding: 0 12px;
+
+  border: 1px solid #dbe3ec;
+  border-radius: 10px;
+
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.crm-subnav {
+  display: flex;
+  gap: 8px;
+  padding: 7px;
+
+  background: #ffffff;
+  border: 1px solid #e7edf5;
+  border-radius: 14px;
+
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .04);
+}
+
+.crm-subnav-btn {
+  border: 0;
+  background: transparent;
+  color: #475569;
+
+  border-radius: 10px;
+  padding: 10px 18px;
+
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.crm-subnav-btn:hover {
+  background: #f1f5f9;
+}
+
+.crm-subnav-btn.active {
+  background: #0d7b73;
+  color: #ffffff;
+}
+
+.crm-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.crm-kpi {
+  background: #ffffff;
+  border: 1px solid #e7edf5;
+  border-top: 4px solid #0d7b73;
+  border-radius: 16px;
+  padding: 18px 20px;
+
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .04);
+}
+
+.crm-kpi span {
+  display: block;
+  margin-bottom: 8px;
+
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.crm-kpi strong {
+  display: block;
+
+  color: #0f766e;
+  font-size: 25px;
+}
+
+.crm-kpi small {
+  display: block;
+  margin-top: 5px;
+
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.crm-overview-grid {
+  display: grid;
+  grid-template-columns: 1.35fr .85fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.crm-painel {
+  background: #ffffff;
+  border: 1px solid #e7edf5;
+  border-radius: 16px;
+  padding: 20px;
+
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .04);
+}
+
+.crm-painel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+
+  margin-bottom: 14px;
+}
+
+.crm-painel-header h2 {
+  margin: 0 0 4px;
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.crm-painel-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.crm-lista-linhas {
+  display: flex;
+  flex-direction: column;
+}
+
+.crm-lista-linha {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+
+  padding: 12px 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.crm-lista-linha:last-child {
+  border-bottom: 0;
+}
+
+.crm-posicao {
+  width: 27px;
+  height: 27px;
+
+  display: inline-grid;
+  place-items: center;
+
+  border-radius: 8px;
+  background: #edf7f5;
+
+  color: #0d7b73;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.crm-lista-conteudo {
+  min-width: 0;
+}
+
+.crm-lista-conteudo strong {
+  display: block;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.crm-lista-conteudo small {
+  display: block;
+  margin-top: 3px;
+
+  color: #64748b;
+  font-size: 11px;
+}
+
+.crm-lista-linha > b {
+  color: #0d7b73;
+  font-size: 15px;
+}
+
+.crm-destaques-lista {
+  display: flex;
+  flex-direction: column;
+}
+
+.crm-destaque-linha {
+  padding: 14px 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.crm-destaque-linha:last-child {
+  border-bottom: 0;
+}
+
+.crm-destaque-linha span {
+  display: block;
+
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.crm-destaque-linha strong {
+  display: block;
+  margin-top: 4px;
+
+  color: #0f172a;
+  font-size: 15px;
+}
+
+.crm-destaque-linha small {
+  display: block;
+  margin-top: 4px;
+
+  color: #0d7b73;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.crm-filtros-tabela {
+  display: grid;
+  grid-template-columns:
+    minmax(260px, 1.5fr)
+    minmax(180px, 1fr)
+    minmax(180px, 1fr)
+    minmax(160px, .8fr)
+    auto;
+
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.crm-filtros-tabela input,
+.crm-filtros-tabela select {
+  width: 100%;
+  height: 42px;
+
+  border: 1px solid #dbe3ec;
+  border-radius: 10px;
+  padding: 0 12px;
+
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.crm-tabela-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.crm-tabela {
+  width: 100%;
+  min-width: 1180px;
+  border-collapse: collapse;
+}
+
+.crm-tabela th {
+  position: static;
+
+  padding: 13px 12px;
+
+  background: #0d7b73;
+  color: #ffffff;
+
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.crm-tabela td {
+  padding: 12px;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.crm-tabela tbody tr:hover {
+  background: #f8fbfd;
+}
+
+.crm-valor {
+  color: #0d7b73;
+}
+
+.crm-tabela-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+
+  margin-top: 14px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.crm-paginacao {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.crm-paginacao button {
+  border: 0;
+  border-radius: 9px;
+  padding: 8px 13px;
+
+  background: #eef3fa;
+  color: #0f172a;
+
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.crm-paginacao button:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.crm-localizacao-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.crm-localizacao-kpis article {
+  background: #ffffff;
+  border: 1px solid #e7edf5;
+  border-radius: 16px;
+  padding: 18px 20px;
+}
+
+.crm-localizacao-kpis span {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.crm-localizacao-kpis strong {
+  display: block;
+  margin-top: 7px;
+
+  color: #0d7b73;
+  font-size: 24px;
+}
+
+.crm-mapa-placeholder {
+  min-height: 230px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.crm-mapa-placeholder span {
+  display: block;
+
+  color: #0d7b73;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.crm-mapa-placeholder h2 {
+  margin: 8px 0 5px;
+  color: #0f172a;
+}
+
+.crm-mapa-placeholder p {
+  max-width: 620px;
+  margin: 0;
+
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.crm-vazio {
+  padding: 28px;
+  text-align: center;
+  color: #64748b;
+}
+
+@media (max-width: 1200px) {
+  .crm-filtros-tabela {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .crm-overview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .crm-cabecalho {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .crm-filtros-periodo {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .crm-kpis,
+  .crm-localizacao-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .crm-subnav {
+    overflow-x: auto;
+  }
+
+  .crm-subnav-btn {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 600px) {
+  .crm-kpis,
+  .crm-localizacao-kpis,
+  .crm-filtros-tabela {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-filtros-periodo,
+  .crm-campo,
+  .crm-campo input {
+    width: 100%;
+  }
+
+  .crm-filtros-periodo .btn {
+    width: 100%;
+  }
+
+  .crm-tabela-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 
   </style>
 </head>
@@ -4618,120 +5177,275 @@ tbody tr:hover{
 
           <div class="topbar-actions">
 
-            <button id="btnTelaVendas"
-                    class="tab-btn active"
-                    onclick="trocarTelaComercial('vendas')">
-              📈 Vendas
-            </button>
+            <!-- COMERCIAL -->
+<div id="grupoMenuComercial" class="menu-dropdown menu-modulo">
+  <button
+    id="btnGrupoComercial"
+    class="tab-btn menu-modulo-btn active"
+    onclick="alternarMenuModulo('menuComercialDropdown', event)"
+  >
+    📊 Comercial - Vendas ▾
+  </button>
 
-            <button id="btnTelaOperacional"
-                    class="tab-btn"
-                    onclick="trocarTelaComercial('operacional')">
-              ⚙️ Operacional
-            </button>
+  <div
+    id="menuComercialDropdown"
+    class="menu-dropdown-list menu-modulo-list"
+  >
+    <button
+      id="btnTelaVendas"
+      class="menu-dropdown-item menu-modulo-item active"
+      onclick="
+        definirModuloAtivo('btnGrupoComercial');
+        trocarTelaComercial('vendas');
+        fecharMenusModulos();
+      "
+    >
+      📈 Vendas
+    </button>
 
-            <button id="btnRelatorioReversao"
-                    class="tab-btn"
-                    onclick="abrirTelaRelatorioReversao()"
-                    style="display:none;">
-              📝 Reversão
-            </button>
+    <button
+      id="btnLinkDedicado"
+      class="menu-dropdown-item menu-modulo-item"
+      onclick="
+        definirModuloAtivo('btnGrupoComercial');
+        abrirTelaLinkDedicado();
+        fecharMenusModulos();
+      "
+      style="display:none;"
+    >
+      🌐 Link Dedicado
+    </button>
 
-            <button id="btnRanking"
-                    class="tab-btn"
-                    onclick="abrirTelaRanking()">
-              🏆 Ranking
-            </button>
+    <button
+      id="btnRanking"
+      class="menu-dropdown-item menu-modulo-item"
+      onclick="
+        definirModuloAtivo('btnGrupoComercial');
+        abrirTelaRanking();
+        fecharMenusModulos();
+      "
+    >
+      🏆 Ranking Comercial
+    </button>
 
-            <button id="btnRankingChurn"
-                    class="tab-btn"
-                    onclick="abrirTelaRankingChurn()">
-              🔄 Churn
-            </button>
+    <button
+      id="btnRankingChurn"
+      class="menu-dropdown-item menu-modulo-item"
+      onclick="
+        definirModuloAtivo('btnGrupoComercial');
+        abrirTelaRankingChurn();
+        fecharMenusModulos();
+      "
+    >
+      🔄 Churn
+    </button>
 
-            <button id="btnRankingBackoffice"
-                    class="tab-btn"
-                    onclick="abrirTelaRankingBackoffice()">
-              📋 BackOffice
-            </button>
+    <button
+      id="btnRelatorioReversao"
+      class="menu-dropdown-item menu-modulo-item"
+      onclick="
+        definirModuloAtivo('btnGrupoComercial');
+        abrirTelaRelatorioReversao();
+        fecharMenusModulos();
+      "
+      style="display:none;"
+    >
+      📝 Reversão
+    </button>
+  </div>
+</div>
 
-            <button id="btnLinkDedicado"
-                  class="tab-btn"
-                  onclick="abrirTelaLinkDedicado()"
-                  style="display:none;">
-            🌐 Link Dedicado
-          </button>
 
-          </div>
+<!-- OPERAÇÃO -->
+<div id="grupoMenuOperacao" class="menu-dropdown menu-modulo">
+  <button
+    id="btnGrupoOperacao"
+    class="tab-btn menu-modulo-btn"
+    onclick="alternarMenuModulo('menuOperacaoDropdown', event)"
+  >
+    ⚙️ Comercial - Operacional ▾
+  </button>
 
-          <div class="topbar-admin-area">
+  <div
+    id="menuOperacaoDropdown"
+    class="menu-dropdown-list menu-modulo-list"
+  >
+    <button
+      id="btnTelaOperacional"
+      class="menu-dropdown-item menu-modulo-item"
+      onclick="
+        definirModuloAtivo('btnGrupoOperacao');
+        trocarTelaComercial('operacional');
+        fecharMenusModulos();
+      "
+    >
+      ⚙️ Operacional
+    </button>
 
-            <div class="menu-dropdown">
-              <button class="menu-dropdown-btn" onclick="alternarMenuAdmin()">
-                ⚙️ Administração ▾
-              </button>
+    <button
+      id="btnRankingBackoffice"
+      class="menu-dropdown-item menu-modulo-item"
+      onclick="
+        definirModuloAtivo('btnGrupoOperacao');
+        abrirTelaRankingBackoffice();
+        fecharMenusModulos();
+      "
+    >
+      📋 Ranking BackOffice
+    </button>
+  </div>
+</div>
 
-              <div id="menuAdminDropdown" class="menu-dropdown-list">
-                <button id="btnUsuarios"
-                        class="menu-dropdown-item"
-                        onclick="abrirTelaUsuarios()"
-                        style="display:none;">
-                  👥 Usuários
-                </button>
 
-                <button id="btnMetasRanking"
-                        class="menu-dropdown-item"
-                        onclick="abrirTelaMetasRanking()"
-                        style="display:none;">
-                  🎯 Metas
-                </button>
+<!-- CRM -->
+<div id="grupoMenuCrm" class="menu-dropdown menu-modulo">
+  <button
+    id="btnGrupoCrm"
+    class="tab-btn menu-modulo-btn"
+    onclick="alternarMenuModulo('menuCrmDropdown', event)"
+  >
+    💼 CRM ▾
+  </button>
 
-                <button class="menu-dropdown-item"
-                        onclick="window.open('/atualizacoes.html', '_blank')">
-                  📢 Atualizações
-                </button>
-              </div>
-            </div>
+  <div
+    id="menuCrmDropdown"
+    class="menu-dropdown-list menu-modulo-list"
+  >
+    <button
+      id="btnCrmPerdidos"
+      class="menu-dropdown-item menu-modulo-item"
+      onclick="
+        definirModuloAtivo('btnGrupoCrm');
+        abrirTelaCrmPerdidos();
+        fecharMenusModulos();
+      "
+      style="display:none;"
+    >
+      📉 Perdidos
+    </button>
 
-            <div class="usuario-menu">
-              <div class="usuario-box" onclick="alternarMenuUsuario()">
-                <div class="usuario-avatar" id="avatarUsuario" title="Alterar foto">
-                  R
-                </div>
+    <button
+      class="menu-dropdown-item menu-modulo-item menu-item-bloqueado"
+      disabled
+    >
+      🔀 Funis
+      <span class="menu-item-em-breve">Em breve</span>
+    </button>
 
-                <input
-                  id="inputFotoUsuario"
-                  type="file"
-                  accept="image/*"
-                  style="display:none"
-                  onchange="enviarFotoUsuario()"
-                />
+    <button
+      class="menu-dropdown-item menu-modulo-item menu-item-bloqueado"
+      disabled
+    >
+      🗺️ Mapa de Inviabilidade
+      <span class="menu-item-em-breve">Em breve</span>
+    </button>
+  </div>
+</div>
 
-                <div class="usuario-info">
-                  <span id="nomeUsuarioLogado">Usuário logado</span>
-                  <small id="perfilUsuarioLogado">Perfil</small>
-                </div>
-              </div>
+</div>
 
-              <div id="menuUsuarioDropdown" class="usuario-dropdown">
-                <button class="menu-dropdown-item" onclick="abrirSeletorFotoUsuario()">
-                  🖼️ Alterar foto
-                </button>
+<div class="topbar-admin-area">
 
-                <button class="menu-dropdown-item" onclick="abrirModalAlterarSenha()">
-                  🔑 Alterar senha
-                </button>
+  <div class="menu-dropdown">
+    <button
+      class="menu-dropdown-btn"
+      onclick="alternarMenuAdmin()"
+    >
+      ⚙️ Administração ▾
+    </button>
 
-                <button class="menu-dropdown-item" onclick="logout()">
-                  🚪 Sair
-                </button>
-              </div>
-            </div>
+    <div
+      id="menuAdminDropdown"
+      class="menu-dropdown-list"
+    >
+      <button
+        id="btnUsuarios"
+        class="menu-dropdown-item"
+        onclick="abrirTelaUsuarios()"
+        style="display:none;"
+      >
+        👥 Usuários
+      </button>
 
-          </div>
+      <button
+        id="btnMetasRanking"
+        class="menu-dropdown-item"
+        onclick="abrirTelaMetasRanking()"
+        style="display:none;"
+      >
+        🎯 Metas
+      </button>
 
-          </div>
-        </header>
+      <button
+        class="menu-dropdown-item"
+        onclick="window.open('/atualizacoes.html', '_blank')"
+      >
+        📢 Atualizações
+      </button>
+    </div>
+  </div>
+
+  <div class="usuario-menu">
+    <div
+      class="usuario-box"
+      onclick="alternarMenuUsuario()"
+    >
+      <div
+        class="usuario-avatar"
+        id="avatarUsuario"
+        title="Alterar foto"
+      >
+        R
+      </div>
+
+      <input
+        id="inputFotoUsuario"
+        type="file"
+        accept="image/*"
+        style="display:none;"
+        onchange="enviarFotoUsuario()"
+      />
+
+      <div class="usuario-info">
+        <span id="nomeUsuarioLogado">
+          Usuário logado
+        </span>
+
+        <small id="perfilUsuarioLogado">
+          Perfil
+        </small>
+      </div>
+    </div>
+
+    <div
+      id="menuUsuarioDropdown"
+      class="usuario-dropdown"
+    >
+      <button
+        class="menu-dropdown-item"
+        onclick="abrirSeletorFotoUsuario()"
+      >
+        🖼️ Alterar foto
+      </button>
+
+      <button
+        class="menu-dropdown-item"
+        onclick="abrirModalAlterarSenha()"
+      >
+        🔑 Alterar senha
+      </button>
+
+      <button
+        class="menu-dropdown-item"
+        onclick="logout()"
+      >
+        🚪 Sair
+      </button>
+    </div>
+  </div>
+
+</div>
+</header>
 
 
   <!-- =========================================================
@@ -5006,7 +5720,9 @@ tbody tr:hover{
             linkDedicado: document.getElementById("btnLinkDedicado"),
             relatorioReversao: document.getElementById("btnRelatorioReversao"),
             usuarios: document.getElementById("btnUsuarios"),
-            metas: document.getElementById("btnMetasRanking")
+            metas: document.getElementById("btnMetasRanking"),
+            crmPerdidos: document.getElementById("btnCrmPerdidos"),
+            grupoCrm: document.getElementById("grupoMenuCrm")
           };
 
           Object.values(botoes).forEach(btn => {
@@ -5015,6 +5731,21 @@ tbody tr:hover{
 
           const isAdmin = perfil === "super_admin";
           const isGerencial = perfil === "gerencial";
+          const podeVerCrmPiperun =
+            isAdmin ||
+            isGerencial ||
+            pode("ver_crm_piperun");
+
+          if (botoes.grupoCrm) {
+            botoes.grupoCrm.style.display =
+              podeVerCrmPiperun ? "block" : "none";
+          }
+
+          if (podeVerCrmPiperun) {
+            if (botoes.crmPerdidos) {
+              botoes.crmPerdidos.style.display = "flex";
+            }
+          }
 
           if (isAdmin || isGerencial || pode("ver_comercial_vendas")) {
             if (botoes.vendas) botoes.vendas.style.display = "inline-flex";
@@ -5054,11 +5785,29 @@ tbody tr:hover{
           }
         }
 
+
+
+
     /*
       =========================================================
       JS 02 - TOASTS E MODAIS GERAIS
       =========================================================
     */
+
+
+    function definirModuloAtivo(botaoId) {
+        document
+          .querySelectorAll(".menu-modulo-btn")
+          .forEach(botao => {
+            botao.classList.remove("active");
+          });
+
+        const botaoAtivo = document.getElementById(botaoId);
+
+        if (botaoAtivo) {
+          botaoAtivo.classList.add("active");
+        }
+      }
 
 
     function alternarMenuAdmin() {
@@ -5092,7 +5841,49 @@ tbody tr:hover{
           if (!clicouMenuUsuario) {
             document.getElementById("menuUsuarioDropdown")?.classList.remove("aberto");
           }
+          const clicouMenuModulo = event.target.closest(".menu-modulo");
+
+          if (!clicouMenuModulo) {
+            fecharMenusModulos();
+          }
         });
+
+        function fecharMenusModulos() {
+            document
+              .querySelectorAll(".menu-modulo-list")
+              .forEach(menu => {
+                menu.classList.remove("aberto");
+              });
+          }
+
+        function alternarMenuModulo(menuId, event) {
+          if (event) {
+            event.stopPropagation();
+          }
+
+          const menuSelecionado = document.getElementById(menuId);
+
+          if (!menuSelecionado) {
+            console.warn("Menu de módulo não encontrado:", menuId);
+            return;
+          }
+
+          const estavaAberto = menuSelecionado.classList.contains("aberto");
+
+          fecharMenusModulos();
+
+          document
+            .getElementById("menuAdminDropdown")
+            ?.classList.remove("aberto");
+
+          document
+            .getElementById("menuUsuarioDropdown")
+            ?.classList.remove("aberto");
+
+          if (!estavaAberto) {
+            menuSelecionado.classList.add("aberto");
+          }
+        }
 
           function responderModalConfirmacaoPadrao(resposta) {
             const modal = document.getElementById("modalConfirmacaoPadrao");
@@ -6329,6 +7120,13 @@ function copiarTextoFallback(texto) {
       };
       let statusPortalClienteAtual = "SOLICITADO";
       let solicitacaoPortalClienteSelecionada = null;
+
+      let dadosCrmPiperun = null;
+      let abaCrmAtiva = "visaoGeral";
+      let paginaCrmPerdidos = 1;      
+      const itensPorPaginaCrm = 25;
+
+      
 
 
 
@@ -9852,22 +10650,25 @@ async function salvarNovoUsuario() {
           }
         }
 
-                          async function logout() {
+async function logout() {
   try {
-    await fetch("/logout", {
+    const resposta = await fetch("/api/logout", {
       method: "POST"
     });
 
-      localStorage.removeItem("telaComercialAtiva");
-      localStorage.removeItem("abaPrincipalAtiva");
-      localStorage.removeItem("telaAtual");
-
-    window.location.href = "/login.html";
+    if (!resposta.ok) {
+      console.error("Não foi possível encerrar a sessão no servidor.");
+    }
 
   } catch (erro) {
     console.error("Erro ao sair:", erro);
 
-    window.location.href = "/login.html";
+  } finally {
+    localStorage.removeItem("telaComercialAtiva");
+    localStorage.removeItem("abaPrincipalAtiva");
+    localStorage.removeItem("telaAtual");
+
+    window.location.replace("/login");
   }
 }
 
@@ -11399,6 +12200,992 @@ function abrirModalMotivoPenalidadeBackoffice(titulo = "Motivo da penalidade") {
 
 
         /*
+
+/*
+  =========================================================
+  JS 14 - CRM PIPERUN / OPORTUNIDADES PERDIDAS
+  =========================================================
+*/
+
+function escaparHtmlCrm(valor) {
+  return String(valor ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function obterMesAtualCrm() {
+  const hoje = new Date();
+  const ano = hoje.getFullYear();
+  const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+
+  return `${ano}-${mes}`;
+}
+
+function formatarDataHoraCrm(valor) {
+  if (!valor) return "-";
+
+  const texto = String(valor).trim();
+
+  const formatoMariaDb =
+    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(texto);
+
+  const data = new Date(
+    formatoMariaDb
+      ? texto.replace(" ", "T")
+      : texto
+  );
+
+  if (Number.isNaN(data.getTime())) {
+    return texto;
+  }
+
+  return data.toLocaleString("pt-BR");
+}
+
+function podeAcessarCrmPiperun() {
+  const perfil = usuarioLogado?.perfil;
+  const permissoes = usuarioLogado?.permissoes || [];
+
+  return (
+    perfil === "super_admin" ||
+    perfil === "gerencial" ||
+    permissoes.includes("ver_crm_piperun")
+  );
+}
+
+async function abrirTelaCrmPerdidos() {
+  mostrarDashboardPrincipal();
+
+  if (!podeAcessarCrmPiperun()) {
+    mostrarToastPadrao(
+      "Acesso restrito",
+      "Seu usuário não possui permissão para acessar o CRM.",
+      "erro"
+    );
+    return;
+  }
+
+  telaAtual = "crmPerdidos";
+  localStorage.setItem("telaAtual", telaAtual);
+
+  definirModuloAtivo("btnGrupoCrm");
+
+  abaCrmAtiva = "visaoGeral";
+  paginaCrmPerdidos = 1;
+
+  const conteudo = document.getElementById("conteudo");
+  if (!conteudo) return;
+
+  conteudo.innerHTML = `
+    <section class="crm-page">
+
+      <header class="crm-cabecalho">
+        <div class="crm-cabecalho-texto">
+          <span class="crm-eyebrow">CRM PIPERUN</span>
+
+          <h1>Oportunidades Perdidas</h1>
+
+          <p>
+            Análise das perdas comerciais, inviabilidades e oportunidades
+            registradas na Piperun.
+          </p>
+
+          <div id="ultimaSincronizacaoCrm" class="crm-sync">
+            Consultando última sincronização...
+          </div>
+        </div>
+
+        <div class="crm-filtros-periodo">
+          <div class="crm-campo">
+            <label for="filtroMesCrm">Mês de origem</label>
+
+            <input
+              id="filtroMesCrm"
+              type="month"
+              value="${obterMesAtualCrm()}"
+            >
+          </div>
+
+          <button
+            class="btn btn-primary"
+            onclick="carregarCrmPerdidos()"
+          >
+            Buscar
+          </button>
+
+          <button
+            class="btn btn-secondary"
+            onclick="limparFiltroMesCrm()"
+          >
+            Todos os períodos
+          </button>
+        </div>
+      </header>
+
+      <nav class="crm-subnav">
+        <button
+          id="btnCrmVisaoGeral"
+          class="crm-subnav-btn active"
+          onclick="trocarAbaCrm('visaoGeral')"
+        >
+          Visão geral
+        </button>
+
+        <button
+          id="btnCrmOportunidades"
+          class="crm-subnav-btn"
+          onclick="trocarAbaCrm('oportunidades')"
+        >
+          Oportunidades
+        </button>
+
+        <button
+          id="btnCrmLocalizacao"
+          class="crm-subnav-btn"
+          onclick="trocarAbaCrm('localizacao')"
+        >
+          Localização
+        </button>
+
+        <button
+          id="btnCrmVendedores"
+          class="crm-subnav-btn"
+          onclick="trocarAbaCrm('vendedores')"
+        >
+          Vendedores
+        </button>
+      </nav>
+
+      <div id="areaCrmPerdidos">
+        <div class="loading">
+          Carregando informações da Piperun...
+        </div>
+      </div>
+
+    </section>
+  `;
+
+  await carregarCrmPerdidos();
+}
+
+async function limparFiltroMesCrm() {
+  const campo = document.getElementById("filtroMesCrm");
+
+  if (campo) {
+    campo.value = "";
+  }
+
+  paginaCrmPerdidos = 1;
+
+  await carregarCrmPerdidos();
+}
+
+async function carregarCrmPerdidos() {
+  const area = document.getElementById("areaCrmPerdidos");
+  const mes = document.getElementById("filtroMesCrm")?.value || "";
+
+  if (!area) return;
+
+  area.innerHTML = `
+    <div class="loading">
+      Carregando informações da Piperun...
+    </div>
+  `;
+
+  try {
+    const parametros = new URLSearchParams();
+
+    if (mes) {
+      parametros.set("mes", mes);
+    }
+
+    const url = parametros.toString()
+      ? `/api/piperun/perdidos?${parametros.toString()}`
+      : "/api/piperun/perdidos";
+
+    const resposta = await fetch(url);
+    const dados = await resposta.json();
+
+    if (!resposta.ok || dados.erro || !dados.sucesso) {
+      throw new Error(
+        dados.mensagem ||
+        "Não foi possível carregar as oportunidades perdidas."
+      );
+    }
+
+    dadosCrmPiperun = dados;
+    paginaCrmPerdidos = 1;
+
+    atualizarUltimaSincronizacaoCrm(
+      dados.ultima_sincronizacao
+    );
+
+    renderizarAbaCrm();
+
+  } catch (erro) {
+    area.innerHTML = `
+      <div class="erro">
+        Erro ao carregar o CRM:
+        ${escaparHtmlCrm(erro.message)}
+      </div>
+    `;
+  }
+}
+
+function atualizarUltimaSincronizacaoCrm(valor) {
+  const elemento = document.getElementById(
+    "ultimaSincronizacaoCrm"
+  );
+
+  if (!elemento) return;
+
+  elemento.innerHTML = valor
+    ? `Piperun sincronizada em <strong>${formatarDataHoraCrm(valor)}</strong>`
+    : "Nenhuma sincronização registrada.";
+}
+
+function trocarAbaCrm(aba) {
+  abaCrmAtiva = aba;
+  paginaCrmPerdidos = 1;
+
+  document
+    .querySelectorAll(".crm-subnav-btn")
+    .forEach(botao => {
+      botao.classList.remove("active");
+    });
+
+  const botoes = {
+    visaoGeral: "btnCrmVisaoGeral",
+    oportunidades: "btnCrmOportunidades",
+    localizacao: "btnCrmLocalizacao",
+    vendedores: "btnCrmVendedores"
+  };
+
+  document
+    .getElementById(botoes[aba])
+    ?.classList.add("active");
+
+  renderizarAbaCrm();
+}
+
+function renderizarAbaCrm() {
+  const area = document.getElementById("areaCrmPerdidos");
+
+  if (!area || !dadosCrmPiperun) return;
+
+  if (abaCrmAtiva === "oportunidades") {
+    area.innerHTML = gerarAbaOportunidadesCrm();
+    return;
+  }
+
+  if (abaCrmAtiva === "localizacao") {
+    area.innerHTML = gerarAbaLocalizacaoCrm();
+    return;
+  }
+
+  if (abaCrmAtiva === "vendedores") {
+    area.innerHTML = gerarAbaVendedoresCrm();
+    return;
+  }
+
+  area.innerHTML = gerarAbaVisaoGeralCrm();
+}
+
+
+/* =========================================================
+   VISÃO GERAL
+   ========================================================= */
+
+function gerarAbaVisaoGeralCrm() {
+  const resumo = dadosCrmPiperun?.resumo || {};
+  const agrupamentos = dadosCrmPiperun?.agrupamentos || {};
+
+  return `
+    ${gerarCardsResumoCrm(resumo)}
+
+    <section class="crm-overview-grid">
+      ${gerarListaMotivosCrm(
+        agrupamentos.etapas || []
+      )}
+
+      ${gerarDestaquesCompactosCrm(resumo)}
+    </section>
+  `;
+}
+
+function gerarCardsResumoCrm(resumo) {
+  return `
+    <section class="crm-kpis">
+      <article class="crm-kpi">
+        <span>Total de perdas</span>
+        <strong>${Number(resumo.total || 0)}</strong>
+        <small>Oportunidades</small>
+      </article>
+
+      <article class="crm-kpi">
+        <span>Receita de Plano Perdida</span>
+        <strong>${formatarMoeda(resumo.mrr_perdido)}</strong>
+        <small>Receita Total</small>
+      </article>
+
+      <article class="crm-kpi">
+        <span>Taxas de instalação</span>
+        <strong>${formatarMoeda(resumo.instalacao_perdida)}</strong>
+        <small>Receita não realizada</small>
+      </article>
+
+      <article class="crm-kpi">
+        <span>Ticket médio</span>
+        <strong>${formatarMoeda(resumo.ticket_medio)}</strong>
+        <small>Por oportunidade</small>
+      </article>
+    </section>
+  `;
+}
+
+function gerarListaMotivosCrm(lista) {
+  const motivos = (lista || [])
+    .filter(item =>
+      item.nome &&
+      item.nome !== "Não identificado" &&
+      item.nome !== "-"
+    )
+    .slice(0, 7);
+
+  return `
+    <section class="crm-painel crm-motivos-simples">
+      <div class="crm-painel-header">
+        <div>
+          <h2>Principais motivos</h2>
+          <p>Motivos com maior número de oportunidades perdidas.</p>
+        </div>
+      </div>
+
+      <div class="crm-lista-linhas">
+        ${
+          motivos.length
+            ? motivos.map((item, indice) => `
+                <div class="crm-lista-linha">
+                  <span class="crm-posicao">
+                    ${indice + 1}
+                  </span>
+
+                  <div class="crm-lista-conteudo">
+                    <strong>
+                      ${escaparHtmlCrm(item.nome)}
+                    </strong>
+
+                    <small>
+                      ${Number(item.percentual || 0).toFixed(2)}% das perdas
+                    </small>
+                  </div>
+
+                  <b>
+                    ${Number(item.quantidade || 0)}
+                  </b>
+                </div>
+              `).join("")
+            : `
+              <div class="crm-vazio">
+                Nenhum motivo encontrado.
+              </div>
+            `
+        }
+      </div>
+    </section>
+  `;
+}
+
+function gerarDestaquesCompactosCrm(resumo) {
+  const itens = [
+    {
+      titulo: "Cidade mais afetada",
+      valor: resumo.principal_cidade?.nome,
+      quantidade: resumo.principal_cidade?.quantidade,
+      percentual: resumo.principal_cidade?.percentual
+    },
+    {
+      titulo: "Bairro mais afetado",
+      valor: resumo.principal_bairro?.nome,
+      quantidade: resumo.principal_bairro?.quantidade,
+      percentual: resumo.principal_bairro?.percentual
+    },
+    {
+      titulo: "Vendedor mais afetado",
+      valor: resumo.vendedor_mais_afetado?.nome,
+      quantidade: resumo.vendedor_mais_afetado?.quantidade,
+      percentual: resumo.vendedor_mais_afetado?.percentual
+    }
+  ];
+
+  return `
+    <section class="crm-painel crm-destaques-compactos">
+      <div class="crm-painel-header">
+        <div>
+          <h2>Destaques do período</h2>
+          <p>Principais concentrações dos dados analisados.</p>
+        </div>
+      </div>
+
+      <div class="crm-destaques-lista">
+        ${itens.map(item => `
+          <article class="crm-destaque-linha">
+            <span>${item.titulo}</span>
+
+            <strong>
+              ${escaparHtmlCrm(item.valor || "Sem informação")}
+            </strong>
+
+            <small>
+              ${Number(item.quantidade || 0)} oportunidade(s)
+              · ${Number(item.percentual || 0).toFixed(2)}%
+            </small>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+
+/* =========================================================
+   OPORTUNIDADES
+   ========================================================= */
+
+function gerarAbaOportunidadesCrm() {
+  const agrupamentos = dadosCrmPiperun?.agrupamentos || {};
+
+  return `
+    <section class="crm-painel">
+      <div class="crm-painel-header crm-header-filtros">
+        <div>
+          <h2>Oportunidades perdidas</h2>
+          <p>Consulte e filtre os registros sincronizados da Piperun.</p>
+        </div>
+      </div>
+
+      <div class="crm-filtros-tabela">
+        <input
+          id="buscaCrm"
+          type="search"
+          placeholder="Buscar cliente, vendedor, cidade ou campanha..."
+          oninput="filtrarTabelaCrm()"
+        >
+
+        ${gerarSelectFiltroCrm(
+          "filtroEtapaCrm",
+          "Todos os motivos",
+          agrupamentos.etapas || []
+        )}
+
+        ${gerarSelectFiltroCrm(
+          "filtroVendedorCrm",
+          "Todos os vendedores",
+          agrupamentos.vendedores || []
+        )}
+
+        ${gerarSelectFiltroCrm(
+          "filtroCidadeCrm",
+          "Todas as cidades",
+          agrupamentos.cidades || []
+        )}
+
+        <button
+          class="btn btn-secondary"
+          onclick="limparFiltrosTabelaCrm()"
+        >
+          Limpar filtros
+        </button>
+      </div>
+
+      <div id="areaTabelaCrm">
+        ${gerarConteudoTabelaCrm()}
+      </div>
+    </section>
+  `;
+}
+
+function gerarSelectFiltroCrm(id, titulo, lista) {
+  const valores = (lista || [])
+    .map(item => item.nome)
+    .filter(nome =>
+      nome &&
+      nome !== "Não identificado" &&
+      nome !== "-"
+    );
+
+  return `
+    <select
+      id="${id}"
+      onchange="filtrarTabelaCrm()"
+    >
+      <option value="">
+        ${titulo}
+      </option>
+
+      ${valores.map(valor => `
+        <option value="${escaparHtmlCrm(valor)}">
+          ${escaparHtmlCrm(valor)}
+        </option>
+      `).join("")}
+    </select>
+  `;
+}
+
+function obterOportunidadesFiltradasCrm() {
+  const oportunidades =
+    dadosCrmPiperun?.oportunidades || [];
+
+  const busca = String(
+    document.getElementById("buscaCrm")?.value || ""
+  )
+    .trim()
+    .toLowerCase();
+
+  const etapa =
+    document.getElementById("filtroEtapaCrm")?.value || "";
+
+  const vendedor =
+    document.getElementById("filtroVendedorCrm")?.value || "";
+
+  const cidade =
+    document.getElementById("filtroCidadeCrm")?.value || "";
+
+  return oportunidades.filter(item => {
+    if (etapa && item.etapa !== etapa) {
+      return false;
+    }
+
+    if (
+      vendedor &&
+      item.vendedor_nome !== vendedor
+    ) {
+      return false;
+    }
+
+    if (cidade && item.cidade !== cidade) {
+      return false;
+    }
+
+    if (!busca) return true;
+
+    const texto = [
+      item.deal_id,
+      item.cliente,
+      item.etapa,
+      item.vendedor_nome,
+      item.cidade,
+      item.bairro,
+      item.campanha_nome,
+      item.canal_venda_nome,
+      item.plano_nome
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return texto.includes(busca);
+  });
+}
+
+function gerarConteudoTabelaCrm() {
+  const lista = obterOportunidadesFiltradasCrm();
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(lista.length / itensPorPaginaCrm)
+  );
+
+  if (paginaCrmPerdidos > totalPaginas) {
+    paginaCrmPerdidos = totalPaginas;
+  }
+
+  const inicio =
+    (paginaCrmPerdidos - 1) *
+    itensPorPaginaCrm;
+
+  const pagina = lista.slice(
+    inicio,
+    inicio + itensPorPaginaCrm
+  );
+
+  if (!pagina.length) {
+    return `
+      <div class="crm-vazio">
+        Nenhuma oportunidade encontrada.
+      </div>
+    `;
+  }
+
+  return `
+    <div class="crm-tabela-scroll">
+      <table class="crm-tabela">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Motivo</th>
+            <th>Vendedor</th>
+            <th>Cidade</th>
+            <th>Bairro</th>
+            <th>Campanha</th>
+            <th>Canal</th>
+            <th>MRR</th>
+            <th>Data</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${pagina.map(item => `
+            <tr>
+              <td>${escaparHtmlCrm(item.deal_id)}</td>
+              <td>${escaparHtmlCrm(item.cliente || "-")}</td>
+              <td>${escaparHtmlCrm(item.etapa || "-")}</td>
+              <td>${escaparHtmlCrm(item.vendedor_nome || "-")}</td>
+              <td>${escaparHtmlCrm(item.cidade || "-")}</td>
+              <td>${escaparHtmlCrm(item.bairro || "-")}</td>
+              <td>${escaparHtmlCrm(item.campanha_nome || "-")}</td>
+              <td>${escaparHtmlCrm(item.canal_venda_nome || "-")}</td>
+              <td>${formatarMoeda(item.mrr)}</td>
+              <td>${formatarDataHoraCrm(item.data_origem)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="crm-tabela-footer">
+      <span>
+        ${lista.length} registro(s)
+      </span>
+
+      <div class="crm-paginacao">
+        <button
+          onclick="mudarPaginaCrm(-1)"
+          ${paginaCrmPerdidos <= 1 ? "disabled" : ""}
+        >
+          Anterior
+        </button>
+
+        <strong>
+          Página ${paginaCrmPerdidos} de ${totalPaginas}
+        </strong>
+
+        <button
+          onclick="mudarPaginaCrm(1)"
+          ${paginaCrmPerdidos >= totalPaginas ? "disabled" : ""}
+        >
+          Próxima
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function filtrarTabelaCrm() {
+  paginaCrmPerdidos = 1;
+
+  const area = document.getElementById("areaTabelaCrm");
+
+  if (area) {
+    area.innerHTML = gerarConteudoTabelaCrm();
+  }
+}
+
+function limparFiltrosTabelaCrm() {
+  const ids = [
+    "buscaCrm",
+    "filtroEtapaCrm",
+    "filtroVendedorCrm",
+    "filtroCidadeCrm"
+  ];
+
+  ids.forEach(id => {
+    const elemento = document.getElementById(id);
+
+    if (elemento) {
+      elemento.value = "";
+    }
+  });
+
+  filtrarTabelaCrm();
+}
+
+function mudarPaginaCrm(direcao) {
+  paginaCrmPerdidos += direcao;
+
+  const area = document.getElementById("areaTabelaCrm");
+
+  if (area) {
+    area.innerHTML = gerarConteudoTabelaCrm();
+  }
+}
+
+
+/* =========================================================
+   LOCALIZAÇÃO
+   ========================================================= */
+
+function gerarAbaLocalizacaoCrm() {
+  const agrupamentos = dadosCrmPiperun?.agrupamentos || {};
+  const oportunidades =
+    dadosCrmPiperun?.oportunidades || [];
+
+  const comCoordenadas = oportunidades.filter(item =>
+    item.latitude !== null &&
+    item.longitude !== null
+  ).length;
+
+  const semCoordenadas =
+    oportunidades.length - comCoordenadas;
+
+  return `
+    <section class="crm-localizacao-kpis">
+      <article>
+        <span>Com coordenadas</span>
+        <strong>${comCoordenadas}</strong>
+      </article>
+
+      <article>
+        <span>Sem coordenadas</span>
+        <strong>${semCoordenadas}</strong>
+      </article>
+
+      <article>
+        <span>Cidades identificadas</span>
+        <strong>
+          ${contarItensIdentificadosCrm(agrupamentos.cidades)}
+        </strong>
+      </article>
+
+      <article>
+        <span>Bairros identificados</span>
+        <strong>
+          ${contarItensIdentificadosCrm(agrupamentos.bairros)}
+        </strong>
+      </article>
+    </section>
+
+    <section class="crm-overview-grid">
+      ${gerarRankingLocalizacaoCrm(
+        "Cidades",
+        agrupamentos.cidades || []
+      )}
+
+      ${gerarRankingLocalizacaoCrm(
+        "Bairros",
+        agrupamentos.bairros || []
+      )}
+    </section>
+
+    <section class="crm-painel crm-mapa-placeholder">
+      <div>
+        <span>Mapa de inviabilidade</span>
+
+        <h2>Pronto para receber o mapa</h2>
+
+        <p>
+          Os registros com latitude e longitude já estão disponíveis.
+          O mapa será implementado nesta área na próxima etapa.
+        </p>
+      </div>
+    </section>
+  `;
+}
+
+function contarItensIdentificadosCrm(lista) {
+  return (lista || []).filter(item =>
+    item.nome &&
+    item.nome !== "Não identificado" &&
+    item.nome !== "-"
+  ).length;
+}
+
+function gerarRankingLocalizacaoCrm(titulo, lista) {
+  const itens = (lista || [])
+    .filter(item =>
+      item.nome &&
+      item.nome !== "Não identificado" &&
+      item.nome !== "-"
+    )
+    .slice(0, 12);
+
+  return `
+    <section class="crm-painel">
+      <div class="crm-painel-header">
+        <div>
+          <h2>${titulo}</h2>
+          <p>Locais com maior concentração de perdas.</p>
+        </div>
+      </div>
+
+      <div class="crm-lista-linhas">
+        ${itens.map((item, indice) => `
+          <div class="crm-lista-linha">
+            <span class="crm-posicao">
+              ${indice + 1}
+            </span>
+
+            <div class="crm-lista-conteudo">
+              <strong>
+                ${escaparHtmlCrm(item.nome)}
+              </strong>
+
+              <small>
+                ${Number(item.percentual || 0).toFixed(2)}% das perdas
+              </small>
+            </div>
+
+            <b>
+              ${Number(item.quantidade || 0)}
+            </b>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+
+/* =========================================================
+   VENDEDORES
+   ========================================================= */
+
+function gerarAbaVendedoresCrm() {
+  const vendedores = (
+    dadosCrmPiperun?.agrupamentos?.vendedores || []
+  )
+    .filter(item =>
+      item.nome &&
+      item.nome !== "Não identificado" &&
+      item.nome !== "-"
+    );
+
+  const oportunidades =
+    dadosCrmPiperun?.oportunidades || [];
+
+  return `
+    <section class="crm-painel">
+      <div class="crm-painel-header">
+        <div>
+          <h2>Análise por vendedor</h2>
+          <p>
+            Quantidade, receita de plano, motivo principal e cidade.
+          </p>
+        </div>
+      </div>
+
+      <div class="crm-tabela-scroll">
+        <table class="crm-tabela crm-tabela-vendedores">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Vendedor</th>
+              <th>Perdas</th>
+              <th>Receita Plano Perdida</th>
+              <th>Motivo principal</th>
+              <th>Cidade predominante</th>
+              <th>% das perdas</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${vendedores.map((vendedor, indice) => {
+              const registros = oportunidades.filter(item =>
+                item.vendedor_nome === vendedor.nome
+              );
+
+              const mrr = registros.reduce(
+                (soma, item) =>
+                  soma + Number(item.mrr || 0),
+                0
+              );
+
+              return `
+                <tr>
+                  <td>
+                    <span class="crm-posicao">
+                      ${indice + 1}
+                    </span>
+                  </td>
+
+                  <td>
+                    <strong>
+                      ${escaparHtmlCrm(vendedor.nome)}
+                    </strong>
+                  </td>
+
+                  <td>
+                    ${Number(vendedor.quantidade || 0)}
+                  </td>
+
+                  <td>
+                    <strong class="crm-valor">
+                      ${formatarMoeda(mrr)}
+                    </strong>
+                  </td>
+
+                  <td>
+                    ${escaparHtmlCrm(
+                      obterMaisFrequenteCrm(
+                        registros,
+                        "etapa"
+                      )
+                    )}
+                  </td>
+
+                  <td>
+                    ${escaparHtmlCrm(
+                      obterMaisFrequenteCrm(
+                        registros,
+                        "cidade"
+                      )
+                    )}
+                  </td>
+
+                  <td>
+                    ${Number(
+                      vendedor.percentual || 0
+                    ).toFixed(2)}%
+                  </td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+function obterMaisFrequenteCrm(lista, campo) {
+  const contagem = new Map();
+
+  for (const item of lista || []) {
+    const valor = item[campo];
+
+    if (!valor) continue;
+
+    contagem.set(
+      valor,
+      (contagem.get(valor) || 0) + 1
+    );
+  }
+
+  const ordenado = [...contagem.entries()]
+    .sort((a, b) => b[1] - a[1]);
+
+  return ordenado[0]?.[0] || "-";
+}
+
+
+
+       /*
+       
+       
   =========================================================
   JS 13 - LINK DEDICADO / PAINEL EXECUTIVO
   =========================================================
@@ -13344,6 +15131,8 @@ function gerarDetalheRelatorioReversaoEquipe(item) {
     </div>
   `;
 }
+
+
 
 
 
