@@ -298,10 +298,39 @@ const {
   criarRotasPiperun
 } = require("./integracoes/piperun/routes");
 
+const {
+  criarSincronizadorInviabilidade
+} = require("./integracoes/inviabilidade/sync");
+
+const {
+  criarRotasInviabilidade
+} = require("./integracoes/inviabilidade/routes");
+
 const piperunSync = criarSincronizadorPiperun(db);
 
+const inviabilidadeSync =
+  criarSincronizadorInviabilidade(db);
+
+async function sincronizarPiperunCompleto() {
+  const resultadoPiperun =
+    await piperunSync.sincronizarPerdidos();
+
+  const resultadoInviabilidade =
+    await inviabilidadeSync.sincronizarPiperun();
+
+  console.log(
+    "[INVIABILIDADE] Sincronização concluída.",
+    resultadoInviabilidade
+  );
+
+  return {
+    ...resultadoPiperun,
+    inviabilidade: resultadoInviabilidade
+  };
+}
+
 const piperunScheduler = criarAgendadorPiperun({
-  sincronizarPerdidos: piperunSync.sincronizarPerdidos,
+  sincronizarPerdidos: sincronizarPiperunCompleto,
   intervaloMs: 10 * 60 * 1000,
   atrasoInicialMs: 30 * 1000
 });
@@ -312,6 +341,80 @@ const piperunRoutes = criarRotasPiperun({
   exigirPermissao,
   responderErroInterno
 });
+
+const inviabilidadeRoutes =
+  criarRotasInviabilidade({
+    db,
+    exigirLogin,
+    exigirPermissao,
+    responderErroInterno
+  });
+
+  registrarDebugGet("/api/debug/ixc/crm-lead/:id", async (req, res) => {
+  try {
+    const retorno = await buscar(
+      "crm_lead",
+      "crm_lead.id",
+      req.params.id,
+      "1"
+    );
+
+    res.json(retorno);
+
+  } catch (erro) {
+    res.status(500).json({
+      erro: true,
+      detalhe: erro.response?.data || erro.message
+    });
+  }
+});
+
+
+  registrarDebugGet(
+  "/api/debug/ixc/crm-leads-amostra",
+  async (req, res) => {
+    try {
+      const retorno = await buscarComFiltros(
+        "crm_lead",
+        [],
+        "10"
+      );
+
+      const registros =
+        retorno.registros || [];
+
+      const camposEncontrados =
+        registros.length > 0
+          ? Object.keys(registros[0]).sort()
+          : [];
+
+      return res.json({
+        sucesso: true,
+        total_retornado: registros.length,
+        total_ixc:
+          Number(retorno.total || 0),
+        campos_encontrados: camposEncontrados,
+        registros
+      });
+
+    } catch (erro) {
+      console.error(
+        "[IXC CRM_LEAD] Erro ao buscar amostra:",
+        erro.response?.data || erro.message
+      );
+
+      return res.status(500).json({
+        erro: true,
+        mensagem:
+          "Erro ao consultar amostra de leads do IXC.",
+        detalhe:
+          erro.response?.data ||
+          erro.message
+      });
+    }
+  }
+);
+
 
 // FIM DO CÓDIGO DO PIPER //
 
@@ -7904,6 +8007,7 @@ app.get("/api/debug-portal-cliente-login", async (req, res) => {
 
 
 piperunRoutes.registrar(app);
+inviabilidadeRoutes.registrar(app);
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Servidor rodando em http://10.1.103.94:${PORT}`);

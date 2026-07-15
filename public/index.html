@@ -18,7 +18,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <title>Dashboard InMap Comercial & Operacional</title>
   <style>
     * {
@@ -5158,6 +5157,485 @@ tbody tr:hover{
   }
 }
 
+.crm-detalhe-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.crm-detalhe-grid > div {
+  background: #f8fafc;
+  border: 1px solid #e7edf5;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.crm-detalhe-grid span {
+  display: block;
+  margin-bottom: 5px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.crm-detalhe-grid strong {
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+@media (max-width: 700px) {
+  .crm-detalhe-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.crm-mapa-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px;
+  margin-bottom: 12px;
+}
+
+.crm-mapa-topo h2 {
+  margin: 0 0 4px;
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.crm-mapa-topo p {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.crm-mapa-filtros {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.crm-mapa-filtros select {
+  min-width: 170px;
+  height: 40px;
+  padding: 0 10px;
+
+  border: 1px solid #dbe3ec;
+  border-radius: 9px;
+
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.crm-mapa {
+  width: 100%;
+  height: 560px;
+
+  overflow: hidden;
+  border: 1px solid #dbe3ec;
+  border-radius: 14px;
+
+  background: #e8edf3;
+}
+
+.crm-mapa-legenda {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-bottom: 10px;
+
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.crm-mapa-legenda span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.crm-mapa-legenda b {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.crm-legenda-baixa {
+  background: #2563eb;
+}
+
+.crm-legenda-media {
+  background: #f59e0b;
+}
+
+.crm-legenda-alta {
+  background: #dc2626;
+}
+
+.crm-mapa-resumo {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 12px;
+
+  color: #64748b;
+  font-size: 12px;
+}
+
+.crm-mapa-resumo strong {
+  color: #0d7b73;
+  font-size: 15px;
+}
+
+.crm-popup-mapa {
+  min-width: 240px;
+}
+
+.crm-popup-mapa > strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.crm-popup-mapa > span {
+  display: block;
+  margin-top: 4px;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.crm-popup-mapa dl {
+  margin: 12px 0;
+}
+
+.crm-popup-mapa dl > div {
+  margin-top: 7px;
+}
+
+.crm-popup-mapa dt {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.crm-popup-mapa dd {
+  margin: 2px 0 0;
+  color: #0f172a;
+  font-size: 12px;
+}
+
+.crm-popup-mapa button {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+
+  background: #0d7b73;
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 1000px) {
+  .crm-mapa-topo {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .crm-mapa-filtros {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .crm-mapa {
+    height: 480px;
+  }
+}
+
+/* =========================================================
+   CRM - ANÁLISE POR VENDEDOR
+   ========================================================= */
+
+.crm-vendedores-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.crm-vendedores-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.crm-vendedores-kpi {
+  background: #ffffff;
+  border: 1px solid #e7edf5;
+  border-top: 4px solid #0d7b73;
+  border-radius: 16px;
+  padding: 18px 20px;
+
+  box-shadow:
+    0 6px 16px rgba(15, 23, 42, .04);
+}
+
+.crm-vendedores-kpi span {
+  display: block;
+  margin-bottom: 8px;
+
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.crm-vendedores-kpi strong {
+  display: block;
+
+  color: #0f766e;
+  font-size: 25px;
+}
+
+.crm-vendedores-kpi
+.crm-vendedores-kpi-texto {
+  color: #0f172a;
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.crm-vendedores-kpi small {
+  display: block;
+  margin-top: 5px;
+
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.crm-vendedores-header {
+  align-items: flex-end;
+}
+
+.crm-vendedores-busca input {
+  width: 280px;
+  height: 42px;
+
+  padding: 0 12px;
+
+  border: 1px solid #dbe3ec;
+  border-radius: 10px;
+
+  background: #f8fafc;
+  color: #0f172a;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.crm-tabela-vendedores {
+  min-width: 1500px;
+}
+
+.crm-tabela-vendedores tbody tr {
+  cursor: default;
+}
+
+.crm-vendedor-identidade {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.crm-vendedor-avatar {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #edf7f5;
+  color: #0d7b73;
+
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.crm-vendedor-identidade strong {
+  display: block;
+
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.crm-vendedor-identidade small {
+  display: block;
+  margin-top: 3px;
+
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.crm-coluna-numero {
+  text-align: right;
+}
+
+.crm-quantidade-perdas {
+  color: #0f172a;
+  font-size: 16px;
+}
+
+.crm-motivo-badge {
+  display: inline-flex;
+  align-items: center;
+
+  max-width: 230px;
+
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.crm-motivo-badge.cto {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.crm-motivo-badge.sem-cto {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.crm-motivo-badge.metragem {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.crm-motivo-badge.estrutura {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.crm-motivo-badge.financeiro {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.crm-motivo-badge.desistencia {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.crm-motivo-badge.outro {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.crm-vendedor-acoes {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.crm-vendedor-acoes .btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 1050px) {
+  .crm-vendedores-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .crm-vendedores-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .crm-vendedores-busca,
+  .crm-vendedores-busca input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .crm-vendedores-kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
+.crm-detalhe-observacao {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid #e7edf5;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.crm-detalhe-observacao span {
+  display: block;
+  margin-bottom: 7px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.crm-detalhe-observacao p {
+  margin: 0;
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.crm-detalhe-acoes {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.crm-origens-resumo {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+
+  padding: 11px 15px;
+
+  background: #ffffff;
+  border: 1px solid #e7edf5;
+  border-radius: 12px;
+
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.crm-origens-resumo span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.crm-origens-resumo strong {
+  color: #0d7b73;
+  font-size: 14px;
+}
+
 
   </style>
 </head>
@@ -5332,13 +5810,18 @@ tbody tr:hover{
       <span class="menu-item-em-breve">Em breve</span>
     </button>
 
-    <button
-      class="menu-dropdown-item menu-modulo-item menu-item-bloqueado"
-      disabled
-    >
-      🗺️ Mapa de Inviabilidade
-      <span class="menu-item-em-breve">Em breve</span>
-    </button>
+        <button
+          id="btnMapaInviabilidade"
+          class="menu-dropdown-item menu-modulo-item"
+          onclick="
+            definirModuloAtivo('btnGrupoCrm');
+            abrirTelaMapaInviabilidade();
+            fecharMenusModulos();
+          "
+          style="display:none;"
+        >
+          🗺️ Mapa de Inviabilidade
+        </button>
   </div>
 </div>
 
@@ -5346,13 +5829,13 @@ tbody tr:hover{
 
 <div class="topbar-admin-area">
 
-  <div class="menu-dropdown">
-    <button
-      class="menu-dropdown-btn"
-      onclick="alternarMenuAdmin()"
-    >
-      ⚙️ Administração ▾
-    </button>
+    <div id="grupoMenuAdmin" class="menu-dropdown">
+      <button
+        class="menu-dropdown-btn"
+        onclick="alternarMenuAdmin()"
+      >
+        ⚙️ Administração ▾
+      </button>
 
     <div
       id="menuAdminDropdown"
@@ -5707,83 +6190,196 @@ tbody tr:hover{
     */
 
         function aplicarPermissoesTela(usuario) {
-          const perfil = usuario?.perfil;
-          const permissoes = usuario?.permissoes || [];
-          const pode = permissao => permissoes.includes(permissao);
+  const perfil = usuario?.perfil;
+  const permissoes = usuario?.permissoes || [];
+  const pode = permissao => permissoes.includes(permissao);
 
-          const botoes = {
-            vendas: document.getElementById("btnTelaVendas"),
-            operacional: document.getElementById("btnTelaOperacional"), 
-            ranking: document.getElementById("btnRanking"), 
-            churn: document.getElementById("btnRankingChurn"),
-            backoffice: document.getElementById("btnRankingBackoffice"),
-            linkDedicado: document.getElementById("btnLinkDedicado"),
-            relatorioReversao: document.getElementById("btnRelatorioReversao"),
-            usuarios: document.getElementById("btnUsuarios"),
-            metas: document.getElementById("btnMetasRanking"),
-            crmPerdidos: document.getElementById("btnCrmPerdidos"),
-            grupoCrm: document.getElementById("grupoMenuCrm")
-          };
+  const botoes = {
+    vendas: document.getElementById("btnTelaVendas"),
+    operacional: document.getElementById("btnTelaOperacional"),
+    ranking: document.getElementById("btnRanking"),
+    churn: document.getElementById("btnRankingChurn"),
+    backoffice: document.getElementById("btnRankingBackoffice"),
+    linkDedicado: document.getElementById("btnLinkDedicado"),
+    relatorioReversao: document.getElementById("btnRelatorioReversao"),
+    usuarios: document.getElementById("btnUsuarios"),
+    metas: document.getElementById("btnMetasRanking"),
+    crmPerdidos: document.getElementById("btnCrmPerdidos"),
+    mapaInviabilidade: document.getElementById("btnMapaInviabilidade")
+  };
 
-          Object.values(botoes).forEach(btn => {
-            if (btn) btn.style.display = "none";
-          });
+  const grupos = {
+    comercial: document.getElementById("grupoMenuComercial"),
+    operacao: document.getElementById("grupoMenuOperacao"),
+    crm: document.getElementById("grupoMenuCrm"),
+    admin: document.getElementById("grupoMenuAdmin")
+  };
 
-          const isAdmin = perfil === "super_admin";
-          const isGerencial = perfil === "gerencial";
-          const podeVerCrmPiperun =
-            isAdmin ||
-            isGerencial ||
-            pode("ver_crm_piperun");
+  Object.values(botoes).forEach(botao => {
+    if (botao) {
+      botao.style.display = "none";
+    }
+  });
 
-          if (botoes.grupoCrm) {
-            botoes.grupoCrm.style.display =
-              podeVerCrmPiperun ? "block" : "none";
-          }
+  Object.values(grupos).forEach(grupo => {
+    if (grupo) {
+      grupo.style.display = "none";
+    }
+  });
 
-          if (podeVerCrmPiperun) {
-            if (botoes.crmPerdidos) {
-              botoes.crmPerdidos.style.display = "flex";
-            }
-          }
+  const isAdmin = perfil === "super_admin";
+  const isGerencial = perfil === "gerencial";
 
-          if (isAdmin || isGerencial || pode("ver_comercial_vendas")) {
-            if (botoes.vendas) botoes.vendas.style.display = "inline-flex";
-          }
+  const podeVerCrmPiperun =
+    isAdmin ||
+    isGerencial ||
+    pode("ver_crm_piperun");
 
-          if (isAdmin || isGerencial || pode("ver_comercial_operacional")) {
-            if (botoes.operacional) botoes.operacional.style.display = "inline-flex";
-          }
+    if (podeVerCrmPiperun) {
+      if (botoes.crmPerdidos) {
+        botoes.crmPerdidos.style.display = "flex";
+      }
 
-          if (isAdmin || isGerencial || pode("ver_ranking_comercial")) {
-            if (botoes.ranking) botoes.ranking.style.display = "inline-flex";
-          }
+      if (botoes.mapaInviabilidade) {
+        botoes.mapaInviabilidade.style.display = "flex";
+      }
+    }
 
-          if (isAdmin || isGerencial || pode("ver_ranking_churn")) {
-            if (botoes.churn) botoes.churn.style.display = "inline-flex";
-          }
+  if (
+    isAdmin ||
+    isGerencial ||
+    pode("ver_comercial_vendas")
+  ) {
+    if (botoes.vendas) {
+      botoes.vendas.style.display = "inline-flex";
+    }
+  }
 
-          if (isAdmin || isGerencial || pode("ver_ranking_backoffice")) {
-            if (botoes.backoffice) botoes.backoffice.style.display = "inline-flex";
-          }
-          if ( isAdmin || isGerencial || perfil === "vendedor" || perfil === "supervisao_midia" || pode("ver_relatorio_reversao") ||
-            pode("ver_relatorio_reversao_equipe")
-          ) {
-            if (botoes.relatorioReversao) botoes.relatorioReversao.style.display = "inline-flex";
-          }
+  if (
+    isAdmin ||
+    isGerencial ||
+    pode("ver_comercial_operacional")
+  ) {
+    if (botoes.operacional) {
+      botoes.operacional.style.display = "inline-flex";
+    }
+  }
 
-          if (isAdmin || isGerencial || pode("ver_link_dedicado")) {
-          if (botoes.linkDedicado) botoes.linkDedicado.style.display = "inline-flex";
-        }
+  if (
+    isAdmin ||
+    isGerencial ||
+    pode("ver_ranking_comercial")
+  ) {
+    if (botoes.ranking) {
+      botoes.ranking.style.display = "inline-flex";
+    }
+  }
 
-          if (isAdmin || pode("gerenciar_usuarios")) {
-            if (botoes.usuarios) botoes.usuarios.style.display = "inline-flex";
-          }
+  if (
+    isAdmin ||
+    isGerencial ||
+    pode("ver_ranking_churn")
+  ) {
+    if (botoes.churn) {
+      botoes.churn.style.display = "inline-flex";
+    }
+  }
 
-          if (isAdmin || isGerencial || pode("gerenciar_metas")) {
-            if (botoes.metas) botoes.metas.style.display = "inline-flex";
-          }
-        }
+  if (
+    isAdmin ||
+    isGerencial ||
+    pode("ver_ranking_backoffice")
+  ) {
+    if (botoes.backoffice) {
+      botoes.backoffice.style.display = "inline-flex";
+    }
+  }
+
+  if (
+    isAdmin ||
+    isGerencial ||
+    perfil === "vendedor" ||
+    perfil === "supervisao_midia" ||
+    pode("ver_relatorio_reversao") ||
+    pode("ver_relatorio_reversao_equipe")
+  ) {
+    if (botoes.relatorioReversao) {
+      botoes.relatorioReversao.style.display = "inline-flex";
+    }
+  }
+
+  if (
+    isAdmin ||
+    isGerencial ||
+    pode("ver_link_dedicado")
+  ) {
+    if (botoes.linkDedicado) {
+      botoes.linkDedicado.style.display = "inline-flex";
+    }
+  }
+
+  if (
+    isAdmin ||
+    pode("gerenciar_usuarios")
+  ) {
+    if (botoes.usuarios) {
+      botoes.usuarios.style.display = "inline-flex";
+    }
+  }
+
+  if (
+    isAdmin ||
+    isGerencial ||
+    pode("gerenciar_metas")
+  ) {
+    if (botoes.metas) {
+      botoes.metas.style.display = "inline-flex";
+    }
+  }
+
+  const podeVerGrupoComercial =
+    isAdmin ||
+    isGerencial ||
+    pode("ver_comercial_vendas") ||
+    pode("ver_ranking_comercial") ||
+    pode("ver_ranking_churn") ||
+    perfil === "vendedor" ||
+    perfil === "supervisao_midia" ||
+    pode("ver_relatorio_reversao") ||
+    pode("ver_relatorio_reversao_equipe") ||
+    pode("ver_link_dedicado");
+
+  const podeVerGrupoOperacao =
+    isAdmin ||
+    isGerencial ||
+    pode("ver_comercial_operacional") ||
+    pode("ver_ranking_backoffice");
+
+  const podeVerGrupoAdmin =
+    isAdmin ||
+    pode("gerenciar_usuarios") ||
+    pode("gerenciar_metas");
+
+  if (grupos.comercial) {
+    grupos.comercial.style.display =
+      podeVerGrupoComercial ? "block" : "none";
+  }
+
+  if (grupos.operacao) {
+    grupos.operacao.style.display =
+      podeVerGrupoOperacao ? "block" : "none";
+  }
+
+  if (grupos.crm) {
+    grupos.crm.style.display =
+      podeVerCrmPiperun ? "block" : "none";
+  }
+
+  if (grupos.admin) {
+    grupos.admin.style.display =
+      podeVerGrupoAdmin ? "block" : "none";
+  }
+}
 
 
 
@@ -7125,6 +7721,11 @@ function copiarTextoFallback(texto) {
       let abaCrmAtiva = "visaoGeral";
       let paginaCrmPerdidos = 1;      
       const itensPorPaginaCrm = 25;
+      let mapaCrm = null;
+      let camadaCalorCrm = null;
+      let camadaPontosCrm = null;
+      let dadosMapaInviabilidade = null;
+    
 
       
 
@@ -10061,6 +10662,21 @@ async function confirmarClienteOS(osId, tecnicoId, dataAgendamento, turno) {
                             return;
                           }
 
+                          if (telaAtual === "crmPerdidos") {
+                            const podeAbrirCrm =
+                              perfil === "super_admin" ||
+                              perfil === "gerencial" ||
+                              pode("ver_crm_piperun");
+
+                            if (podeAbrirCrm) {
+                              abrirTelaCrmPerdidos();
+                              return;
+                            }
+
+                            telaAtual = "dashboard";
+                            localStorage.setItem("telaAtual", "dashboard");
+                          }
+
                           carregarDashboard();
                         });
 
@@ -12207,6 +12823,35 @@ function abrirModalMotivoPenalidadeBackoffice(titulo = "Motivo da penalidade") {
   =========================================================
 */
 
+async function carregarMapaInviabilidade() {
+  const mes =
+    document.getElementById("filtroMesCrm")?.value || "";
+
+  const parametros = new URLSearchParams();
+
+  if (mes) {
+    parametros.set("mes", mes);
+  }
+
+  const url = parametros.toString()
+    ? `/api/inviabilidade/mapa?${parametros.toString()}`
+    : "/api/inviabilidade/mapa";
+
+  const resposta = await fetch(url);
+  const dados = await resposta.json();
+
+  if (!resposta.ok || dados.erro || !dados.sucesso) {
+    throw new Error(
+      dados.mensagem ||
+      "Não foi possível carregar o mapa de inviabilidade."
+    );
+  }
+
+  dadosMapaInviabilidade = dados;
+
+  return dados;
+}
+
 function escaparHtmlCrm(valor) {
   return String(valor ?? "")
     .replaceAll("&", "&amp;")
@@ -12273,7 +12918,9 @@ async function abrirTelaCrmPerdidos() {
 
   definirModuloAtivo("btnGrupoCrm");
 
-  abaCrmAtiva = "visaoGeral";
+  abaCrmAtiva =
+  localStorage.getItem("abaCrmAtiva") ||
+  "visaoGeral";
   paginaCrmPerdidos = 1;
 
   const conteudo = document.getElementById("conteudo");
@@ -12368,6 +13015,24 @@ async function abrirTelaCrmPerdidos() {
     </section>
   `;
 
+  document
+  .querySelectorAll(".crm-subnav-btn")
+  .forEach(botao => {
+    botao.classList.remove("active");
+  });
+
+const botoesAbasCrm = {
+  visaoGeral: "btnCrmVisaoGeral",
+  oportunidades: "btnCrmOportunidades",
+  localizacao: "btnCrmLocalizacao",
+  vendedores: "btnCrmVendedores"
+};
+
+document
+  .getElementById(botoesAbasCrm[abaCrmAtiva])
+  ?.classList.add("active");
+
+
   await carregarCrmPerdidos();
 }
 
@@ -12449,6 +13114,7 @@ function atualizarUltimaSincronizacaoCrm(valor) {
 
 function trocarAbaCrm(aba) {
   abaCrmAtiva = aba;
+  localStorage.setItem("abaCrmAtiva", aba);
   paginaCrmPerdidos = 1;
 
   document
@@ -12481,10 +13147,40 @@ function renderizarAbaCrm() {
     return;
   }
 
-  if (abaCrmAtiva === "localizacao") {
-    area.innerHTML = gerarAbaLocalizacaoCrm();
-    return;
+if (abaCrmAtiva === "localizacao") {
+  if (mapaCrm) {
+    mapaCrm.remove();
+    mapaCrm = null;
   }
+
+  camadaCalorCrm = null;
+  camadaPontosCrm = null;
+
+  area.innerHTML = `
+    <div class="loading">
+      Carregando mapa de inviabilidade...
+    </div>
+  `;
+
+  carregarMapaInviabilidade()
+    .then(() => {
+      area.innerHTML = gerarAbaLocalizacaoCrm();
+
+      setTimeout(() => {
+        inicializarMapaCrm();
+      }, 100);
+    })
+    .catch(erro => {
+      area.innerHTML = `
+        <div class="erro">
+          Erro ao carregar o mapa:
+          ${escaparHtmlCrm(erro.message)}
+        </div>
+      `;
+    });
+
+  return;
+}
 
   if (abaCrmAtiva === "vendedores") {
     area.innerHTML = gerarAbaVendedoresCrm();
@@ -12493,6 +13189,8 @@ function renderizarAbaCrm() {
 
   area.innerHTML = gerarAbaVisaoGeralCrm();
 }
+
+
 
 
 /* =========================================================
@@ -12693,6 +13391,18 @@ function gerarAbaOportunidadesCrm() {
           agrupamentos.cidades || []
         )}
 
+        ${gerarSelectFiltroCrm(
+        "filtroBairroCrm",
+        "Todos os bairros",
+        agrupamentos.bairros || []
+      )}
+
+      ${gerarSelectFiltroCrm(
+        "filtroCampanhaCrm",
+        "Todas as campanhas",
+        agrupamentos.campanhas || []
+      )}
+
         <button
           class="btn btn-secondary"
           onclick="limparFiltrosTabelaCrm()"
@@ -12708,6 +13418,18 @@ function gerarAbaOportunidadesCrm() {
   `;
 }
 
+
+function formatarOrigemInviabilidadeCrm(origem) {
+  const nomes = {
+    PIPERUN: "Piperun",
+    IXC: "IXC",
+    MANUAL: "Cadastro manual"
+  };
+
+  return nomes[origem] || origem || "Não identificada";
+}
+
+
 function gerarSelectFiltroCrm(id, titulo, lista) {
   const valores = (lista || [])
     .map(item => item.nome)
@@ -12717,11 +13439,15 @@ function gerarSelectFiltroCrm(id, titulo, lista) {
       nome !== "-"
     );
 
-  return `
-    <select
-      id="${id}"
-      onchange="filtrarTabelaCrm()"
-    >
+      return `
+        <select
+          id="${id}"
+          onchange="${
+            id.startsWith("filtroMapa")
+              ? "atualizarMapaCrm()"
+              : "filtrarTabelaCrm()"
+          }"
+        >
       <option value="">
         ${titulo}
       </option>
@@ -12754,6 +13480,12 @@ function obterOportunidadesFiltradasCrm() {
   const cidade =
     document.getElementById("filtroCidadeCrm")?.value || "";
 
+    const bairro =
+  document.getElementById("filtroBairroCrm")?.value || "";
+
+const campanha =
+  document.getElementById("filtroCampanhaCrm")?.value || "";
+
   return oportunidades.filter(item => {
     if (etapa && item.etapa !== etapa) {
       return false;
@@ -12767,6 +13499,17 @@ function obterOportunidadesFiltradasCrm() {
     }
 
     if (cidade && item.cidade !== cidade) {
+      return false;
+    }
+
+    if (bairro && item.bairro !== bairro) {
+      return false;
+    }
+
+    if (
+      campanha &&
+      item.campanha_nome !== campanha
+    ) {
       return false;
     }
 
@@ -12833,8 +13576,9 @@ function gerarConteudoTabelaCrm() {
             <th>Bairro</th>
             <th>Campanha</th>
             <th>Canal</th>
-            <th>MRR</th>
+            <th>Receita</th>
             <th>Data</th>
+            <th>Ações</th>
           </tr>
         </thead>
 
@@ -12851,6 +13595,14 @@ function gerarConteudoTabelaCrm() {
               <td>${escaparHtmlCrm(item.canal_venda_nome || "-")}</td>
               <td>${formatarMoeda(item.mrr)}</td>
               <td>${formatarDataHoraCrm(item.data_origem)}</td>
+              <td>
+                <button
+                  class="btn btn-secondary btn-small"
+                  onclick='abrirDetalheOportunidadeCrm(${JSON.stringify(item.deal_id)})'
+                >
+                  Ver detalhes
+                </button>
+              </td>
             </tr>
           `).join("")}
         </tbody>
@@ -12897,10 +13649,12 @@ function filtrarTabelaCrm() {
 
 function limparFiltrosTabelaCrm() {
   const ids = [
-    "buscaCrm",
-    "filtroEtapaCrm",
-    "filtroVendedorCrm",
-    "filtroCidadeCrm"
+      "buscaCrm",
+      "filtroEtapaCrm",
+      "filtroVendedorCrm",
+      "filtroCidadeCrm",
+      "filtroBairroCrm",
+      "filtroCampanhaCrm"
   ];
 
   ids.forEach(id => {
@@ -12924,77 +13678,321 @@ function mudarPaginaCrm(direcao) {
   }
 }
 
+function abrirDetalheOportunidadeCrm(dealId) {
+  const oportunidades =
+    dadosCrmPiperun?.oportunidades || [];
+
+  const item = oportunidades.find(
+    oportunidade =>
+      String(oportunidade.deal_id) === String(dealId)
+  );
+
+  if (!item) {
+    mostrarToastPadrao(
+      "Registro não encontrado",
+      "Não foi possível localizar esta oportunidade.",
+      "erro"
+    );
+    return;
+  }
+
+  const html = `
+    <div class="crm-detalhe-grid">
+      <div>
+        <span>Cliente</span>
+        <strong>${escaparHtmlCrm(item.cliente || "-")}</strong>
+      </div>
+
+      <div>
+        <span>Motivo</span>
+        <strong>${escaparHtmlCrm(item.etapa || "-")}</strong>
+      </div>
+
+      <div>
+        <span>Vendedor</span>
+        <strong>${escaparHtmlCrm(item.vendedor_nome || "-")}</strong>
+      </div>
+
+      <div>
+        <span>Responsável Piperun</span>
+        <strong>${escaparHtmlCrm(item.responsavel_piperun_nome || "-")}</strong>
+      </div>
+
+      <div>
+        <span>Cidade</span>
+        <strong>${escaparHtmlCrm(item.cidade || "-")}</strong>
+      </div>
+
+      <div>
+        <span>Bairro</span>
+        <strong>${escaparHtmlCrm(item.bairro || "-")}</strong>
+      </div>
+
+      <div>
+        <span>Campanha</span>
+        <strong>${escaparHtmlCrm(item.campanha_nome || "-")}</strong>
+      </div>
+
+      <div>
+        <span>Canal</span>
+        <strong>${escaparHtmlCrm(item.canal_venda_nome || "-")}</strong>
+      </div>
+
+      <div>
+        <span>Plano</span>
+        <strong>${escaparHtmlCrm(item.plano_nome || "-")}</strong>
+      </div>
+
+      <div>
+        <span>MRR</span>
+        <strong>${formatarMoeda(item.mrr)}</strong>
+      </div>
+
+      <div>
+        <span>Instalação</span>
+        <strong>${formatarMoeda(item.instalacao_valor)}</strong>
+      </div>
+
+      <div>
+        <span>Data de origem</span>
+        <strong>${formatarDataHoraCrm(item.data_origem)}</strong>
+      </div>
+
+      <div>
+        <span>Entrada no funil</span>
+        <strong>${formatarDataHoraCrm(item.data_entrada_funil)}</strong>
+      </div>
+
+      <div>
+        <span>Entrada na etapa</span>
+        <strong>${formatarDataHoraCrm(item.data_entrada_etapa)}</strong>
+      </div>
+
+      <div>
+        <span>Lead time</span>
+        <strong>${Number(item.lead_time || 0)} dia(s)</strong>
+      </div>
+
+      <div>
+        <span>Coordenadas</span>
+        <strong>
+          ${
+            item.latitude !== null &&
+            item.longitude !== null
+              ? `${item.latitude}, ${item.longitude}`
+              : "-"
+          }
+        </strong>
+      </div>
+    </div>
+  `;
+
+  abrirModalDetalheDashboard(
+    `Oportunidade ${item.deal_id}`,
+    item.cliente || "Detalhes da oportunidade",
+    html
+  );
+}
+
 
 /* =========================================================
    LOCALIZAÇÃO
    ========================================================= */
 
+  
+
 function gerarAbaLocalizacaoCrm() {
-  const agrupamentos = dadosCrmPiperun?.agrupamentos || {};
+  const agrupamentos =
+    dadosMapaInviabilidade?.agrupamentos || {};
+
   const oportunidades =
-    dadosCrmPiperun?.oportunidades || [];
+    dadosMapaInviabilidade?.pontos || [];
 
   const comCoordenadas = oportunidades.filter(item =>
-    item.latitude !== null &&
-    item.longitude !== null
+    coordenadaCrmValida(
+      item.latitude,
+      item.longitude
+    )
   ).length;
 
   const semCoordenadas =
     oportunidades.length - comCoordenadas;
 
+  const origens =
+    agrupamentos.origens || [];
+
+  const totalPiperun =
+    origens.find(
+      item => item.nome === "PIPERUN"
+    )?.quantidade || 0;
+
+  const totalIxc =
+    origens.find(
+      item => item.nome === "IXC"
+    )?.quantidade || 0;
+
+  const totalManual =
+    origens.find(
+      item => item.nome === "MANUAL"
+    )?.quantidade || 0;
+
   return `
     <section class="crm-localizacao-kpis">
       <article>
-        <span>Com coordenadas</span>
-        <strong>${comCoordenadas}</strong>
+        <span>Pontos no mapa</span>
+
+        <strong>
+          ${comCoordenadas}
+        </strong>
       </article>
 
       <article>
         <span>Sem coordenadas</span>
-        <strong>${semCoordenadas}</strong>
+
+        <strong>
+          ${semCoordenadas}
+        </strong>
       </article>
 
       <article>
         <span>Cidades identificadas</span>
+
         <strong>
-          ${contarItensIdentificadosCrm(agrupamentos.cidades)}
+          ${contarItensIdentificadosCrm(
+            agrupamentos.cidades || []
+          )}
         </strong>
       </article>
 
       <article>
         <span>Bairros identificados</span>
+
         <strong>
-          ${contarItensIdentificadosCrm(agrupamentos.bairros)}
+          ${contarItensIdentificadosCrm(
+            agrupamentos.bairros || []
+          )}
         </strong>
       </article>
     </section>
 
-    <section class="crm-overview-grid">
-      ${gerarRankingLocalizacaoCrm(
-        "Cidades",
-        agrupamentos.cidades || []
-      )}
+    <div class="crm-origens-resumo">
+      <span>
+        Piperun:
+        <strong>${totalPiperun}</strong>
+      </span>
 
-      ${gerarRankingLocalizacaoCrm(
-        "Bairros",
-        agrupamentos.bairros || []
-      )}
-    </section>
+      <span>
+        IXC:
+        <strong>${totalIxc}</strong>
+      </span>
 
-    <section class="crm-painel crm-mapa-placeholder">
-      <div>
-        <span>Mapa de inviabilidade</span>
+      <span>
+        Manual:
+        <strong>${totalManual}</strong>
+      </span>
+    </div>
 
-        <h2>Pronto para receber o mapa</h2>
+    <section class="crm-painel">
+      <div class="crm-mapa-topo">
+        <div>
+          <h2>Mapa de inviabilidade</h2>
 
-        <p>
-          Os registros com latitude e longitude já estão disponíveis.
-          O mapa será implementado nesta área na próxima etapa.
-        </p>
+          <p>
+            Distribuição geográfica das inviabilidades técnicas.
+          </p>
+        </div>
+
+        <div class="crm-mapa-filtros">
+          ${gerarSelectFiltroCrm(
+            "filtroMapaOrigemCrm",
+            "Todas as origens",
+            agrupamentos.origens || []
+          )}
+
+          ${gerarSelectFiltroCrm(
+            "filtroMapaCategoriaCrm",
+            "Todas as categorias",
+            agrupamentos.categorias || []
+          )}
+
+          ${gerarSelectFiltroCrm(
+            "filtroMapaCidadeCrm",
+            "Todas as cidades",
+            agrupamentos.cidades || []
+          )}
+
+          ${gerarSelectFiltroCrm(
+            "filtroMapaVendedorCrm",
+            "Todos os vendedores",
+            agrupamentos.vendedores || []
+          )}
+
+          <select
+            id="tipoVisualizacaoMapaCrm"
+            onchange="atualizarMapaCrm()"
+          >
+            <option value="pontos">
+              Pontos por inviabilidade
+            </option>
+
+            <option value="ambos">
+              Pontos + calor
+            </option>
+
+            <option value="calor">
+              Somente calor
+            </option>
+          </select>
+
+          <button
+            class="btn btn-secondary"
+            onclick="limparFiltrosMapaCrm()"
+          >
+            Limpar
+          </button>
+        </div>
       </div>
+
+      <div class="crm-mapa-legenda">
+        <span>
+          <b style="background:#dc2626"></b>
+          CTO lotada
+        </span>
+
+        <span>
+          <b style="background:#7c3aed"></b>
+          Sem CTO
+        </span>
+
+        <span>
+          <b style="background:#f59e0b"></b>
+          Metragem
+        </span>
+
+        <span>
+          <b style="background:#2563eb"></b>
+          Estrutura
+        </span>
+
+        <span>
+          <b style="background:#0891b2"></b>
+          Fibrasil
+        </span>
+      </div>
+
+      <div
+        id="mapaCrm"
+        class="crm-mapa"
+      ></div>
+
+      <div
+        id="resumoMapaCrm"
+        class="crm-mapa-resumo"
+      ></div>
     </section>
   `;
 }
+  
 
 function contarItensIdentificadosCrm(lista) {
   return (lista || []).filter(item =>
@@ -13049,125 +14047,1234 @@ function gerarRankingLocalizacaoCrm(titulo, lista) {
   `;
 }
 
+function coordenadaCrmValida(latitude, longitude) {
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  );
+}
+
+function obterOportunidadesMapaCrm() {
+
+  const origem =
+  document.getElementById(
+    "filtroMapaOrigemCrm"
+  )?.value || "";
+
+
+  const oportunidades =
+    dadosMapaInviabilidade?.pontos || [];
+
+  const categoria =
+    document.getElementById(
+      "filtroMapaCategoriaCrm"
+    )?.value || "";
+
+  const cidade =
+    document.getElementById(
+      "filtroMapaCidadeCrm"
+    )?.value || "";
+
+  const vendedor =
+    document.getElementById(
+      "filtroMapaVendedorCrm"
+    )?.value || "";
+
+  return oportunidades.filter(item => {
+    if (
+      !coordenadaCrmValida(
+        item.latitude,
+        item.longitude
+      )
+    ) {
+      return false;
+    }
+
+    if (
+  origem &&
+  item.origem !== origem
+) {
+  return false;
+}
+
+
+    if (
+      categoria &&
+      item.categoria !== categoria
+    ) {
+      return false;
+    }
+
+    if (
+      cidade &&
+      item.cidade !== cidade
+    ) {
+      return false;
+    }
+
+    if (
+      vendedor &&
+      item.vendedor_nome !== vendedor
+    ) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+    function inicializarMapaCrm() {
+      const elemento = document.getElementById("mapaCrm");
+
+      if (!elemento) return;
+
+      if (typeof L === "undefined") {
+        elemento.innerHTML = `
+          <div class="crm-vazio">
+            A biblioteca do mapa não foi carregada.
+          </div>
+        `;
+        return;
+      }
+
+      if (mapaCrm) {
+        mapaCrm.remove();
+        mapaCrm = null;
+      }
+
+      elemento.innerHTML = "";
+
+      mapaCrm = L.map(elemento, {
+        zoomControl: true,
+        preferCanvas: true
+      }).setView([-1.4558, -48.4902], 10);
+
+      L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          maxZoom: 19,
+          attribution: "&copy; OpenStreetMap"
+        }
+      ).addTo(mapaCrm);
+
+      camadaPontosCrm = L.layerGroup();
+
+      setTimeout(() => {
+        mapaCrm.invalidateSize();
+        atualizarMapaCrm();
+      }, 150);
+    }
+
+    function atualizarMapaCrm() {
+      if (!mapaCrm) {
+        inicializarMapaCrm();
+        return;
+      }
+
+      const oportunidades = obterOportunidadesMapaCrm();
+
+      if (
+        camadaCalorCrm &&
+        mapaCrm.hasLayer(camadaCalorCrm)
+      ) {
+        mapaCrm.removeLayer(camadaCalorCrm);
+      }
+
+      camadaCalorCrm = null;
+
+      if (
+        camadaPontosCrm &&
+        mapaCrm.hasLayer(camadaPontosCrm)
+      ) {
+        mapaCrm.removeLayer(camadaPontosCrm);
+      }
+
+      camadaPontosCrm = L.layerGroup();
+
+      const tipo = String(
+        document.getElementById(
+          "tipoVisualizacaoMapaCrm"
+        )?.value || "pontos"
+      )
+        .trim()
+        .toLowerCase();
+
+      if (!oportunidades.length) {
+        mapaCrm.setView([-1.4558, -48.4902], 10);
+        atualizarResumoMapaCrm([]);
+        mapaCrm.invalidateSize();
+        return;
+      }
+
+      const coordenadasValidas = [];
+
+      for (const item of oportunidades) {
+        const latitude = Number(item.latitude);
+        const longitude = Number(item.longitude);
+
+        if (
+          !Number.isFinite(latitude) ||
+          !Number.isFinite(longitude)
+        ) {
+          continue;
+        }
+
+        coordenadasValidas.push([
+          latitude,
+          longitude
+        ]);
+
+        if (
+          tipo !== "pontos" &&
+          tipo !== "ambos"
+        ) {
+          continue;
+        }
+
+        try {
+          const cor = obterCorCategoriaCrm(
+            item.categoria
+          );
+
+          const marcador = L.circleMarker(
+            [latitude, longitude],
+            {
+              radius: 8,
+              weight: 2,
+              color: cor,
+              fillColor: cor,
+              fillOpacity: 0.85
+            }
+          );
+
+          /*
+            O marcador entra na camada antes da criação do popup.
+            Portanto, eventual erro no popup não apaga o ponto.
+          */
+          marcador.addTo(camadaPontosCrm);
+
+          try {
+            marcador.bindPopup(
+              gerarPopupMapaCrm(item),
+              {
+                maxWidth: 330
+              }
+            );
+          } catch (erroPopup) {
+            console.error(
+              "[CRM MAPA] Erro ao gerar popup:",
+              {
+                id: item.id,
+                categoria: item.categoria,
+                erro: erroPopup
+              }
+            );
+
+            marcador.bindPopup(`
+              <div class="crm-popup-mapa">
+                <strong>
+                  ${escaparHtmlCrm(
+                    item.cliente ||
+                    "Cliente não identificado"
+                  )}
+                </strong>
+
+                <span>
+                  ${escaparHtmlCrm(
+                    item.motivo_nome ||
+                    "Motivo não identificado"
+                  )}
+                </span>
+              </div>
+            `);
+          }
+        } catch (erroMarcador) {
+          console.error(
+            "[CRM MAPA] Erro ao criar marcador:",
+            {
+              id: item.id,
+              latitude,
+              longitude,
+              erro: erroMarcador
+            }
+          );
+        }
+      }
+
+      if (
+        tipo === "pontos" ||
+        tipo === "ambos"
+      ) {
+        camadaPontosCrm.addTo(mapaCrm);
+      }
+
+      if (
+        (tipo === "calor" ||
+          tipo === "ambos") &&
+        typeof L.heatLayer === "function"
+      ) {
+        camadaCalorCrm = L.heatLayer(
+          coordenadasValidas.map(
+            ([latitude, longitude]) => [
+              latitude,
+              longitude,
+              1
+            ]
+          ),
+          {
+            radius: 28,
+            blur: 22,
+            maxZoom: 16,
+            minOpacity: 0.35
+          }
+        );
+
+        camadaCalorCrm.addTo(mapaCrm);
+      }
+
+      if (coordenadasValidas.length) {
+        const limites = L.latLngBounds(
+          coordenadasValidas
+        );
+
+        mapaCrm.fitBounds(limites, {
+          padding: [30, 30],
+          maxZoom: 15
+        });
+      } else {
+        mapaCrm.setView([-1.4558, -48.4902], 10);
+      }
+
+      atualizarResumoMapaCrm(oportunidades);
+
+      setTimeout(() => {
+        mapaCrm.invalidateSize();
+      }, 100);
+    }
+
+
+function obterCorCategoriaCrm(categoria) {
+  const cores = {
+    CTO_LOTADA: "#dc2626",
+    SEM_CTO: "#7c3aed",
+    METRAGEM: "#f59e0b",
+    ESTRUTURA: "#2563eb",
+    FIBRASIL: "#0891b2",
+    OUTRA: "#0d7b73"
+  };
+
+  return cores[categoria] || cores.OUTRA;
+}
+
+    function formatarCategoriaInviabilidadeCrm(categoria) {
+  const nomes = {
+    CTO_LOTADA: "CTO lotada",
+    SEM_CTO: "Sem CTO",
+    METRAGEM: "Metragem",
+    ESTRUTURA: "Estrutura",
+    FIBRASIL: "Fibrasil",
+    OUTRA: "Outra"
+  };
+
+  return nomes[categoria] || categoria || "Não identificada";
+}
+
+function gerarPopupMapaCrm(item) {
+  const origemTexto = {
+    PIPERUN: "Piperun",
+    IXC: "IXC",
+    MANUAL: "Cadastro manual"
+  }[item.origem] || item.origem || "Não identificada";
+
+  return `
+    <div class="crm-popup-mapa">
+      <strong>
+        ${escaparHtmlCrm(
+          item.cliente || "Cliente não identificado"
+        )}
+      </strong>
+
+      <span>
+        ${escaparHtmlCrm(
+          item.motivo_nome || "Motivo não identificado"
+        )}
+      </span>
+
+      <dl>
+        <div>
+          <dt>Categoria</dt>
+          <dd>
+            ${escaparHtmlCrm(
+              formatarCategoriaInviabilidadeCrm(
+                item.categoria
+              )
+            )}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Origem</dt>
+          <dd>${escaparHtmlCrm(origemTexto)}</dd>
+        </div>
+
+        <div>
+          <dt>Vendedor</dt>
+          <dd>
+            ${escaparHtmlCrm(
+              item.vendedor_nome || "-"
+            )}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Localização</dt>
+          <dd>
+            ${escaparHtmlCrm(item.bairro || "-")}
+            ·
+            ${escaparHtmlCrm(item.cidade || "-")}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Campanha</dt>
+          <dd>
+            ${escaparHtmlCrm(
+              item.campanha_nome || "-"
+            )}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Data da inviabilidade</dt>
+          <dd>
+            ${formatarDataHoraCrm(
+              item.data_inviabilidade ||
+              item.data_origem
+            )}
+          </dd>
+        </div>
+      </dl>
+
+      <button
+        type="button"
+        onclick="abrirDetalhePontoInviabilidadeCrm(${Number(item.id)})"
+      >
+        Ver detalhes
+      </button>
+    </div>
+  `;
+}
+
+function abrirTelaMapaInviabilidade() {
+  abaCrmAtiva = "localizacao";
+
+  localStorage.setItem(
+    "abaCrmAtiva",
+    "localizacao"
+  );
+
+  abrirTelaCrmPerdidos();
+}
+
+function abrirDetalhePontoInviabilidadeCrm(id) {
+  const pontos =
+    dadosMapaInviabilidade?.pontos || [];
+
+  const item = pontos.find(
+    ponto => String(ponto.id) === String(id)
+  );
+
+  if (!item) {
+    mostrarToastPadrao(
+      "Registro não encontrado",
+      "Não foi possível localizar esta inviabilidade.",
+      "erro"
+    );
+    return;
+  }
+
+  const origemTexto = {
+    PIPERUN: "Piperun",
+    IXC: "IXC",
+    MANUAL: "Cadastro manual"
+  }[item.origem] || item.origem || "-";
+
+  const enderecoCompleto = [
+    item.endereco,
+    item.numero,
+    item.complemento
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const possuiCoordenadas =
+    coordenadaCrmValida(
+      item.latitude,
+      item.longitude
+    );
+
+  const html = `
+    <div class="crm-detalhe-grid">
+      <div>
+        <span>Cliente</span>
+        <strong>
+          ${escaparHtmlCrm(item.cliente || "-")}
+        </strong>
+      </div>
+
+      <div>
+        <span>Motivo</span>
+        <strong>
+          ${escaparHtmlCrm(item.motivo_nome || "-")}
+        </strong>
+      </div>
+
+      <div>
+        <span>Categoria</span>
+        <strong>
+          ${escaparHtmlCrm(
+            formatarCategoriaInviabilidadeCrm(
+              item.categoria
+            )
+          )}
+        </strong>
+      </div>
+
+      <div>
+        <span>Origem</span>
+        <strong>${escaparHtmlCrm(origemTexto)}</strong>
+      </div>
+
+      <div>
+        <span>Vendedor</span>
+        <strong>
+          ${escaparHtmlCrm(
+            item.vendedor_nome || "-"
+          )}
+        </strong>
+      </div>
+
+      <div>
+        <span>Campanha</span>
+        <strong>
+          ${escaparHtmlCrm(
+            item.campanha_nome || "-"
+          )}
+        </strong>
+      </div>
+
+      <div>
+        <span>Canal de venda</span>
+        <strong>
+          ${escaparHtmlCrm(
+            item.canal_venda_nome || "-"
+          )}
+        </strong>
+      </div>
+
+      <div>
+        <span>Plano</span>
+        <strong>
+          ${escaparHtmlCrm(
+            item.plano_nome || "-"
+          )}
+        </strong>
+      </div>
+
+      <div>
+        <span>Cidade</span>
+        <strong>
+          ${escaparHtmlCrm(item.cidade || "-")}
+        </strong>
+      </div>
+
+      <div>
+        <span>Bairro</span>
+        <strong>
+          ${escaparHtmlCrm(item.bairro || "-")}
+        </strong>
+      </div>
+
+      <div>
+        <span>Endereço</span>
+        <strong>
+          ${escaparHtmlCrm(enderecoCompleto || "-")}
+        </strong>
+      </div>
+
+      <div>
+        <span>Referência</span>
+        <strong>
+          ${escaparHtmlCrm(item.referencia || "-")}
+        </strong>
+      </div>
+
+      <div>
+        <span>Data de origem</span>
+        <strong>
+          ${formatarDataHoraCrm(item.data_origem)}
+        </strong>
+      </div>
+
+      <div>
+        <span>Data da inviabilidade</span>
+        <strong>
+          ${formatarDataHoraCrm(
+            item.data_inviabilidade
+          )}
+        </strong>
+      </div>
+
+      <div>
+        <span>Status</span>
+        <strong>
+          ${escaparHtmlCrm(item.status || "-")}
+        </strong>
+      </div>
+
+      <div>
+        <span>Identificador da origem</span>
+        <strong>
+          ${
+            item.origem === "PIPERUN"
+              ? `Deal ${escaparHtmlCrm(item.deal_id || item.origem_id || "-")}`
+              : item.origem === "IXC"
+                ? `Lead ${escaparHtmlCrm(item.lead_ixc_id || item.origem_id || "-")}`
+                : escaparHtmlCrm(item.origem_id || "-")
+          }
+        </strong>
+      </div>
+    </div>
+
+    ${
+      item.observacao
+        ? `
+          <div class="crm-detalhe-observacao">
+            <span>Observação</span>
+            <p>
+              ${escaparHtmlCrm(item.observacao)}
+            </p>
+          </div>
+        `
+        : ""
+    }
+
+    ${
+      possuiCoordenadas
+        ? `
+          <div class="crm-detalhe-acoes">
+            <button
+              class="btn btn-primary"
+              onclick="abrirCoordenadaInviabilidadeCrm(
+                ${Number(item.latitude)},
+                ${Number(item.longitude)}
+              )"
+            >
+              Abrir no Google Maps
+            </button>
+          </div>
+        `
+        : ""
+    }
+  `;
+
+  abrirModalDetalheDashboard(
+    `Inviabilidade #${item.id}`,
+    `${origemTexto} · ${formatarCategoriaInviabilidadeCrm(item.categoria)}`,
+    html
+  );
+}
+
+function abrirCoordenadaInviabilidadeCrm(
+  latitude,
+  longitude
+) {
+  if (
+    !coordenadaCrmValida(
+      latitude,
+      longitude
+    )
+  ) {
+    mostrarToastPadrao(
+      "Coordenada inválida",
+      "Este registro não possui uma coordenada válida.",
+      "erro"
+    );
+    return;
+  }
+
+  const url =
+    `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+  window.open(
+    url,
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
+
+function atualizarResumoMapaCrm(oportunidades) {
+  const elemento = document.getElementById(
+    "resumoMapaCrm"
+  );
+
+  if (!elemento) return;
+
+  const cidades = new Set(
+    oportunidades
+      .map(item => item.cidade)
+      .filter(Boolean)
+  );
+
+  const bairros = new Set(
+    oportunidades
+      .map(item => item.bairro)
+      .filter(Boolean)
+  );
+
+  elemento.innerHTML = `
+    <span>
+      <strong>${oportunidades.length}</strong>
+      ponto(s) exibido(s)
+    </span>
+
+    <span>
+      <strong>${cidades.size}</strong>
+      cidade(s)
+    </span>
+
+    <span>
+      <strong>${bairros.size}</strong>
+      bairro(s)
+    </span>
+  `;
+}
+
+function limparFiltrosMapaCrm() {
+  const ids = [
+    "filtroMapaOrigemCrm",
+    "filtroMapaCategoriaCrm",
+    "filtroMapaCidadeCrm",
+    "filtroMapaVendedorCrm"
+  ];
+
+  ids.forEach(id => {
+    const elemento = document.getElementById(id);
+
+    if (elemento) {
+      elemento.value = "";
+    }
+  });
+
+  const tipo = document.getElementById(
+    "tipoVisualizacaoMapaCrm"
+  );
+
+  if (tipo) {
+    tipo.value = "pontos";
+  }
+
+  atualizarMapaCrm();
+}
 
 /* =========================================================
    VENDEDORES
    ========================================================= */
 
 function gerarAbaVendedoresCrm() {
-  const vendedores = (
-    dadosCrmPiperun?.agrupamentos?.vendedores || []
-  )
-    .filter(item =>
-      item.nome &&
-      item.nome !== "Não identificado" &&
-      item.nome !== "-"
-    );
-
   const oportunidades =
     dadosCrmPiperun?.oportunidades || [];
 
+  const vendedores = gerarAnaliseVendedoresCrm(
+    oportunidades
+  );
+
+  const totalOportunidades = vendedores.reduce(
+    (soma, vendedor) =>
+      soma + vendedor.quantidade,
+    0
+  );
+
+  const receitaPerdidaTotal = vendedores.reduce(
+    (soma, vendedor) =>
+      soma + vendedor.receitaPerdidaPlano,
+    0
+  );
+
+  const principalMotivoGeral =
+    obterMaisFrequenteCrm(
+      oportunidades.filter(item =>
+        item.vendedor_nome &&
+        item.vendedor_nome !== "Não identificado"
+      ),
+      "etapa"
+    );
+
   return `
-    <section class="crm-painel">
-      <div class="crm-painel-header">
-        <div>
-          <h2>Análise por vendedor</h2>
-          <p>
-            Quantidade, receita de plano, motivo principal e cidade.
-          </p>
+    <section class="crm-vendedores-page">
+
+      <section class="crm-vendedores-kpis">
+        <article class="crm-vendedores-kpi">
+          <span>Vendedores com perdas</span>
+
+          <strong>
+            ${vendedores.length}
+          </strong>
+
+          <small>
+            Vendedores identificados
+          </small>
+        </article>
+
+        <article class="crm-vendedores-kpi">
+          <span>Oportunidades perdidas</span>
+
+          <strong>
+            ${totalOportunidades}
+          </strong>
+
+          <small>
+            Registros com vendedor identificado
+          </small>
+        </article>
+
+        <article class="crm-vendedores-kpi">
+          <span>Receita Perdida do Plano</span>
+
+          <strong>
+            ${formatarMoeda(receitaPerdidaTotal)}
+          </strong>
+
+          <small>
+            Soma dos planos perdidos
+          </small>
+        </article>
+
+        <article class="crm-vendedores-kpi">
+          <span>Principal motivo</span>
+
+          <strong class="crm-vendedores-kpi-texto">
+            ${escaparHtmlCrm(principalMotivoGeral)}
+          </strong>
+
+          <small>
+            Motivo com maior incidência
+          </small>
+        </article>
+      </section>
+
+      <section class="crm-painel">
+        <div class="crm-painel-header crm-vendedores-header">
+          <div>
+            <h2>Análise de perdas por vendedor</h2>
+
+            <p>
+              Lista ordenada pela maior quantidade de oportunidades
+              perdidas no período selecionado.
+            </p>
+          </div>
+
+          <div class="crm-vendedores-busca">
+            <input
+              id="buscaVendedorCrm"
+              type="search"
+              placeholder="Buscar vendedor..."
+              oninput="filtrarVendedoresCrm()"
+            >
+          </div>
         </div>
-      </div>
 
-      <div class="crm-tabela-scroll">
-        <table class="crm-tabela crm-tabela-vendedores">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Vendedor</th>
-              <th>Perdas</th>
-              <th>Receita Plano Perdida</th>
-              <th>Motivo principal</th>
-              <th>Cidade predominante</th>
-              <th>% das perdas</th>
-            </tr>
-          </thead>
+        <div id="areaTabelaVendedoresCrm">
+          ${gerarTabelaVendedoresCrm(vendedores)}
+        </div>
+      </section>
 
-          <tbody>
-            ${vendedores.map((vendedor, indice) => {
-              const registros = oportunidades.filter(item =>
-                item.vendedor_nome === vendedor.nome
-              );
-
-              const mrr = registros.reduce(
-                (soma, item) =>
-                  soma + Number(item.mrr || 0),
-                0
-              );
-
-              return `
-                <tr>
-                  <td>
-                    <span class="crm-posicao">
-                      ${indice + 1}
-                    </span>
-                  </td>
-
-                  <td>
-                    <strong>
-                      ${escaparHtmlCrm(vendedor.nome)}
-                    </strong>
-                  </td>
-
-                  <td>
-                    ${Number(vendedor.quantidade || 0)}
-                  </td>
-
-                  <td>
-                    <strong class="crm-valor">
-                      ${formatarMoeda(mrr)}
-                    </strong>
-                  </td>
-
-                  <td>
-                    ${escaparHtmlCrm(
-                      obterMaisFrequenteCrm(
-                        registros,
-                        "etapa"
-                      )
-                    )}
-                  </td>
-
-                  <td>
-                    ${escaparHtmlCrm(
-                      obterMaisFrequenteCrm(
-                        registros,
-                        "cidade"
-                      )
-                    )}
-                  </td>
-
-                  <td>
-                    ${Number(
-                      vendedor.percentual || 0
-                    ).toFixed(2)}%
-                  </td>
-                </tr>
-              `;
-            }).join("")}
-          </tbody>
-        </table>
-      </div>
     </section>
   `;
 }
 
-function obterMaisFrequenteCrm(lista, campo) {
+
+function gerarAnaliseVendedoresCrm(oportunidades) {
+  const mapa = new Map();
+
+  for (const oportunidade of oportunidades) {
+    const vendedor = String(
+      oportunidade.vendedor_nome || ""
+    ).trim();
+
+    if (
+      !vendedor ||
+      vendedor === "Não identificado" ||
+      vendedor === "-"
+    ) {
+      continue;
+    }
+
+    if (!mapa.has(vendedor)) {
+      mapa.set(vendedor, {
+        nome: vendedor,
+        oportunidades: []
+      });
+    }
+
+    mapa
+      .get(vendedor)
+      .oportunidades
+      .push(oportunidade);
+  }
+
+  return [...mapa.values()]
+    .map(grupo => {
+      const registros = grupo.oportunidades;
+
+      const receitaPerdidaPlano = registros.reduce(
+        (soma, item) =>
+          soma + Number(item.mrr || 0),
+        0
+      );
+
+      const taxaInstalacaoPerdida = registros.reduce(
+        (soma, item) =>
+          soma + Number(item.instalacao_valor || 0),
+        0
+      );
+
+      return {
+        nome: grupo.nome,
+
+        quantidade: registros.length,
+
+        receitaPerdidaPlano,
+
+        taxaInstalacaoPerdida,
+
+        principalMotivo:
+          obterMaisFrequenteCrm(
+            registros,
+            "etapa"
+          ),
+
+        principalCidade:
+          obterMaisFrequenteCrm(
+            registros,
+            "cidade"
+          ),
+
+        principalBairro:
+          obterMaisFrequenteCrm(
+            registros,
+            "bairro"
+          ),
+
+        principalCampanha:
+          obterMaisFrequenteCrm(
+            registros,
+            "campanha_nome"
+          )
+      };
+    })
+    .sort((a, b) => {
+      if (b.quantidade !== a.quantidade) {
+        return b.quantidade - a.quantidade;
+      }
+
+      return (
+        b.receitaPerdidaPlano -
+        a.receitaPerdidaPlano
+      );
+    });
+}
+
+
+function obterVendedoresFiltradosCrm() {
+  const oportunidades =
+    dadosCrmPiperun?.oportunidades || [];
+
+  const vendedores =
+    gerarAnaliseVendedoresCrm(oportunidades);
+
+  const busca = String(
+    document.getElementById(
+      "buscaVendedorCrm"
+    )?.value || ""
+  )
+    .trim()
+    .toLowerCase();
+
+  if (!busca) {
+    return vendedores;
+  }
+
+  return vendedores.filter(vendedor => {
+    const texto = [
+      vendedor.nome,
+      vendedor.principalMotivo,
+      vendedor.principalCidade,
+      vendedor.principalBairro,
+      vendedor.principalCampanha
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return texto.includes(busca);
+  });
+}
+
+
+function filtrarVendedoresCrm() {
+  const area = document.getElementById(
+    "areaTabelaVendedoresCrm"
+  );
+
+  if (!area) return;
+
+  area.innerHTML = gerarTabelaVendedoresCrm(
+    obterVendedoresFiltradosCrm()
+  );
+}
+
+
+function gerarTabelaVendedoresCrm(vendedores) {
+  if (!vendedores.length) {
+    return `
+      <div class="crm-vazio">
+        Nenhum vendedor encontrado.
+      </div>
+    `;
+  }
+
+  return `
+    <div class="crm-tabela-scroll">
+      <table class="crm-tabela crm-tabela-vendedores">
+        <thead>
+          <tr>
+            <th>Vendedor</th>
+
+            <th class="crm-coluna-numero">
+              Oportunidades perdidas
+            </th>
+
+            <th class="crm-coluna-numero">
+              Receita Perdida do Plano
+            </th>
+
+            <th class="crm-coluna-numero">
+              Taxa de Instalação Perdida
+            </th>
+
+            <th>Principal motivo</th>
+
+            <th>Cidade com maior incidência</th>
+
+            <th>Bairro com maior incidência</th>  
+
+            <th>Campanha com maior incidência</th>
+
+            <th>Ações</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${vendedores.map(vendedor => `
+            <tr>
+              <td>
+                <div class="crm-vendedor-identidade">
+                  <div class="crm-vendedor-avatar">
+                    ${escaparHtmlCrm(
+                      obterIniciaisVendedorCrm(
+                        vendedor.nome
+                      )
+                    )}
+                  </div>
+
+                  <div>
+                    <strong>
+                      ${escaparHtmlCrm(vendedor.nome)}
+                    </strong>
+
+                    <small>
+                      Dados do período selecionado
+                    </small>
+                  </div>
+                </div>
+              </td>
+
+              <td class="crm-coluna-numero">
+                <strong class="crm-quantidade-perdas">
+                  ${vendedor.quantidade}
+                </strong>
+              </td>
+
+              <td class="crm-coluna-numero">
+                <strong class="crm-valor">
+                  ${formatarMoeda(
+                    vendedor.receitaPerdidaPlano
+                  )}
+                </strong>
+              </td>
+
+              <td class="crm-coluna-numero">
+                ${formatarMoeda(
+                  vendedor.taxaInstalacaoPerdida
+                )}
+              </td>
+
+              <td>
+                ${gerarBadgeMotivoCrm(
+                  vendedor.principalMotivo
+                )}
+              </td>
+
+              <td>
+                ${escaparHtmlCrm(
+                  vendedor.principalCidade
+                )}
+              </td>
+
+              <td>
+                ${escaparHtmlCrm(
+                  vendedor.principalBairro
+                )}
+              </td>
+
+              <td>
+                ${escaparHtmlCrm(
+                  vendedor.principalCampanha
+                )}
+              </td>
+
+              <td>
+                <div class="crm-vendedor-acoes">
+                  <button
+                    class="btn btn-secondary btn-small"
+                    onclick='abrirOportunidadesVendedorCrm(${JSON.stringify(vendedor.nome)})'
+                  >
+                    Ver oportunidades
+                  </button>
+
+                  <button
+                    class="btn btn-secondary btn-small"
+                    onclick='abrirMapaVendedorCrm(${JSON.stringify(vendedor.nome)})'
+                  >
+                    Ver no mapa
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+
+function obterIniciaisVendedorCrm(nome) {
+  return String(nome || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(parte => parte.charAt(0).toUpperCase())
+    .join("") || "?";
+}
+
+
+function gerarBadgeMotivoCrm(motivo) {
+  const texto = String(
+    motivo || "Não identificado"
+  );
+
+  const normalizado = texto.toLowerCase();
+
+  let classe = "outro";
+
+  if (normalizado.includes("cto lotada")) {
+    classe = "cto";
+  } else if (normalizado.includes("sem cto")) {
+    classe = "sem-cto";
+  } else if (normalizado.includes("metragem")) {
+    classe = "metragem";
+  } else if (normalizado.includes("estrutura")) {
+    classe = "estrutura";
+  } else if (normalizado.includes("financeira")) {
+    classe = "financeiro";
+  } else if (normalizado.includes("desistiu")) {
+    classe = "desistencia";
+  }
+
+  return `
+    <span class="crm-motivo-badge ${classe}">
+      ${escaparHtmlCrm(texto)}
+    </span>
+  `;
+}
+
+
+function abrirOportunidadesVendedorCrm(
+  vendedorNome
+) {
+  trocarAbaCrm("oportunidades");
+
+  requestAnimationFrame(() => {
+    const filtro = document.getElementById(
+      "filtroVendedorCrm"
+    );
+
+    if (filtro) {
+      filtro.value = vendedorNome;
+    }
+
+    filtrarTabelaCrm();
+  });
+}
+
+
+function abrirMapaVendedorCrm(
+  vendedorNome
+) {
+  trocarAbaCrm("localizacao");
+
+  setTimeout(() => {
+    const filtro = document.getElementById(
+      "filtroMapaVendedorCrm"
+    );
+
+    if (filtro) {
+      filtro.value = vendedorNome;
+    }
+
+    atualizarMapaCrm();
+  }, 150);
+}
+
+
+function obterMaisFrequenteCrm(
+  lista,
+  campo
+) {
   const contagem = new Map();
 
   for (const item of lista || []) {
-    const valor = item[campo];
+    const valor = String(
+      item?.[campo] || ""
+    ).trim();
 
-    if (!valor) continue;
+    if (
+      !valor ||
+      valor === "Não identificado" ||
+      valor === "-"
+    ) {
+      continue;
+    }
 
     contagem.set(
       valor,
@@ -13175,8 +15282,9 @@ function obterMaisFrequenteCrm(lista, campo) {
     );
   }
 
-  const ordenado = [...contagem.entries()]
-    .sort((a, b) => b[1] - a[1]);
+  const ordenado = [
+    ...contagem.entries()
+  ].sort((a, b) => b[1] - a[1]);
 
   return ordenado[0]?.[0] || "-";
 }
@@ -15150,5 +17258,8 @@ function gerarDetalheRelatorioReversaoEquipe(item) {
     */
 
   </script>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 </body>
 </html>

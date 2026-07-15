@@ -38,3 +38,19 @@
 - Inclusão de penalidades automáticas e manuais.
 - Inclusão de página de atualizações.
 - Inclusão de assets visuais do login.
+
+## [1.16.0] - 2026-07-15
+
+### Adicionado
+- Integração com Piperun para oportunidades perdidas.
+- Sincronização automática da Piperun.
+- Tabela consolidada `inviabilidades_mapa`.
+- Sincronização automática Piperun → mapa de inviabilidade.
+- Módulo CRM com visão geral, oportunidades, vendedores e localização.
+- Mapa de inviabilidade com filtros por categoria, cidade, vendedor e origem.
+- Controle de acesso pela permissão `ver_crm_piperun`.
+
+### Corrigido
+- Persistência da tela e da aba do CRM após F5.
+- Ocultação de menus sem permissão.
+- Reinicialização do Leaflet após troca de período.
