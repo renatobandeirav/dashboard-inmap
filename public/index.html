@@ -5636,6 +5636,642 @@ tbody tr:hover{
   font-size: 14px;
 }
 
+/* =========================================================
+   CSS 16 - RELATÓRIOS COMERCIAIS / BI DE ATIVAÇÕES
+   ========================================================= */
+
+.bi-ativacoes-page {
+  width: 100%;
+}
+
+.bi-ativacoes-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.bi-ativacoes-header h1 {
+  font-size: 38px;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.bi-ativacoes-header p {
+  color: #64748b;
+  font-size: 16px;
+}
+
+.bi-ativacoes-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.bi-ativacoes-kpi {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+}
+
+.bi-ativacoes-kpi-icone {
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.bi-ativacoes-kpi-icone.azul {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.bi-ativacoes-kpi-icone.verde {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.bi-ativacoes-kpi-icone.laranja {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.bi-ativacoes-kpi-icone.roxo {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+
+.bi-ativacoes-kpi-icone.ciano {
+  background: #cffafe;
+  color: #0e7490;
+}
+
+.bi-ativacoes-kpi-icone.amarelo {
+  background: #fef3c7;
+  color: #a16207;
+}
+
+.bi-ativacoes-kpi-icone.rosa {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.bi-ativacoes-kpi-icone.cinza {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.bi-ativacoes-kpi span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.bi-ativacoes-kpi strong {
+  display: block;
+  color: #0f172a;
+  font-size: 24px;
+}
+
+.bi-ativacoes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.bi-ativacoes-painel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+  min-width: 0;
+}
+
+.bi-ativacoes-painel.full {
+  grid-column: 1 / -1;
+}
+
+.bi-ativacoes-painel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.bi-ativacoes-painel-header h2 {
+  font-size: 18px;
+  color: #0f172a;
+  margin: 0;
+}
+
+.bi-ativacoes-painel-header span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bi-ativacoes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.bi-ativacoes-item {
+  display: grid;
+  grid-template-columns: 38px minmax(180px, 1fr) 90px 120px;
+  align-items: center;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #edf2f7;
+  border-radius: 13px;
+  padding: 11px 13px;
+}
+
+.bi-ativacoes-posicao {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #334155;
+  font-weight: 900;
+}
+
+.bi-ativacoes-item-info strong {
+  display: block;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.bi-ativacoes-item-info small {
+  display: block;
+  color: #64748b;
+  margin-top: 3px;
+}
+
+.bi-ativacoes-item-quantidade {
+  text-align: center;
+  color: #2563eb;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.bi-ativacoes-item-valor {
+  text-align: right;
+  color: #15803d;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.bi-ativacoes-tabela-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.bi-ativacoes-tabela {
+  min-width: 1200px;
+}
+
+.bi-ativacoes-tabela th {
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.bi-movimento-badge {
+  display: inline-flex;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.bi-movimento-badge.ativacao {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.bi-movimento-badge.reativacao {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.bi-situacao-badge {
+  display: inline-flex;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.bi-situacao-badge.ativo {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.bi-situacao-badge.inativo {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.bi-ativacoes-filtros {
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 1fr)
+    minmax(220px, 1fr)
+    160px;
+  gap: 14px;
+  align-items: end;
+}
+
+.bi-ativacoes-filtros .input-modal {
+  margin-bottom: 0;
+}
+
+@media (max-width: 1200px) {
+  .bi-ativacoes-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .bi-ativacoes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bi-ativacoes-painel.full {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 750px) {
+  .bi-ativacoes-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .bi-ativacoes-filtros {
+    grid-template-columns: 1fr;
+  }
+
+  .bi-ativacoes-item {
+    grid-template-columns: 38px 1fr;
+  }
+
+  .bi-ativacoes-item-quantidade,
+  .bi-ativacoes-item-valor {
+    grid-column: 2;
+    text-align: left;
+  }
+}
+
+.bi-filtros-interativos {
+  margin-bottom: 20px;
+}
+
+.bi-filtros-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.bi-filtros-grid .input-modal {
+  margin-bottom: 0;
+}
+
+@media (max-width: 1000px) {
+  .bi-filtros-grid {
+    grid-template-columns:
+      repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .bi-filtros-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bi-icone-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bi-icone-svg svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bi-titulo-com-icone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bi-titulo-com-icone .bi-icone-svg {
+  color: #0d7b73;
+}
+
+.bi-ativacoes-subnav {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  overflow-x: auto;
+
+  margin-bottom: 18px;
+  padding: 7px;
+
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.bi-ativacoes-subnav-btn {
+  border: 0;
+  background: transparent;
+  color: #475569;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 10px 15px;
+  border-radius: 10px;
+
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.bi-ativacoes-subnav-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.bi-ativacoes-subnav-btn.active {
+  background: #0d7b73;
+  color: #ffffff;
+}
+
+.bi-ativacoes-conteudo-aba {
+  min-height: 200px;
+}
+
+.bi-visao-geral-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.bi-ativacoes-painel.compacto .bi-ativacoes-lista {
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.bi-ativacoes-painel.compacto {
+  min-height: 320px;
+}
+
+.bi-ativacoes-kpi-icone .bi-icone-svg {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+@media (max-width: 1000px) {
+  .bi-visao-geral-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bi-detalhamento-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.bi-detalhamento-busca {
+  flex: 1;
+  min-width: 260px;
+  position: relative;
+}
+
+.bi-detalhamento-busca-icone {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  pointer-events: none;
+}
+
+.bi-detalhamento-busca input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px 0 43px;
+
+  border: 1px solid #dbe3ec;
+  border-radius: 11px;
+
+  background: #f8fafc;
+  color: #0f172a;
+
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+}
+
+.bi-detalhamento-busca input:focus {
+  background: #ffffff;
+  border-color: #0d7b73;
+  box-shadow: 0 0 0 3px rgba(13, 123, 115, 0.10);
+}
+
+.bi-detalhamento-toolbar .btn {
+  height: 44px;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .bi-detalhamento-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bi-detalhamento-busca {
+    width: 100%;
+  }
+}
+
+.bi-multiselect {
+  position: relative;
+  min-width: 0;
+}
+
+.bi-multiselect > label {
+  display: block;
+  margin-bottom: 8px;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.bi-multiselect-trigger {
+  width: 100%;
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 0 14px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #0f172a;
+
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bi-multiselect-trigger:hover {
+  border-color: #0d7b73;
+}
+
+.bi-multiselect-resumo {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bi-multiselect-seta {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.bi-multiselect-menu {
+  display: none;
+
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  right: 0;
+
+  z-index: 1000;
+
+  background: #ffffff;
+  border: 1px solid #dbe3ec;
+  border-radius: 13px;
+
+  box-shadow:
+    0 18px 45px
+    rgba(15, 23, 42, 0.16);
+
+  padding: 10px;
+}
+
+.bi-multiselect-menu.aberto {
+  display: block;
+}
+
+.bi-multiselect-topo {
+  display: flex;
+  gap: 7px;
+  margin-bottom: 8px;
+}
+
+.bi-multiselect-topo input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+
+  padding: 0 10px;
+
+  border: 1px solid #dbe3ec;
+  border-radius: 9px;
+
+  background: #f8fafc;
+  outline: none;
+}
+
+.bi-multiselect-topo input:focus {
+  border-color: #0d7b73;
+  background: #ffffff;
+}
+
+.bi-multiselect-topo button {
+  border: 0;
+  border-radius: 9px;
+  padding: 0 11px;
+
+  background: #e2e8f0;
+  color: #334155;
+
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.bi-multiselect-opcoes {
+  max-height: 270px;
+  overflow-y: auto;
+}
+
+.bi-multiselect-opcao {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  padding: 9px 8px;
+  border-radius: 8px;
+
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bi-multiselect-opcao:hover {
+  background: #f1f5f9;
+}
+
+.bi-multiselect-opcao input {
+  width: 16px;
+  height: 16px;
+  accent-color: #0d7b73;
+  cursor: pointer;
+}
+
+
 
   </style>
 </head>
@@ -5774,6 +6410,38 @@ tbody tr:hover{
   </div>
 </div>
 
+  <!-- RELATÓRIOS COMERCIAIS -->
+<div
+  id="grupoMenuRelatoriosComerciais"
+  class="menu-dropdown menu-modulo"
+  style="display:none;"
+>
+  <button
+    id="btnGrupoRelatoriosComerciais"
+    class="tab-btn menu-modulo-btn"
+    onclick="alternarMenuModulo('menuRelatoriosComerciaisDropdown', event)"
+  >
+    📑 Relatórios Comerciais ▾
+  </button>
+
+  <div
+    id="menuRelatoriosComerciaisDropdown"
+    class="menu-dropdown-list menu-modulo-list"
+  >
+    <button
+      id="btnDashboardAtivacoes"
+      class="menu-dropdown-item menu-modulo-item"
+      onclick="
+        definirModuloAtivo('btnGrupoRelatoriosComerciais');
+        abrirDashboardAtivacoes();
+        fecharMenusModulos();
+      "
+    >
+      📊 Dashboard de Ativações
+    </button>
+  </div>
+</div>
+
 
 <!-- CRM -->
 <div id="grupoMenuCrm" class="menu-dropdown menu-modulo">
@@ -5824,8 +6492,8 @@ tbody tr:hover{
         </button>
   </div>
 </div>
-
 </div>
+
 
 <div class="topbar-admin-area">
 
@@ -5867,6 +6535,8 @@ tbody tr:hover{
       </button>
     </div>
   </div>
+
+
 
   <div class="usuario-menu">
     <div
@@ -6189,7 +6859,7 @@ tbody tr:hover{
       =========================================================
     */
 
-        function aplicarPermissoesTela(usuario) {
+  function aplicarPermissoesTela(usuario) {
   const perfil = usuario?.perfil;
   const permissoes = usuario?.permissoes || [];
   const pode = permissao => permissoes.includes(permissao);
@@ -6214,6 +6884,19 @@ tbody tr:hover{
     crm: document.getElementById("grupoMenuCrm"),
     admin: document.getElementById("grupoMenuAdmin")
   };
+
+  const grupoRelatoriosComerciais =
+  document.getElementById("grupoMenuRelatoriosComerciais");
+
+    const podeVerRelatoriosComerciais =
+      perfil === "super_admin" ||
+      perfil === "gerencial" ||
+      pode("ver_relatorios_comerciais");
+
+    if (grupoRelatoriosComerciais) {
+      grupoRelatoriosComerciais.style.display =
+        podeVerRelatoriosComerciais ? "" : "none";
+    }
 
   Object.values(botoes).forEach(botao => {
     if (botao) {
@@ -7725,7 +8408,85 @@ function copiarTextoFallback(texto) {
       let camadaCalorCrm = null;
       let camadaPontosCrm = null;
       let dadosMapaInviabilidade = null;
+      let dadosDashboardAtivacoesGlobais = null;
+      let registrosDashboardAtivacoesFiltrados = [];
     
+      let filtrosInterativosAtivacoes = {
+        tipo: [],
+        segmento: [],
+        cidade: [],
+        vendedor: [],
+        plano: [],
+        situacao: []
+      };
+
+    function salvarFiltrosDashboardAtivacoes() {
+  localStorage.setItem(
+    "filtrosDashboardAtivacoes",
+    JSON.stringify(filtrosInterativosAtivacoes)
+  );
+}
+
+function carregarFiltrosSalvosDashboardAtivacoes() {
+  const estadoPadrao = {
+    tipo: [],
+    segmento: [],
+    cidade: [],
+    vendedor: [],
+    plano: [],
+    situacao: []
+  };
+
+  try {
+    const salvo = localStorage.getItem(
+      "filtrosDashboardAtivacoes"
+    );
+
+    const dados = salvo
+      ? JSON.parse(salvo)
+      : {};
+
+    filtrosInterativosAtivacoes = {
+      tipo: Array.isArray(dados.tipo)
+        ? dados.tipo
+        : [],
+
+      segmento: Array.isArray(dados.segmento)
+        ? dados.segmento
+        : [],
+
+      cidade: Array.isArray(dados.cidade)
+        ? dados.cidade
+        : [],
+
+      vendedor: Array.isArray(dados.vendedor)
+        ? dados.vendedor
+        : [],
+
+      plano: Array.isArray(dados.plano)
+        ? dados.plano
+        : [],
+
+      situacao: Array.isArray(dados.situacao)
+        ? dados.situacao
+        : []
+    };
+  } catch (erro) {
+    console.warn(
+      "Erro ao restaurar filtros do BI:",
+      erro
+    );
+
+    filtrosInterativosAtivacoes =
+      estadoPadrao;
+  }
+}
+
+let abaDashboardAtivacoes =
+  localStorage.getItem("abaDashboardAtivacoes") ||
+  "visaoGeral";
+
+  let buscaDetalhamentoAtivacoes = "";
 
       
 
@@ -10388,6 +11149,14 @@ async function confirmarClienteOS(osId, tecnicoId, dataAgendamento, turno) {
               const btnRankingChurn = document.getElementById("btnRankingChurn");
               const btnRankingBackoffice = document.getElementById("btnRankingBackoffice");
               const btnLinkDedicado = document.getElementById("btnLinkDedicado");
+              const btnDashboardAtivacoes = document.getElementById("btnDashboardAtivacoes");
+
+              if (btnDashboardAtivacoes) {
+                btnDashboardAtivacoes.classList.toggle(
+                  "active",
+                  telaAtual === "dashboardAtivacoes"
+                );
+              }
 
               if (btnVendas) {
                 btnVendas.classList.toggle(
@@ -10430,6 +11199,7 @@ async function confirmarClienteOS(osId, tecnicoId, dataAgendamento, turno) {
                 );
               }
             }
+            
             
 
           
@@ -10677,6 +11447,12 @@ async function confirmarClienteOS(osId, tecnicoId, dataAgendamento, turno) {
                             localStorage.setItem("telaAtual", "dashboard");
                           }
 
+                          if (telaAtual === "dashboardAtivacoes") {
+                          definirModuloAtivo("btnGrupoRelatoriosComerciais");
+                          abrirDashboardAtivacoes();
+                          return;
+                        }
+
                           carregarDashboard();
                         });
 
@@ -10911,6 +11687,8 @@ function gerarTabelaUsuarios(lista) {
                               ${gerarCheckboxPermissao(user, "ver_ranking_churn", "Ranking Churn")}
                               ${gerarCheckboxPermissao(user, "ver_ranking_backoffice", "Ranking BackOffice")}
                               ${gerarCheckboxPermissao(user, "ver_link_dedicado", "Link Dedicado")}
+                              ${gerarCheckboxPermissao(user, "ver_crm_piperun", "CRM Piperun")}    
+                              ${gerarCheckboxPermissao(user,"ver_relatorios_comerciais","Relatórios Comerciais")}          
                               ${gerarCheckboxPermissao(user, "operar_os", "Operar O.S.")}
                               ${gerarCheckboxPermissao(user, "finalizar_pagamento_ativacao", "Finalizar Pagamento de Ativação")}
                               ${gerarCheckboxPermissao(user, "gerenciar_portal_cliente", "Gerenciar Portal do Assinante")}
@@ -10919,7 +11697,8 @@ function gerarTabelaUsuarios(lista) {
                               ${gerarCheckboxPermissao(user, "editar_penalidades_backoffice", "Editar Penalidades BackOffice")}                              
                               ${gerarCheckboxPermissao(user, "gerenciar_metas", "Metas/Regras")}
                               ${gerarCheckboxPermissao(user, "gerenciar_usuarios", "Usuários")}
-                              ${gerarCheckboxPermissao(user, "sincronizar_dados", "Sincronizar Dados")}                              
+                              ${gerarCheckboxPermissao(user, "sincronizar_dados", "Sincronizar Dados")}       
+                               
                             </div>
                           </td>
 
@@ -13142,10 +13921,15 @@ function renderizarAbaCrm() {
 
   if (!area || !dadosCrmPiperun) return;
 
-  if (abaCrmAtiva === "oportunidades") {
-    area.innerHTML = gerarAbaOportunidadesCrm();
-    return;
-  }
+    if (abaCrmAtiva === "oportunidades") {
+      area.innerHTML = gerarAbaOportunidadesCrm();
+
+      requestAnimationFrame(() => {
+        limparAutopreenchimentoBuscaCrm();
+      });
+
+      return;
+    }
 
 if (abaCrmAtiva === "localizacao") {
   if (mapaCrm) {
@@ -13368,8 +14152,19 @@ function gerarAbaOportunidadesCrm() {
       <div class="crm-filtros-tabela">
         <input
           id="buscaCrm"
-          type="search"
-          placeholder="Buscar cliente, vendedor, cidade ou campanha..."
+          name="filtro_oportunidades_perdidas"
+          type="text"
+          value=""
+          autocomplete="new-password"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+          data-lpignore="true"
+          data-1p-ignore="true"
+          readonly
+          onfocus="this.removeAttribute('readonly')"
+          onmousedown="this.removeAttribute('readonly')"
+          placeholder="Buscar cliente, vendedor, cidade ou campanha."
           oninput="filtrarTabelaCrm()"
         >
 
@@ -13635,6 +14430,14 @@ function gerarConteudoTabelaCrm() {
       </div>
     </div>
   `;
+}
+
+function limparAutopreenchimentoBuscaCrm() {
+  const campo = document.getElementById("buscaCrm");
+
+  if (!campo) return;
+
+  campo.value = "";
 }
 
 function filtrarTabelaCrm() {
@@ -17241,21 +18044,1875 @@ function gerarDetalheRelatorioReversaoEquipe(item) {
 }
 
 
+/*
+  =========================================================
+  JS 15 - RELATÓRIOS COMERCIAIS 
+  =========================================================
+*/
+
+function normalizarArrayFiltro(valor) {
+  return Array.isArray(valor)
+    ? valor.map(String)
+    : [];
+}
+
+function filtroBiPossuiValor(
+  campo,
+  valor
+) {
+  const selecionados =
+    normalizarArrayFiltro(
+      filtrosInterativosAtivacoes[campo]
+    );
+
+  return selecionados.includes(
+    String(valor)
+  );
+}
+
+function obterTextoResumoFiltroBi(
+  campo,
+  opcoes,
+  textoTodos
+) {
+  const selecionados =
+    normalizarArrayFiltro(
+      filtrosInterativosAtivacoes[campo]
+    );
+
+  if (!selecionados.length) {
+    return textoTodos;
+  }
+
+  if (selecionados.length === 1) {
+    const item = opcoes.find(
+      opcao =>
+        String(opcao.id) ===
+        String(selecionados[0])
+    );
+
+    return item?.nome ||
+      "1 selecionado";
+  }
+
+  return `${selecionados.length} selecionados`;
+}
 
 
+function gerarFiltroMultiploBi({
+  campo,
+  titulo,
+  opcoes,
+  textoTodos = "Todos"
+}) {
+  const selecionados =
+    normalizarArrayFiltro(
+      filtrosInterativosAtivacoes[campo]
+    );
+
+  const resumo =
+    obterTextoResumoFiltroBi(
+      campo,
+      opcoes,
+      textoTodos
+    );
+
+  return `
+    <div
+      class="bi-multiselect"
+      data-campo="${campo}"
+    >
+      <label>${titulo}</label>
+
+      <button
+        type="button"
+        class="bi-multiselect-trigger"
+        onclick="
+          alternarFiltroMultiploBi(
+            '${campo}',
+            event
+          )
+        "
+      >
+        <span class="bi-multiselect-resumo">
+          ${resumo}
+        </span>
+
+        <span class="bi-multiselect-seta">
+          ▾
+        </span>
+      </button>
+
+      <div
+        id="menuFiltroBi-${campo}"
+        class="bi-multiselect-menu"
+      >
+        <div class="bi-multiselect-topo">
+
+          <input
+            type="search"
+            placeholder="Pesquisar..."
+            oninput="
+              pesquisarOpcaoFiltroBi(
+                '${campo}',
+                this.value
+              )
+            "
+          >
+
+          ${
+            selecionados.length
+              ? `
+                <button
+                  type="button"
+                  onclick="
+                    limparFiltroMultiploBi(
+                      '${campo}'
+                    )
+                  "
+                >
+                  Limpar
+                </button>
+              `
+              : ""
+          }
+
+        </div>
+
+        <div
+          id="listaFiltroBi-${campo}"
+          class="bi-multiselect-opcoes"
+        >
+          ${opcoes.map(opcao => {
+            const ativo =
+              selecionados.includes(
+                String(opcao.id)
+              );
+
+            return `
+              <label
+                class="bi-multiselect-opcao"
+                data-texto="${String(
+                  opcao.nome || ""
+                ).toUpperCase()}"
+              >
+                <input
+                  type="checkbox"
+                  value="${String(opcao.id)}"
+                  ${ativo ? "checked" : ""}
+                  onchange="
+                    alterarFiltroMultiploBi(
+                      '${campo}',
+                      '${String(opcao.id)
+                        .replace(/'/g, "\\'")}',
+                      this.checked
+                    )
+                  "
+                >
+
+                <span>
+                  ${opcao.nome}
+                </span>
+              </label>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function fecharFiltrosMultiplosBi(
+  excetoCampo = ""
+) {
+  document
+    .querySelectorAll(
+      ".bi-multiselect-menu.aberto"
+    )
+    .forEach(menu => {
+      if (
+        menu.id !==
+        `menuFiltroBi-${excetoCampo}`
+      ) {
+        menu.classList.remove("aberto");
+      }
+    });
+}
+
+function alternarFiltroMultiploBi(
+  campo,
+  event
+) {
+  event?.stopPropagation();
+
+  const menu =
+    document.getElementById(
+      `menuFiltroBi-${campo}`
+    );
+
+  if (!menu) return;
+
+  const estavaAberto =
+    menu.classList.contains("aberto");
+
+  fecharFiltrosMultiplosBi();
+
+  if (!estavaAberto) {
+    menu.classList.add("aberto");
+
+    setTimeout(() => {
+      menu.querySelector(
+        'input[type="search"]'
+      )?.focus();
+    }, 0);
+  }
+}
+
+function alterarFiltroMultiploBi(
+  campo,
+  valor,
+  marcado
+) {
+  const atual =
+    new Set(
+      normalizarArrayFiltro(
+        filtrosInterativosAtivacoes[campo]
+      )
+    );
+
+  if (marcado) {
+    atual.add(String(valor));
+  } else {
+    atual.delete(String(valor));
+  }
+
+  filtrosInterativosAtivacoes[campo] =
+    [...atual];
+
+  salvarFiltrosDashboardAtivacoes();
+
+  renderizarDashboardAtivacoesFiltrado();
+}
+
+function limparFiltroMultiploBi(
+  campo
+) {
+  filtrosInterativosAtivacoes[campo] = [];
+
+  salvarFiltrosDashboardAtivacoes();
+
+  renderizarDashboardAtivacoesFiltrado();
+}
+
+function pesquisarOpcaoFiltroBi(
+  campo,
+  termo
+) {
+  const texto =
+    String(termo || "")
+      .trim()
+      .toUpperCase();
+
+  document
+    .querySelectorAll(
+      `#listaFiltroBi-${campo}
+       .bi-multiselect-opcao`
+    )
+    .forEach(opcao => {
+      const conteudo =
+        opcao.dataset.texto || "";
+
+      opcao.style.display =
+        !texto ||
+        conteudo.includes(texto)
+          ? ""
+          : "none";
+    });
+}
+
+document.addEventListener(
+  "click",
+  event => {
+    if (
+      !event.target.closest(
+        ".bi-multiselect"
+      )
+    ) {
+      fecharFiltrosMultiplosBi();
+    }
+  }
+);
+
+function aplicarBuscaDetalhamentoAtivacoes() {
+  const campo =
+    document.getElementById(
+      "buscaDetalhamentoAtivacoes"
+    );
+
+  const termo =
+    String(campo?.value || "")
+      .trim()
+      .toUpperCase();
+
+  buscaDetalhamentoAtivacoes = termo;
+
+  const linhas =
+    document.querySelectorAll(
+      "#tabelaDetalhamentoAtivacoes tbody tr"
+    );
+
+  let visiveis = 0;
+
+  linhas.forEach(linha => {
+    const texto =
+      String(linha.innerText || "")
+        .toUpperCase();
+
+    const mostrar =
+      !termo || texto.includes(termo);
+
+    linha.style.display =
+      mostrar ? "" : "none";
+
+    if (mostrar) {
+      visiveis += 1;
+    }
+  });
+
+  const contador =
+    document.getElementById(
+      "contadorDetalhamentoAtivacoes"
+    );
+
+  if (contador) {
+    contador.textContent =
+      `${visiveis} contratos encontrados`;
+  }
+
+  const btnLimpar =
+    document.getElementById(
+      "btnLimparBuscaDetalhamento"
+    );
+
+  if (btnLimpar) {
+    btnLimpar.style.display =
+      termo ? "inline-flex" : "none";
+  }
+}
+
+function limparBuscaDetalhamentoAtivacoes() {
+  buscaDetalhamentoAtivacoes = "";
+
+  const campo =
+    document.getElementById(
+      "buscaDetalhamentoAtivacoes"
+    );
+
+  if (campo) {
+    campo.value = "";
+  }
+
+  aplicarBuscaDetalhamentoAtivacoes();
+
+  campo?.focus();
+}
+
+function filtrarBuscaDetalhamentoAtivacoes(
+  registros
+) {
+  const termo =
+    String(buscaDetalhamentoAtivacoes || "")
+      .trim()
+      .toUpperCase();
+
+  if (!termo) {
+    return registros || [];
+  }
+
+  return (registros || []).filter(item => {
+    const texto = [
+      item.data_ativacao,
+      item.contrato_id,
+      item.cliente,
+      item.tipo_movimento,
+      item.vendedor,
+      item.filial,
+      item.cidade,
+      item.bairro,
+      item.plano,
+      item.valor_mensal,
+      item.taxa_instalacao,
+      item.situacao
+    ]
+      .map(valor =>
+        String(valor || "").toUpperCase()
+      )
+      .join(" ");
+
+    return texto.includes(termo);
+  });
+}
+
+function iconeBi(nome, tamanho = 22) {
+  const icones = {
+    dashboard: `
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+        <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+        <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+        <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+      </svg>
+    `,
+
+    contrato: `
+      <svg viewBox="0 0 24 24">
+        <path d="M6 2h9l5 5v15H6z"></path>
+        <path d="M14 2v6h6"></path>
+        <path d="M9 13h6"></path>
+        <path d="M9 17h6"></path>
+      </svg>
+    `,
+
+    ativacao: `
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="m8 12 3 3 5-6"></path>
+      </svg>
+    `,
+
+    reativacao: `
+      <svg viewBox="0 0 24 24">
+        <path d="M20 7v5h-5"></path>
+        <path d="M18 17a8 8 0 1 1 1.5-8"></path>
+      </svg>
+    `,
+
+    receita: `
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M16 8.5c-.8-.8-2-1.2-3.5-1.2-2 0-3.5 1-3.5 2.5s1.3 2.2 3.5 2.7 3.5 1.1 3.5 2.7-1.5 2.5-3.5 2.5c-1.5 0-2.8-.4-3.7-1.3"></path>
+        <path d="M12 5v14"></path>
+      </svg>
+    `,
+
+    taxa: `
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+        <path d="M3 10h18"></path>
+        <path d="M7 15h3"></path>
+      </svg>
+    `,
+
+    ticket: `
+      <svg viewBox="0 0 24 24">
+        <path d="M4 5h16v5a2 2 0 0 0 0 4v5H4v-5a2 2 0 0 0 0-4z"></path>
+        <path d="M12 7v10"></path>
+      </svg>
+    `,
+
+    vendedor: `
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="4"></circle>
+        <path d="M4 21a8 8 0 0 1 16 0"></path>
+      </svg>
+    `,
+
+    cidade: `
+      <svg viewBox="0 0 24 24">
+        <path d="M4 21V9l6-4v16"></path>
+        <path d="M10 21V3l10 5v13"></path>
+        <path d="M7 12h1"></path>
+        <path d="M7 16h1"></path>
+        <path d="M14 9h2"></path>
+        <path d="M14 13h2"></path>
+        <path d="M14 17h2"></path>
+      </svg>
+    `,
+
+    plano: `
+      <svg viewBox="0 0 24 24">
+        <path d="M4 6h16"></path>
+        <path d="M4 12h16"></path>
+        <path d="M4 18h10"></path>
+        <circle cx="18" cy="18" r="2"></circle>
+      </svg>
+    `,
+
+    filial: `
+      <svg viewBox="0 0 24 24">
+        <path d="M3 21h18"></path>
+        <path d="M5 21V8l7-5 7 5v13"></path>
+        <path d="M9 21v-6h6v6"></path>
+      </svg>
+    `,
+
+    tabela: `
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+        <path d="M3 10h18"></path>
+        <path d="M9 4v16"></path>
+        <path d="M15 4v16"></path>
+      </svg>
+    `
+  };
+
+  return `
+    <span
+      class="bi-icone-svg"
+      style="width:${tamanho}px;height:${tamanho}px;"
+      aria-hidden="true"
+    >
+      ${icones[nome] || icones.dashboard}
+    </span>
+  `;
+}
+
+function abrirDashboardAtivacoes() {
+  mostrarDashboardPrincipal();
+
+  telaAtual = "dashboardAtivacoes";
+  localStorage.setItem(
+    "telaAtual",
+    "dashboardAtivacoes"
+  );
+
+  definirModuloAtivo(
+    "btnGrupoRelatoriosComerciais"
+  );
+
+  atualizarBotoesTelaComercial();
+
+  const conteudo =
+    document.getElementById("conteudo");
+
+  if (!conteudo) return;
+
+  const hoje = new Date();
+
+  const inicioMes = new Date(
+    hoje.getFullYear(),
+    hoje.getMonth(),
+    1
+  )
+    .toISOString()
+    .slice(0, 10);
+
+  const dataFinal = hoje
+    .toISOString()
+    .slice(0, 10);
+
+    carregarFiltrosSalvosDashboardAtivacoes();
+
+  conteudo.innerHTML = `
+    <section class="bi-ativacoes-page">
+
+      <div class="bi-ativacoes-header">
+        <h1>📊 Dashboard de Ativações</h1>
+
+        <p>
+          Visão estratégica das ativações,
+          reativações, receita, vendedores,
+          cidades e planos.
+        </p>
+      </div>
+
+      <div class="ranking-filtro-card">
+        <div class="bi-ativacoes-filtros">
+
+          <div class="ranking-campo">
+            <label>Data inicial</label>
+
+            <input
+              id="relatorioAtivacoesInicio"
+              type="date"
+              class="input-modal"
+              value="${inicioMes}"
+            >
+          </div>
+
+          <div class="ranking-campo">
+            <label>Data final</label>
+
+            <input
+              id="relatorioAtivacoesFim"
+              type="date"
+              class="input-modal"
+              value="${dataFinal}"
+            >
+          </div>
+          <button
+            class="btn btn-primary"
+            style="height:54px;"
+            onclick="carregarDashboardAtivacoes()"
+          >
+            🔎 Buscar
+          </button>
+
+        </div>
+      </div>
+
+      <div id="areaDashboardAtivacoes">
+        <div class="loading">
+          Carregando dados do BI.
+        </div>
+      </div>
+
+    </section>
+  `;
+
+  carregarDashboardAtivacoes();
+}
+
+
+async function carregarDashboardAtivacoes() {
+  const area =
+    document.getElementById(
+      "areaDashboardAtivacoes"
+    );
+
+  if (!area) return;
+
+  const inicio =
+    document.getElementById(
+      "relatorioAtivacoesInicio"
+    )?.value;
+
+  const fim =
+    document.getElementById(
+      "relatorioAtivacoesFim"
+    )?.value;
+
+  if (!inicio || !fim) {
+    area.innerHTML = `
+      <div class="erro">
+        Informe a data inicial e a data final.
+      </div>
+    `;
+    return;
+  }
+
+  if (inicio > fim) {
+    area.innerHTML = `
+      <div class="erro">
+        A data inicial não pode ser posterior
+        à data final.
+      </div>
+    `;
+    return;
+  }
+
+  area.innerHTML = `
+    <div class="loading">
+      Carregando relatório comercial.
+    </div>
+  `;
+
+  try {
+    const parametros =
+      new URLSearchParams({
+        inicio,
+        fim
+      });
+
+    const resposta = await fetch(
+      `/api/relatorios-comerciais/ativacoes?${parametros.toString()}`
+    );
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || dados.erro) {
+      throw new Error(
+        dados.mensagem ||
+        "Erro ao carregar o dashboard."
+      );
+    }
+
+    dadosDashboardAtivacoesGlobais = dados;
+
+    const registros =
+      Array.isArray(dados.registros)
+        ? dados.registros
+        : [];
+
+renderizarDashboardAtivacoesFiltrado();
+
+  } catch (erro) {
+    area.innerHTML = `
+      <div class="erro">
+        Erro: ${erro.message}
+      </div>
+    `;
+  }
+}
+
+function gerarHTMLDashboardAtivacoes(
+  dados,
+  registros
+) {
 
   
-    /*
-      =========================================================
-      CHANGELOG DE ORGANIZAÇÃO
-      ---------------------------------------------------------
-      - Arquivo dividido visualmente por comentários.
-      - Adicionados marcadores CSS/HTML/JS para busca rápida.
-      - Adicionados nomes amigáveis para perfis Churn.
-      - Adicionados checkboxes de permissões Churn na tela de usuários.
-      - Nenhuma regra de ranking foi alterada nesta reorganização.
-      =========================================================
-    */
+  const resumo =
+    calcularResumoDashboardAtivacoes(
+      registros
+    );
+
+  const vendedores =
+    agruparDashboardAtivacoes(
+      registros,
+      "vendedor_id",
+      "vendedor"
+    );
+
+  const cidades =
+    agruparDashboardAtivacoes(
+      registros,
+      "cidade_id",
+      "cidade"
+    );
+
+  const planos =
+    agruparDashboardAtivacoes(
+      registros,
+      "plano_id",
+      "plano"
+    );
+
+    return `
+
+      ${gerarFiltrosInterativosAtivacoes(
+        dados.registros || []
+      )}
+
+      ${gerarCardsDashboardAtivacoes(
+        resumo
+      )}
+
+      ${gerarSubnavDashboardAtivacoes()}
+
+      <div class="bi-ativacoes-conteudo-aba">
+
+        ${gerarConteudoAbaDashboardAtivacoes({
+          dados,
+          registros,
+          vendedores,
+          cidades,
+          planos
+        })}
+
+      </div>
+
+      <div class="ranking-footer-info">
+        <span>
+          Base atualizada:
+          ${dados.atualizado_em || "-"}
+        </span>
+
+        <span>
+          Origem: contratos ativados no IXC
+        </span>
+      </div>
+    `;
+}
+
+
+
+function calcularResumoDashboardAtivacoes(
+  registros
+) {
+  const lista =
+    Array.isArray(registros)
+      ? registros
+      : [];
+
+  const totalAtivacoes =
+    lista.filter(
+      item =>
+        item.tipo_movimento === "ATIVACAO"
+    ).length;
+
+  const totalReativacoes =
+    lista.filter(
+      item =>
+        item.tipo_movimento === "REATIVACAO"
+    ).length;
+
+  const receitaMensal =
+    lista.reduce(
+      (soma, item) =>
+        soma +
+        Number(item.valor_mensal || 0),
+      0
+    );
+
+  const taxaInstalacao =
+    lista.reduce(
+      (soma, item) =>
+        soma +
+        Number(item.taxa_instalacao || 0),
+      0
+    );
+
+  const clientesUnicos =
+    new Set(
+      lista
+        .map(item =>
+          String(item.cliente_id || "")
+        )
+        .filter(Boolean)
+    ).size;
+
+  const vendedoresUnicos =
+    new Set(
+      lista
+        .map(item =>
+          String(item.vendedor_id || "")
+        )
+        .filter(Boolean)
+    ).size;
+
+  const cidadesUnicas =
+    new Set(
+      lista
+        .map(item =>
+          String(item.cidade_id || "")
+        )
+        .filter(Boolean)
+    ).size;
+
+  const ticketMedio =
+    lista.length
+      ? receitaMensal / lista.length
+      : 0;
+
+  return {
+    total_registros: lista.length,
+    total_ativacoes: totalAtivacoes,
+    total_reativacoes: totalReativacoes,
+    receita_mensal: receitaMensal,
+    taxa_instalacao: taxaInstalacao,
+    ticket_medio: ticketMedio,
+    total_clientes: clientesUnicos,
+    total_vendedores: vendedoresUnicos,
+    total_cidades: cidadesUnicas
+  };
+}
+
+function gerarCardsDashboardAtivacoes(
+  resumo
+) {
+  return `
+    <div class="bi-ativacoes-kpis">
+
+      ${gerarCardDashboardAtivacoes(
+        "contrato",
+        "azul",
+        "Total de contratos",
+        resumo.total_registros
+      )}
+
+      ${gerarCardDashboardAtivacoes(
+        "ativacao",
+        "verde",
+        "Ativações",
+        resumo.total_ativacoes
+      )}
+
+      ${gerarCardDashboardAtivacoes(
+        "reativacao",
+        "laranja",
+        "Reativações",
+        resumo.total_reativacoes
+      )}
+
+      ${gerarCardDashboardAtivacoes(
+        "receita",
+        "roxo",
+        "Receita mensal",
+        formatarMoeda(resumo.receita_mensal)
+      )}
+
+      ${gerarCardDashboardAtivacoes(
+        "taxa",
+        "ciano",
+        "Taxas de instalação",
+        formatarMoeda(resumo.taxa_instalacao)
+      )}
+
+      ${gerarCardDashboardAtivacoes(
+        "ticket",
+        "amarelo",
+        "Ticket médio",
+        formatarMoeda(resumo.ticket_medio)
+      )}
+
+      ${gerarCardDashboardAtivacoes(
+        "vendedor",
+        "rosa",
+        "Vendedores",
+        resumo.total_vendedores
+      )}
+
+      ${gerarCardDashboardAtivacoes(
+        "cidade",
+        "cinza",
+        "Cidades",
+        resumo.total_cidades
+      )}
+
+    </div>
+  `;
+}
+
+
+function gerarCardDashboardAtivacoes(
+  icone,
+  classe,
+  titulo,
+  valor
+) {
+  return `
+    <div class="bi-ativacoes-kpi">
+
+      <div class="bi-ativacoes-kpi-icone ${classe}">
+        ${iconeBi(icone, 24)}
+      </div>
+
+      <div>
+        <span>${titulo}</span>
+        <strong>${valor}</strong>
+      </div>
+
+    </div>
+  `;
+}
+
+function agruparDashboardAtivacoes(
+  registros,
+  campoId,
+  campoNome
+) {
+  const mapa = new Map();
+
+  for (const item of registros || []) {
+    const id =
+      String(item[campoId] || "");
+
+    const nome =
+      item[campoNome] ||
+      "Não identificado";
+
+    const chave =
+      `${id}_${nome}`;
+
+    if (!mapa.has(chave)) {
+      mapa.set(chave, {
+        id,
+        nome,
+        total: 0,
+        ativacoes: 0,
+        reativacoes: 0,
+        receita_mensal: 0,
+        taxa_instalacao: 0
+      });
+    }
+
+    const registro =
+      mapa.get(chave);
+
+    registro.total += 1;
+
+    registro.receita_mensal +=
+      Number(
+        item.valor_mensal || 0
+      );
+
+    registro.taxa_instalacao +=
+      Number(
+        item.taxa_instalacao || 0
+      );
+
+    if (
+      item.tipo_movimento ===
+      "ATIVACAO"
+    ) {
+      registro.ativacoes += 1;
+    }
+
+    if (
+      item.tipo_movimento ===
+      "REATIVACAO"
+    ) {
+      registro.reativacoes += 1;
+    }
+  }
+
+  return [...mapa.values()]
+    .sort(
+      (a, b) =>
+        b.total - a.total
+    );
+}
+
+function gerarPainelRankingAtivacoes(
+  titulo,
+  subtitulo,
+  lista,
+  nomeLongo = false,
+  mostrarTodos = false
+)
+ {
+  return `
+    <div class="bi-ativacoes-painel ${
+  mostrarTodos ? "compacto full" : ""
+}">
+
+      <div class="bi-ativacoes-painel-header">
+        <div>
+          <h2>${titulo}</h2>
+          <span>${subtitulo}</span>
+        </div>
+      </div>
+
+      <div class="bi-ativacoes-lista">
+
+        ${
+          lista.length
+            ? lista.map(
+                (item, index) => `
+                  <div class="bi-ativacoes-item">
+
+                    <div class="bi-ativacoes-posicao">
+                      ${index + 1}
+                    </div>
+
+                    <div class="bi-ativacoes-item-info">
+                      <strong title="${item.nome}">
+                        ${
+                          nomeLongo
+                            ? String(
+                                item.nome
+                              ).slice(0, 45)
+                            : item.nome
+                        }
+                      </strong>
+
+                      <small>
+                        ${item.ativacoes} ativações ·
+                        ${item.reativacoes} reativações
+                      </small>
+                    </div>
+
+                    <div class="bi-ativacoes-item-quantidade">
+                      ${item.total}
+                    </div>
+
+                    <div class="bi-ativacoes-item-valor">
+                      ${formatarMoeda(
+                        item.receita_mensal
+                      )}
+                    </div>
+
+                  </div>
+                `
+              ).join("")
+            : `
+              <p>Nenhum registro encontrado.</p>
+            `
+        }
+
+      </div>
+
+    </div>
+  `;
+}
+
+function gerarPainelFiliaisAtivacoes(
+  dados,
+  registros
+) {
+  const filiais =
+    agruparDashboardAtivacoes(
+      registros,
+      "filial_id",
+      "filial"
+    );
+
+  return gerarPainelRankingAtivacoes(
+    `${iconeBi("filial", 21)} Filiais`,
+    "Resultado por filial do contrato",
+    filiais
+  );
+}
+
+function gerarTabelaDashboardAtivacoes(
+  registros
+) {
+  if (!registros.length) {
+    return `
+      <p>
+        Nenhuma ativação encontrada
+        para os filtros selecionados.
+      </p>
+    `;
+  }
+
+  const lista =
+    [...registros]
+      .sort(
+        (a, b) =>
+          String(
+            b.data_ativacao || ""
+          ).localeCompare(
+            String(
+              a.data_ativacao || ""
+            )
+          )
+      );
+
+  return `
+    <div class="bi-ativacoes-tabela-wrap">
+
+      <table
+      id="tabelaDetalhamentoAtivacoes"
+      class="bi-ativacoes-tabela"
+    >
+
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Contrato</th>
+            <th>Cliente</th>
+            <th>Tipo</th>
+            <th>Vendedor</th>
+            <th>Cidade</th>
+            <th>Bairro</th>
+            <th>Plano</th>
+            <th>Mensalidade</th>
+            <th>Taxa</th>
+            <th>Situação</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          ${lista.map(item => `
+            <tr>
+
+              <td>
+                ${formatarDataBR(
+                  item.data_ativacao
+                )}
+              </td>
+
+              <td>
+                ${item.contrato_id || "-"}
+              </td>
+
+              <td>
+                ${item.cliente || "-"}
+              </td>
+
+              <td>
+                ${gerarBadgeMovimentoAtivacao(
+                  item.tipo_movimento
+                )}
+              </td>
+
+              <td>
+                ${item.vendedor || "-"}
+              </td>
+
+              <td>
+                ${item.cidade || "-"}
+              </td>
+
+              <td>
+                ${item.bairro || "-"}
+              </td>
+
+              <td>
+                ${item.plano || "-"}
+              </td>
+
+              <td>
+                <strong>
+                  ${formatarMoeda(
+                    item.valor_mensal
+                  )}
+                </strong>
+              </td>
+
+              <td>
+                ${formatarMoeda(
+                  item.taxa_instalacao
+                )}
+              </td>
+
+              <td>
+                ${gerarBadgeSituacaoAtivacao(
+                  item.situacao
+                )}
+              </td>
+
+            </tr>
+          `).join("")}
+
+        </tbody>
+
+      </table>
+
+    </div>
+  `;
+}
+
+function gerarBadgeMovimentoAtivacao(
+  tipo
+) {
+  const reativacao =
+    tipo === "REATIVACAO";
+
+  return `
+    <span
+      class="bi-movimento-badge ${
+        reativacao
+          ? "reativacao"
+          : "ativacao"
+      }"
+    >
+      ${
+        reativacao
+          ? "Reativação"
+          : "Ativação"
+      }
+    </span>
+  `;
+}
+
+function gerarBadgeSituacaoAtivacao(
+  situacao
+) {
+  const ativo =
+    String(situacao || "")
+      .toUpperCase() === "ATIVO";
+
+  return `
+    <span
+      class="bi-situacao-badge ${
+        ativo
+          ? "ativo"
+          : "inativo"
+      }"
+    >
+      ${
+        ativo
+          ? "Ativo"
+          : "Inativo"
+      }
+    </span>
+  `;
+}
+
+
+
+function gerarFiltrosInterativosAtivacoes(
+  registros
+) {
+  const tipos = [
+    {
+      id: "ATIVACAO",
+      nome: "Ativação"
+    },
+    {
+      id: "REATIVACAO",
+      nome: "Reativação"
+    }
+  ];
+
+  const segmentos = [
+    {
+      id: "RESIDENCIAL",
+      nome: "Residencial"
+    },
+    {
+      id: "EMPRESARIAL",
+      nome: "Empresarial"
+    },
+    {
+      id: "LINK_DEDICADO",
+      nome: "Link Dedicado"
+    },
+    {
+      id: "REDE_NEUTRA",
+      nome: "Rede Neutra"
+    },
+    {
+      id: "FUNCIONARIO",
+      nome: "Funcionário"
+    },
+    {
+      id: "OUTROS",
+      nome: "Outros"
+    }
+  ];
+
+  const cidades =
+    obterOpcoesUnicasAtivacoes(
+      registros,
+      "cidade_id",
+      "cidade"
+    );
+
+  const vendedores =
+    obterOpcoesUnicasAtivacoes(
+      registros,
+      "vendedor_id",
+      "vendedor"
+    );
+
+  const planos =
+    obterOpcoesUnicasAtivacoes(
+      registros,
+      "plano_id",
+      "plano"
+    );
+
+  const situacoes = [
+    {
+      id: "ATIVO",
+      nome: "Ativo"
+    },
+    {
+      id: "INATIVO",
+      nome: "Inativo"
+    },
+    {
+      id: "BLOQUEADO",
+      nome: "Bloqueado"
+    }
+  ];
+
+  return `
+    <div
+      class="
+        bi-ativacoes-painel
+        bi-filtros-interativos
+      "
+    >
+      <div
+        class="
+          bi-ativacoes-painel-header
+        "
+      >
+        <div>
+          <h2>Buscar detalhamento</h2>
+        </div>
+
+        <button
+          class="btn btn-secondary"
+          onclick="
+            limparFiltrosInterativosAtivacoes()
+          "
+        >
+          Limpar filtros
+        </button>
+      </div>
+
+      <div class="bi-filtros-grid">
+
+        ${gerarFiltroMultiploBi({
+          campo: "tipo",
+          titulo: "Motivo da inclusão",
+          opcoes: tipos,
+          textoTodos:
+            "Ativação e reativação"
+        })}
+
+        ${gerarFiltroMultiploBi({
+          campo: "segmento",
+          titulo: "Segmento",
+          opcoes: segmentos,
+          textoTodos: "Todos"
+        })}
+
+        ${gerarFiltroMultiploBi({
+          campo: "cidade",
+          titulo: "Cidade",
+          opcoes: cidades,
+          textoTodos: "Todas"
+        })}
+
+        ${gerarFiltroMultiploBi({
+          campo: "vendedor",
+          titulo: "Vendedor",
+          opcoes: vendedores,
+          textoTodos: "Todos"
+        })}
+
+        ${gerarFiltroMultiploBi({
+          campo: "plano",
+          titulo: "Planos",
+          opcoes: planos,
+          textoTodos: "Todos"
+        })}
+
+        ${gerarFiltroMultiploBi({
+          campo: "situacao",
+          titulo: "Status de acesso",
+          opcoes: situacoes,
+          textoTodos: "Todos"
+        })}
+
+      </div>
+    </div>
+  `;
+}
+
+function gerarOptionFiltro(valor, texto, selecionado) {
+  return `
+    <option
+      value="${String(valor)}"
+      ${
+        String(valor) === String(selecionado)
+          ? "selected"
+          : ""
+      }
+    >
+      ${texto}
+    </option>
+  `;
+}
+
+function obterOpcoesUnicasAtivacoes(
+  registros,
+  campoId,
+  campoNome
+) {
+  const mapa = new Map();
+
+  for (const item of registros || []) {
+    const id = String(item[campoId] || "");
+    const nome = String(item[campoNome] || "").trim();
+
+    if (!id || !nome) continue;
+
+    mapa.set(id, {
+      id,
+      nome
+    });
+  }
+
+  return [...mapa.values()].sort(
+    (a, b) =>
+      a.nome.localeCompare(
+        b.nome,
+        "pt-BR"
+      )
+  );
+}
+
+function aplicarFiltrosInterativosAtivacoes() {
+  filtrosInterativosAtivacoes = {
+    tipo:
+      document.getElementById("filtroBiTipo")?.value || "",
+
+    segmento:
+      document.getElementById("filtroBiSegmento")?.value || "",
+
+    cidade:
+      document.getElementById("filtroBiCidade")?.value || "",
+
+    vendedor:
+      document.getElementById("filtroBiVendedor")?.value || "",
+
+    plano:
+      document.getElementById("filtroBiPlano")?.value || "",
+
+    situacao:
+      document.getElementById("filtroBiSituacao")?.value || ""
+  };
+
+  salvarFiltrosDashboardAtivacoes();
+
+  renderizarDashboardAtivacoesFiltrado();
+}
+
+function renderizarDashboardAtivacoesFiltrado() {
+  const dados =
+    dadosDashboardAtivacoesGlobais;
+
+  const area =
+    document.getElementById(
+      "areaDashboardAtivacoes"
+    );
+
+  if (!dados || !area) return;
+
+  const todos =
+    Array.isArray(dados.registros)
+      ? dados.registros
+      : [];
+
+      const filtrados = todos.filter(item => {
+        const tipos =
+          normalizarArrayFiltro(
+            filtrosInterativosAtivacoes.tipo
+          );
+
+        const segmentos =
+          normalizarArrayFiltro(
+            filtrosInterativosAtivacoes.segmento
+          );
+
+        const cidades =
+          normalizarArrayFiltro(
+            filtrosInterativosAtivacoes.cidade
+          );
+
+        const vendedores =
+          normalizarArrayFiltro(
+            filtrosInterativosAtivacoes.vendedor
+          );
+
+        const planos =
+          normalizarArrayFiltro(
+            filtrosInterativosAtivacoes.plano
+          );
+
+        const situacoes =
+          normalizarArrayFiltro(
+            filtrosInterativosAtivacoes.situacao
+          );
+
+        if (
+          tipos.length &&
+          !tipos.includes(
+            String(item.tipo_movimento || "")
+          )
+        ) {
+          return false;
+        }
+
+        if (
+          segmentos.length &&
+          !segmentos.includes(
+            String(item.segmento || "")
+          )
+        ) {
+          return false;
+        }
+
+        if (
+          cidades.length &&
+          !cidades.includes(
+            String(item.cidade_id || "")
+          )
+        ) {
+          return false;
+        }
+
+        if (
+          vendedores.length &&
+          !vendedores.includes(
+            String(item.vendedor_id || "")
+          )
+        ) {
+          return false;
+        }
+
+        if (
+          planos.length &&
+          !planos.includes(
+            String(item.plano_id || "")
+          )
+        ) {
+          return false;
+        }
+
+        if (
+          situacoes.length &&
+          !situacoes.includes(
+            String(
+              item.situacao || ""
+            ).toUpperCase()
+          )
+        ) {
+          return false;
+        }
+
+        return true;
+      });
+
+  registrosDashboardAtivacoesFiltrados =
+    filtrados;
+
+  area.innerHTML =
+    gerarHTMLDashboardAtivacoes(
+      dados,
+      filtrados
+    );
+}
+
+function limparFiltrosInterativosAtivacoes() {
+  filtrosInterativosAtivacoes = {
+    tipo: [],
+    segmento: [],
+    cidade: [],
+    vendedor: [],
+    plano: [],
+    situacao: []
+  };
+
+  salvarFiltrosDashboardAtivacoes();
+
+  renderizarDashboardAtivacoesFiltrado();
+}
+
+
+function trocarAbaDashboardAtivacoes(aba) {
+  const abasPermitidas = [
+    "visaoGeral",
+    "filiais",
+    "vendedores",
+    "localidades",
+    "planos",
+    "detalhamento"
+  ];
+
+  if (!abasPermitidas.includes(aba)) {
+    aba = "visaoGeral";
+  }
+
+  abaDashboardAtivacoes = aba;
+
+  localStorage.setItem(
+    "abaDashboardAtivacoes",
+    aba
+  );
+
+  renderizarDashboardAtivacoesFiltrado();
+}
+
+function gerarSubnavDashboardAtivacoes() {
+    const botoes = [
+      {
+        id: "visaoGeral",
+        icone: "dashboard",
+        titulo: "Visão geral"
+      },
+      {
+        id: "filiais",
+        icone: "filial",
+        titulo: "Filiais"
+      },
+      {
+        id: "vendedores",
+        icone: "vendedor",
+        titulo: "Vendedores"
+      },
+      {
+        id: "localidades",
+        icone: "cidade",
+        titulo: "Localidades"
+      },
+      {
+        id: "planos",
+        icone: "plano",
+        titulo: "Planos"
+      },
+      {
+        id: "detalhamento",
+        icone: "tabela",
+        titulo: "Detalhamento"
+      }
+    ];
+
+  return `
+    <nav class="bi-ativacoes-subnav">
+      ${botoes.map(botao => `
+        <button
+          class="
+            bi-ativacoes-subnav-btn
+            ${
+              abaDashboardAtivacoes === botao.id
+                ? "active"
+                : ""
+            }
+          "
+          onclick="
+            trocarAbaDashboardAtivacoes('${botao.id}')
+          "
+        >
+          ${iconeBi(botao.icone, 17)}
+          ${botao.titulo}
+        </button>
+      `).join("")}
+    </nav>
+  `;
+}
+
+function gerarConteudoAbaDashboardAtivacoes({
+  dados,
+  registros,
+  vendedores,
+  cidades,
+  planos
+}) {
+  if (abaDashboardAtivacoes === "filiais") {
+    return `
+      <div class="bi-ativacoes-grid">
+        ${gerarPainelFiliaisAtivacoes(
+          dados,
+          registros
+        )}
+      </div>
+    `;
+  }
+
+  if (abaDashboardAtivacoes === "vendedores") {
+    return `
+      <div class="bi-ativacoes-grid">
+
+        ${gerarPainelRankingAtivacoes(
+          `${iconeBi("vendedor", 21)} Vendedores`,
+          "Quantidade e receita por vendedor",
+          vendedores,
+          false,
+          true
+        )}
+
+      </div>
+    `;
+  }
+
+  if (abaDashboardAtivacoes === "localidades") {
+    return `
+      <div class="bi-ativacoes-grid">
+
+        ${gerarPainelRankingAtivacoes(
+          `${iconeBi("cidade", 21)} Cidades`,
+          "Resultado por cidade",
+          cidades,
+          false,
+          true
+        )}
+
+      </div>
+    `;
+  }
+
+  if (abaDashboardAtivacoes === "planos") {
+    return `
+      <div class="bi-ativacoes-grid">
+
+        ${gerarPainelRankingAtivacoes(
+          `${iconeBi("plano", 21)} Planos`,
+          "Quantidade e receita por plano",
+          planos,
+          true,
+          true
+        )}
+
+      </div>
+    `;
+  }
+
+  if (abaDashboardAtivacoes === "detalhamento") {
+    return `
+      <div class="bi-ativacoes-painel">
+
+        <div class="bi-ativacoes-painel-header">
+
+          <div class="bi-titulo-com-icone">
+            ${iconeBi("tabela", 22)}
+
+            <div>
+              <h2>Detalhamento das ativações</h2>
+
+              <span
+                id="contadorDetalhamentoAtivacoes"
+              >
+                ${registros.length} contratos encontrados
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="bi-detalhamento-toolbar">
+
+          <div class="bi-detalhamento-busca">
+
+            <span class="bi-detalhamento-busca-icone">
+              ${iconeBi("dashboard", 18)}
+            </span>
+
+            <input
+              id="buscaDetalhamentoAtivacoes"
+              type="search"
+              value="${buscaDetalhamentoAtivacoes || ""}"
+              placeholder="Buscar por cliente, contrato, vendedor, cidade, bairro ou plano..."
+              oninput="aplicarBuscaDetalhamentoAtivacoes()"
+            >
+
+          </div>
+
+          <button
+            id="btnLimparBuscaDetalhamento"
+            class="btn btn-secondary"
+            style="
+              display:${
+                buscaDetalhamentoAtivacoes
+                  ? "inline-flex"
+                  : "none"
+              };
+            "
+            onclick="limparBuscaDetalhamentoAtivacoes()"
+          >
+            Limpar busca
+          </button>
+
+        </div>
+
+        ${gerarTabelaDashboardAtivacoes(
+          registros
+        )}
+
+      </div>
+    `;
+  }
+
+  // ABA PADRÃO: VISÃO GERAL
+  return `
+    <div class="bi-visao-geral-grid">
+
+      ${gerarPainelRankingAtivacoes(
+        `${iconeBi("vendedor", 21)} Vendedores`,
+        "Principais vendedores",
+        vendedores.slice(0, 5)
+      )}
+
+      ${gerarPainelRankingAtivacoes(
+        `${iconeBi("cidade", 21)} Cidades`,
+        "Principais cidades",
+        cidades.slice(0, 5)
+      )}
+
+      ${gerarPainelRankingAtivacoes(
+        `${iconeBi("plano", 21)} Planos`,
+        "Planos mais ativados",
+        planos.slice(0, 5),
+        true
+      )}
+
+      ${gerarPainelFiliaisAtivacoes(
+        dados,
+        registros
+      )}
+
+    </div>
+  `;
+}
+
 
   </script>
 

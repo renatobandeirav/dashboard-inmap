@@ -144,21 +144,21 @@ function exigirPermissao(permissao) {
     const usuario = req.session?.usuario;
 
     if (!usuario) {
-        console.warn("[ACESSO NEGADO - PERMISSAO]", {
-          usuario_id: usuario.id || null,
-          usuario: usuario.usuario || null,
-          nome: usuario.nome || null,
-          perfil: usuario.perfil || null,
-          equipe: usuario.equipe || null,
-          rota: req.originalUrl,
-          metodo: req.method,
-          ip: req.ip,
-          user_agent: req.get("User-Agent") || null,
-          referer: req.get("Referer") || null,
-          permissao_exigida: permissao,
-          permissoes_usuario: permissoes,
-          data_hora: new Date().toISOString()
-        });
+      console.warn("[ACESSO NEGADO - PERMISSAO]", {
+        usuario_id: null,
+        usuario: null,
+        nome: null,
+        perfil: null,
+        equipe: null,
+        rota: req.originalUrl,
+        metodo: req.method,
+        ip: req.ip,
+        user_agent: req.get("User-Agent") || null,
+        referer: req.get("Referer") || null,
+        permissao_exigida: permissao,
+        permissoes_usuario: [],
+        data_hora: new Date().toISOString()
+      });
 
       return res.status(401).json({
         erro: true,
@@ -3064,6 +3064,852 @@ async function obterPlanoChurnPorNome(nomePlano) {
 }
 
 
+
+// =========================================================
+// RELATÓRIOS COMERCIAIS - BI DE ATIVAÇÕES
+// =========================================================
+
+const cacheRelatorioAtivacoes = {};
+
+const consultasRelatorioAtivacoesEmAndamento =
+  new Map();
+
+const MAX_CACHE_RELATORIO_ATIVACOES = 20;
+
+
+const cachePlanosRelatorioAtivacoes = {};
+const cacheFiliaisRelatorioAtivacoes = {};
+
+const TEMPO_CACHE_RELATORIO_ATIVACOES_MS =
+  5 * 60 * 1000;
+
+const FILIAIS_COMERCIAIS = {
+  "1": "VELLON MATRIZ",
+  "2": "VELLON CASTANHAL",
+  "13": "VELLON BUJARU"
+};
+
+  function limparCacheRelatorioAtivacoes() {
+  const agora = Date.now();
+
+  for (
+    const [chave, item]
+    of Object.entries(cacheRelatorioAtivacoes)
+  ) {
+    if (
+      !item ||
+      agora - item.criadoEm >
+        TEMPO_CACHE_RELATORIO_ATIVACOES_MS
+    ) {
+      delete cacheRelatorioAtivacoes[chave];
+    }
+  }
+
+  const chaves =
+    Object.keys(cacheRelatorioAtivacoes);
+
+  if (
+    chaves.length <=
+    MAX_CACHE_RELATORIO_ATIVACOES
+  ) {
+    return;
+  }
+
+  chaves
+    .sort(
+      (a, b) =>
+        cacheRelatorioAtivacoes[a].criadoEm -
+        cacheRelatorioAtivacoes[b].criadoEm
+    )
+    .slice(
+      0,
+      chaves.length -
+        MAX_CACHE_RELATORIO_ATIVACOES
+    )
+    .forEach(chave => {
+      delete cacheRelatorioAtivacoes[chave];
+    });
+}
+
+
+
+function normalizarTextoRelatorio(valor) {
+  return String(valor || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
+}
+
+function classificarMotivoAtivacao(idMotivoInclusao) {
+  const motivoId = String(idMotivoInclusao || "");
+
+  if (motivoId === "1") {
+    return "ATIVACAO";
+  }
+
+  if (motivoId === "8") {
+    return "REATIVACAO";
+  }
+
+  return null;
+}
+
+function vendedorPermitidoRelatorioAtivacoes(nomeVendedor) {
+  const nomeNormalizado =
+    normalizarTextoRelatorio(nomeVendedor);
+
+  if (!nomeNormalizado) {
+    return false;
+  }
+
+  const prefixosIgnorados = [
+    "RELACIONAMENTO",
+    "RELACIOMANENTO",
+    "FINANCEIRO"
+  ];
+
+  return !prefixosIgnorados.some(prefixo =>
+    nomeNormalizado.startsWith(prefixo)
+  );
+}
+
+function nomeVendedorRelatorioAtivacoes(contrato) {
+  const vendedorId =
+    String(contrato.id_vendedor || "");
+
+  return (
+    vendedores[vendedorId] ||
+    contrato.vendedor ||
+    contrato.nome_vendedor ||
+    contrato.vendedor_nome ||
+    `Vendedor não mapeado - ID ${vendedorId || "0"}`
+  );
+}
+
+async function obterPlanoRelatorioAtivacoes(idPlano) {
+  const planoId = String(idPlano || "");
+
+  if (!planoId || planoId === "0") {
+    return null;
+  }
+
+  if (cachePlanosRelatorioAtivacoes[planoId]) {
+    return cachePlanosRelatorioAtivacoes[planoId];
+  }
+
+  try {
+    const retorno = await buscar(
+      "vd_contratos",
+      "vd_contratos.id",
+      planoId,
+      "1"
+    );
+
+    const plano =
+      retorno.registros?.[0] || null;
+
+    cachePlanosRelatorioAtivacoes[planoId] =
+      plano;
+
+    return plano;
+  } catch (erro) {
+    console.error(
+      `[RELATORIO ATIVACOES] Erro ao buscar plano ${planoId}:`,
+      erro.response?.data || erro.message
+    );
+
+    return null;
+  }
+}
+
+async function obterFilialRelatorioAtivacoes(idFilial) {
+
+
+  const filialId = String(idFilial || "");
+
+  if (!filialId || filialId === "0") {
+    return {
+      id: null,
+      nome: "SEM FILIAL"
+    };
+  }
+
+  if (cacheFiliaisRelatorioAtivacoes[filialId]) {
+    return cacheFiliaisRelatorioAtivacoes[filialId];
+  }
+
+  try {
+    const retorno = await buscar(
+      "filial",
+      "filial.id",
+      filialId,
+      "1"
+    );
+
+    const filialIXC =
+      retorno.registros?.[0] || null;
+
+      const filial = {
+        id: filialId,
+        nome:
+          FILIAIS_COMERCIAIS[filialId] ||
+          filialIXC?.razao ||
+          filialIXC?.fantasia ||
+          filialIXC?.nome ||
+          `Filial ${filialId}`
+      };
+
+    cacheFiliaisRelatorioAtivacoes[filialId] =
+      filial;
+
+    return filial;
+  } catch (erro) {
+      const filial = {
+        id: filialId,
+        nome:
+          FILIAIS_COMERCIAIS[filialId] ||
+          `Filial ${filialId}`
+      };
+
+    cacheFiliaisRelatorioAtivacoes[filialId] =
+      filial;
+
+    return filial;
+  }
+}
+
+function agruparRelatorioAtivacoes(
+  lista,
+  campoId,
+  campoNome
+) {
+  const mapa = new Map();
+
+  for (const item of lista) {
+    const id =
+      String(item[campoId] || "");
+
+    const nome =
+      item[campoNome] || "NÃO IDENTIFICADO";
+
+    const chave = `${id}_${nome}`;
+
+    if (!mapa.has(chave)) {
+      mapa.set(chave, {
+        id: id || null,
+        nome,
+        ativacoes: 0,
+        reativacoes: 0,
+        total: 0,
+        receita_mensal: 0,
+        taxa_instalacao: 0
+      });
+    }
+
+    const registro = mapa.get(chave);
+
+    registro.total += 1;
+    registro.receita_mensal +=
+      Number(item.valor_mensal || 0);
+
+    registro.taxa_instalacao +=
+      Number(item.taxa_instalacao || 0);
+
+    if (item.tipo_movimento === "ATIVACAO") {
+      registro.ativacoes += 1;
+    }
+
+    if (item.tipo_movimento === "REATIVACAO") {
+      registro.reativacoes += 1;
+    }
+  }
+
+  return [...mapa.values()]
+    .map(item => ({
+      ...item,
+      receita_mensal:
+        Number(item.receita_mensal.toFixed(2)),
+      taxa_instalacao:
+        Number(item.taxa_instalacao.toFixed(2))
+    }))
+    .sort((a, b) => b.total - a.total);
+}
+
+
+function classificarSegmentoPlano(plano, contrato = {}) {
+  const nomePlano = normalizarTextoRelatorio(
+    plano?.nome ||
+    contrato.contrato ||
+    contrato.descricao_aux_plano_venda ||
+    ""
+  );
+
+  if (
+    nomePlano.includes("DEDICATED") ||
+    nomePlano.includes("LINK DEDICADO")
+  ) {
+    return "LINK_DEDICADO";
+  }
+
+  if (
+    nomePlano.includes("REDE NEUTRA") ||
+    nomePlano.includes("FIBRASIL")
+  ) {
+    return "REDE_NEUTRA";
+  }
+
+  if (
+    nomePlano.includes("EMPLOYEE") ||
+    nomePlano.includes("FUNCIONARIO")
+  ) {
+    return "FUNCIONARIO";
+  }
+
+  if (
+    nomePlano.includes("CORPORATE") ||
+    nomePlano.includes("ENTERPRISE") ||
+    String(contrato.tipo_pessoa || "").toUpperCase() === "J"
+  ) {
+    return "EMPRESARIAL";
+  }
+
+  if (
+    nomePlano.includes("BASIC") ||
+    nomePlano.includes("PROMOTION") ||
+    nomePlano.includes("PRIME") ||
+    nomePlano.includes("RISE") ||
+    nomePlano.includes("SPEED") ||
+    nomePlano.includes("PIX")
+  ) {
+    return "RESIDENCIAL";
+  }
+
+  return "OUTROS";
+}
+
+async function mapearComConcorrencia(
+  lista,
+  limite,
+  processar
+) {
+  const resultados =
+    new Array(lista.length);
+
+  let proximoIndice = 0;
+
+  async function trabalhador() {
+    while (true) {
+      const indice = proximoIndice;
+      proximoIndice += 1;
+
+      if (indice >= lista.length) {
+        return;
+      }
+
+      resultados[indice] =
+        await processar(
+          lista[indice],
+          indice
+        );
+    }
+  }
+
+  const quantidadeTrabalhadores =
+    Math.min(
+      Math.max(1, limite),
+      lista.length
+    );
+
+  await Promise.all(
+    Array.from(
+      {
+        length: quantidadeTrabalhadores
+      },
+      () => trabalhador()
+    )
+  );
+
+  return resultados;
+}
+
+async function montarRelatorioAtivacoes(
+  dataInicial,
+  dataFinal
+) {
+  const datasPeriodo =
+    gerarDatasPeriodo(dataInicial, dataFinal);
+
+  let contratos = [];
+
+  for (const data of datasPeriodo) {
+    const retorno = await buscar(
+      "cliente_contrato",
+      "cliente_contrato.data_ativacao",
+      data,
+      "1000"
+    );
+
+    contratos.push(...(retorno.registros || []));
+  }
+
+  const contratosUnicos = new Map();
+
+  for (const contrato of contratos) {
+    const contratoId =
+      String(contrato.id || "");
+
+    if (!contratoId) continue;
+
+    contratosUnicos.set(
+      contratoId,
+      contrato
+    );
+  }
+
+  contratos =
+    [...contratosUnicos.values()];
+
+  const registrosProcessados =
+    await mapearComConcorrencia(
+      contratos,
+      6,
+      async contrato => {
+        const tipoMovimento =
+          classificarMotivoAtivacao(
+            contrato.id_motivo_inclusao
+          );
+
+        if (!tipoMovimento) {
+          return null;
+        }
+
+        const vendedorId =
+          String(
+            contrato.id_vendedor || ""
+          );
+
+        const vendedorNome =
+          nomeVendedorRelatorioAtivacoes(
+            contrato
+          );
+
+        if (
+          !vendedorPermitidoRelatorioAtivacoes(
+            vendedorNome
+          )
+        ) {
+          return null;
+        }
+
+        const [cliente, plano, filial] =
+          await Promise.all([
+            buscarClienteCache(
+              contrato.id_cliente
+            ),
+
+            obterPlanoRelatorioAtivacoes(
+              contrato.id_vd_contrato
+            ),
+
+            obterFilialRelatorioAtivacoes(
+              contrato.id_filial
+            )
+          ]);
+
+        const cidadeId =
+          String(
+            cliente?.cidade ||
+            contrato.id_cidade ||
+            contrato.cidade ||
+            ""
+          );
+
+        const cidadeNome =
+          await buscarCidadeIXCCache(
+            cidadeId
+          );
+
+        const valorMensal =
+          numeroIXC(
+            contrato.valor_contrato ||
+            contrato.valor ||
+            plano?.valor_contrato
+          );
+
+        const taxaInstalacao =
+          numeroIXC(
+            contrato.taxa_instalacao
+          );
+
+        return {
+          contrato_id:
+            String(contrato.id),
+
+          cliente_id:
+            String(
+              contrato.id_cliente || ""
+            ),
+
+          cliente:
+            cliente?.razao ||
+            cliente?.nome ||
+            cliente?.fantasia ||
+            `Cliente ID ${contrato.id_cliente}`,
+
+          data_ativacao:
+            String(
+              contrato.data_ativacao || ""
+            ).slice(0, 10),
+
+          motivo_inclusao_id:
+            String(
+              contrato.id_motivo_inclusao ||
+              ""
+            ),
+
+          tipo_movimento:
+            tipoMovimento,
+
+          vendedor_id:
+            vendedorId,
+
+          vendedor:
+            vendedorNome,
+
+          filial_id:
+            filial.id,
+
+          filial:
+            filial.nome,
+
+          cidade_id:
+            cidadeId || null,
+
+          cidade:
+            cidadeNome || "-",
+
+          bairro:
+            cliente?.bairro ||
+            contrato.bairro ||
+            "-",
+
+          plano_id:
+            String(
+              contrato.id_vd_contrato || ""
+            ),
+
+          plano:
+            plano?.nome ||
+            contrato.contrato ||
+            contrato.descricao_aux_plano_venda ||
+            "-",
+
+          segmento:
+            classificarSegmentoPlano(
+              plano,
+              contrato
+            ),
+
+          valor_mensal:
+            Number(
+              valorMensal.toFixed(2)
+            ),
+
+          taxa_instalacao:
+            Number(
+              taxaInstalacao.toFixed(2)
+            ),
+
+          status_contrato:
+            String(
+              contrato.status || "-"
+            ),
+
+          status_acesso:
+            String(
+              contrato.status_internet || "-"
+            ),
+
+          situacao:
+            classificarSituacaoContrato(
+              contrato
+            ),
+
+          tipo_pessoa:
+            cliente?.tipo_pessoa ||
+            cliente?.tipo_pessoa_cliente ||
+            null,
+
+          tipo_cliente_id:
+            cliente?.id_tipo_cliente ||
+            null,
+
+          tipo_cliente:
+            cliente?.tipo_cliente ||
+            cliente?.tipo ||
+            null
+        };
+      }
+    );
+
+  const registros =
+    registrosProcessados.filter(Boolean);
+
+  const totalAtivacoes =
+    registros.filter(
+      item =>
+        item.tipo_movimento === "ATIVACAO"
+    ).length;
+
+  const totalReativacoes =
+    registros.filter(
+      item =>
+        item.tipo_movimento === "REATIVACAO"
+    ).length;
+
+  const receitaMensal =
+    registros.reduce(
+      (soma, item) =>
+        soma + Number(item.valor_mensal || 0),
+      0
+    );
+
+  const taxaInstalacao =
+    registros.reduce(
+      (soma, item) =>
+        soma + Number(item.taxa_instalacao || 0),
+      0
+    );
+
+  const vendedoresUnicos =
+    new Set(
+      registros.map(item => item.vendedor_id)
+    );
+
+  const cidadesUnicas =
+    new Set(
+      registros.map(item => item.cidade_id)
+    );
+
+  const filiaisUnicas =
+    new Set(
+      registros.map(item => item.filial_id)
+    );
+
+  const ticketMedio =
+    registros.length
+      ? receitaMensal / registros.length
+      : 0;
+
+  return {
+    periodo: {
+      inicio: dataInicial,
+      fim: dataFinal
+    },
+
+    resumo: {
+      total_registros:
+        registros.length,
+
+      total_ativacoes:
+        totalAtivacoes,
+
+      total_reativacoes:
+        totalReativacoes,
+
+      receita_mensal:
+        Number(receitaMensal.toFixed(2)),
+
+      taxa_instalacao:
+        Number(taxaInstalacao.toFixed(2)),
+
+      ticket_medio:
+        Number(ticketMedio.toFixed(2)),
+
+      total_vendedores:
+        vendedoresUnicos.size,
+
+      total_cidades:
+        cidadesUnicas.size,
+
+      total_filiais:
+        filiaisUnicas.size
+    },
+
+    agrupamentos: {
+      vendedores:
+        agruparRelatorioAtivacoes(
+          registros,
+          "vendedor_id",
+          "vendedor"
+        ),
+
+      filiais:
+        agruparRelatorioAtivacoes(
+          registros,
+          "filial_id",
+          "filial"
+        ),
+
+      cidades:
+        agruparRelatorioAtivacoes(
+          registros,
+          "cidade_id",
+          "cidade"
+        ),
+
+      planos:
+        agruparRelatorioAtivacoes(
+          registros,
+          "plano_id",
+          "plano"
+        )
+    },
+
+    registros
+  };
+}
+
+
+app.get( "/api/relatorios-comerciais/ativacoes", exigirLogin, exigirPermissao("ver_relatorios_comerciais"), async (req, res) => {
+    try {
+      const inicio =
+        String(req.query.inicio || "");
+
+      const fim =
+        String(req.query.fim || "");
+
+      if (
+        !/^\d{4}-\d{2}-\d{2}$/.test(inicio) ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(fim)
+      ) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "Informe início e fim no formato YYYY-MM-DD."
+        });
+      }
+
+      if (inicio > fim) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "A data inicial não pode ser maior que a data final."
+        });
+      }
+
+      const inicioDate =
+        new Date(`${inicio}T00:00:00`);
+
+      const fimDate =
+        new Date(`${fim}T00:00:00`);
+
+      const diferencaDias =
+        Math.floor(
+          (
+            fimDate.getTime() -
+            inicioDate.getTime()
+          ) /
+          (1000 * 60 * 60 * 24)
+        );
+
+      if (diferencaDias > 62) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "Consulte no máximo 63 dias por vez nesta primeira versão."
+        });
+      }
+
+      const chaveCache =
+        `${inicio}_${fim}`;
+
+      limparCacheRelatorioAtivacoes();
+
+          const cache =
+            cacheRelatorioAtivacoes[chaveCache];
+
+          if (
+            cache &&
+            Date.now() - cache.criadoEm <
+              TEMPO_CACHE_RELATORIO_ATIVACOES_MS
+          ) {
+            return res.json({
+              ...cache.dados,
+              cache: true,
+              atualizado_em:
+                new Date(cache.criadoEm)
+                  .toLocaleString("pt-BR")
+            });
+          }
+
+          if (
+            consultasRelatorioAtivacoesEmAndamento
+              .has(chaveCache)
+          ) {
+            const dados =
+              await consultasRelatorioAtivacoesEmAndamento
+                .get(chaveCache);
+
+            return res.json({
+              ...dados,
+              cache: true,
+              compartilhado: true,
+              atualizado_em:
+                new Date()
+                  .toLocaleString("pt-BR")
+            });
+          }
+
+          const consulta = montarRelatorioAtivacoes(
+            inicio,
+            fim
+          );
+
+          consultasRelatorioAtivacoesEmAndamento.set(
+            chaveCache,
+            consulta
+          );
+
+          try {
+            const dados = await consulta;
+
+            const criadoEm = Date.now();
+
+            cacheRelatorioAtivacoes[chaveCache] = {
+              criadoEm,
+              dados
+            };
+
+            limparCacheRelatorioAtivacoes();
+
+            return res.json({
+              ...dados,
+              cache: false,
+              atualizado_em:
+                new Date(criadoEm)
+                  .toLocaleString("pt-BR")
+            });
+          } finally {
+            consultasRelatorioAtivacoesEmAndamento.delete(
+              chaveCache
+            );
+          }
+    } catch (erro) {
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao gerar relatório comercial de ativações"
+      );
+    }
+  }
+);
+
+
+
 if (process.env.NODE_ENV !== "production") {
 app.get("/api/debug-os-churn", exigirLogin, exigirSuperAdmin, async (req, res) => {
   try {
@@ -4384,17 +5230,7 @@ registrarDebugGet("/api/ranking-backoffice/penalidades-teste", async (req, res) 
           let nomeClienteCadastro = String(os.id_cliente || "-");
 
           try {
-            const respostaClienteCadastro = await api.post("/cliente", {
-              qtype: "cliente.id",
-              query: String(os.id_cliente),
-              oper: "=",
-              page: "1",
-              rp: "1",
-              sortname: "id",
-              sortorder: "desc"
-            });
-
-            const clienteCadastro = respostaClienteCadastro.data?.registros?.[0];
+            const clienteCadastro = await buscarClienteCache(os.id_cliente);
 
             if (clienteCadastro) {
               nomeClienteCadastro =
@@ -4403,7 +5239,11 @@ registrarDebugGet("/api/ranking-backoffice/penalidades-teste", async (req, res) 
                 nomeClienteCadastro;
             }
           } catch (erroClienteCadastro) {
-            console.log("Erro ao buscar cliente do cadastro:", os.id_cliente, erroClienteCadastro.message);
+            console.log(
+              "Erro ao buscar cliente do cadastro:",
+              os.id_cliente,
+              erroClienteCadastro.message
+            );
           }
 
           registro.itens.push({

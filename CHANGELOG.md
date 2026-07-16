@@ -54,3 +54,45 @@
 - Persistência da tela e da aba do CRM após F5.
 - Ocultação de menus sem permissão.
 - Reinicialização do Leaflet após troca de período.
+## [1.17.0] - 2026-07-16 
+
+
+
+### Adicionado
+
+- Novo módulo Relatórios Comerciais.
+
+- Dashboard estratégico de ativações e reativações.
+
+- Indicadores de contratos, receita mensal, taxa de instalação e ticket médio.
+
+- Agrupamentos por filial, vendedor, cidade e plano.
+
+- Filtros múltiplos interativos por movimento, segmento, cidade, vendedor, plano e situação.
+
+- Abas de visão geral, filiais, vendedores, localidades, planos e detalhamento.
+
+- Busca local no detalhamento dos contratos.
+
+- Identificação amigável das filiais Vellon Matriz, Castanhal e Bujaru.
+
+
+
+### Melhorado
+
+- Cache do relatório comercial limitado a 20 períodos.
+
+- Compartilhamento de consultas simultâneas para o mesmo período.
+
+- Processamento com concorrência controlada para consultas ao IXC.
+
+- Persistência da tela, aba e filtros após atualização da página.
+
+
+
+### Corrigido
+
+- Tratamento de usuário não autenticado no middleware de permissões.
+
+- Remoção de código residual na rota de relatórios comerciais.
+
