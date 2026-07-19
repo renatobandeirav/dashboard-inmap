@@ -54,8 +54,18 @@ app.disable("x-powered-by");
 
 app.set("trust proxy", 1);
 
+const ambienteAplicacao =
+  process.env.NODE_ENV === "production"
+    ? "prod"
+    : "dev";
+
+const nomeCookieSessao =
+  ambienteAplicacao === "prod"
+    ? "inmap.prod.sid"
+    : "inmap.dev.sid";
+
 app.use(session({
-  name: "inmap.sid",
+  name: nomeCookieSessao,
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
@@ -306,6 +316,10 @@ const {
   criarRotasInviabilidade
 } = require("./integracoes/inviabilidade/routes");
 
+const {
+  criarSincronizadorInviabilidadeIXC
+} = require("./integracoes/inviabilidade/ixc-sync");
+
 const piperunSync = criarSincronizadorPiperun(db);
 
 const inviabilidadeSync =
@@ -349,72 +363,6 @@ const inviabilidadeRoutes =
     exigirPermissao,
     responderErroInterno
   });
-
-  registrarDebugGet("/api/debug/ixc/crm-lead/:id", async (req, res) => {
-  try {
-    const retorno = await buscar(
-      "crm_lead",
-      "crm_lead.id",
-      req.params.id,
-      "1"
-    );
-
-    res.json(retorno);
-
-  } catch (erro) {
-    res.status(500).json({
-      erro: true,
-      detalhe: erro.response?.data || erro.message
-    });
-  }
-});
-
-
-  registrarDebugGet(
-  "/api/debug/ixc/crm-leads-amostra",
-  async (req, res) => {
-    try {
-      const retorno = await buscarComFiltros(
-        "crm_lead",
-        [],
-        "10"
-      );
-
-      const registros =
-        retorno.registros || [];
-
-      const camposEncontrados =
-        registros.length > 0
-          ? Object.keys(registros[0]).sort()
-          : [];
-
-      return res.json({
-        sucesso: true,
-        total_retornado: registros.length,
-        total_ixc:
-          Number(retorno.total || 0),
-        campos_encontrados: camposEncontrados,
-        registros
-      });
-
-    } catch (erro) {
-      console.error(
-        "[IXC CRM_LEAD] Erro ao buscar amostra:",
-        erro.response?.data || erro.message
-      );
-
-      return res.status(500).json({
-        erro: true,
-        mensagem:
-          "Erro ao consultar amostra de leads do IXC.",
-        detalhe:
-          erro.response?.data ||
-          erro.message
-      });
-    }
-  }
-);
-
 
 // FIM DO CÓDIGO DO PIPER //
 
@@ -1621,11 +1569,12 @@ app.post("/api/logout", exigirLogin, (req, res) => {
       );
     }
 
-    res.clearCookie("inmap.sid", {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production"
-    });
+      res.clearCookie(nomeCookieSessao, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure:
+          process.env.NODE_ENV === "production"
+      });
 
     return res.json({
       sucesso: true,
@@ -1688,6 +1637,1244 @@ async function buscarComFiltros(endpoint, filtros = [], rp = "500") {
   return response.data;
 }
 
+function aguardarIXC(ms) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function normalizarTelefoneIXC(valor) {
+  const telefone = String(valor || "")
+    .replace(/\D/g, "");
+
+  if (!telefone) return "";
+
+  // Remove código do Brasil quando houver.
+  if (
+    telefone.length > 11 &&
+    telefone.startsWith("55")
+  ) {
+    return telefone.slice(2);
+  }
+
+  return telefone;
+}
+
+function coordenadaNumericaIXC(latitude, longitude) {
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat !== 0 &&
+    lng !== 0
+  );
+}
+
+function coordenadaOperacionalIXC(latitude, longitude) {
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+
+  if (!coordenadaNumericaIXC(lat, lng)) {
+    return false;
+  }
+
+  /*
+   * Faixa ampla de diagnóstico.
+   * Não significa que toda coordenada dentro dela seja atendida.
+   */
+  return (
+    lat >= -5 &&
+    lat <= 0.5 &&
+    lng >= -51 &&
+    lng <= -46
+  );
+}
+
+function obterMesRegistroIXC(dataCadastro) {
+  const valor = String(dataCadastro || "").trim();
+
+  const correspondencia =
+    valor.match(/^(\d{4})-(\d{2})/);
+
+  if (!correspondencia) {
+    return "SEM_DATA";
+  }
+
+  return `${correspondencia[1]}-${correspondencia[2]}`;
+}
+
+async function buscarPaginaContatosIXC({
+  pagina,
+  registrosPorPagina
+}) {
+  const params = {
+    qtype: "contato.status_viabilidade",
+    query: "N",
+    oper: "=",
+    page: String(pagina),
+    rp: String(registrosPorPagina),
+    sortname: "id",
+    sortorder: "desc"
+  };
+
+  const response = await api.post(
+    "/contato",
+    params
+  );
+
+  const retorno = response.data || {};
+
+  if (retorno.type === "error") {
+    throw new Error(
+      retorno.message ||
+      "Erro ao consultar recurso contato."
+    );
+  }
+
+  return retorno;
+}
+
+const sincronizadorInviabilidadeIXC =
+  criarSincronizadorInviabilidadeIXC({
+    db,
+
+    buscarPaginaIXC:
+      buscarPaginaContatosIXC,
+
+    buscarCidadeIXCCache
+  });
+
+async function buscarContatosInviaveisIXCPaginado({
+  registrosPorPagina = 500,
+  limitePaginas = 20,
+  intervaloMs = 250
+} = {}) {
+  const todos = [];
+  let pagina = 1;
+  let totalIXC = 0;
+  let totalPaginas = 1;
+
+  while (
+    pagina <= totalPaginas &&
+    pagina <= limitePaginas
+  ) {
+
+  const retorno =
+    await buscarPaginaContatosIXC({
+      pagina,
+      registrosPorPagina
+    });
+
+    const registros = Array.isArray(
+      retorno.registros
+    )
+      ? retorno.registros
+      : [];
+
+    if (pagina === 1) {
+      totalIXC = Number(retorno.total || 0);
+
+      totalPaginas = Math.max(
+        Math.ceil(
+          totalIXC / registrosPorPagina
+        ),
+        1
+      );
+    }
+
+    todos.push(...registros);
+
+    console.log(
+      `[IXC INVIABILIDADE] Página ${pagina}/${totalPaginas} ` +
+      `- recebidos: ${registros.length}`
+    );
+
+    /*
+     * Evita repetição infinita caso o IXC
+     * devolva uma página vazia.
+     */
+    if (!registros.length) {
+      break;
+    }
+
+    pagina += 1;
+
+    if (
+      pagina <= totalPaginas &&
+      intervaloMs > 0
+    ) {
+      await aguardarIXC(intervaloMs);
+    }
+  }
+
+  return {
+    total_ixc: totalIXC,
+    paginas_previstas: totalPaginas,
+    paginas_processadas: pagina - 1,
+    consulta_completa:
+      pagina > totalPaginas,
+    registros: todos
+  };
+}
+
+registrarDebugGet(
+  "/api/debug/ixc/sincronizar-inviabilidades",
+  async (req, res) => {
+    try {
+      const resultado =
+        await sincronizadorInviabilidadeIXC
+          .sincronizarIXC({
+            registrosPorPagina: 500,
+            limitePaginas: 20,
+            intervaloMs: 250
+          });
+
+      return res.json({
+        sucesso: true,
+        resultado
+      });
+    } catch (erro) {
+      console.error(
+        "[IXC INVIABILIDADE] Erro na sincronização:",
+        erro.response?.data ||
+        erro.message
+      );
+
+      return res.status(500).json({
+        sucesso: false,
+        mensagem:
+          "Erro ao sincronizar inviabilidades do IXC.",
+        detalhe:
+          erro.response?.data ||
+          erro.message
+      });
+    }
+  }
+);
+
+app.get("/api/inviabilidades", exigirLogin, async (req, res) => {
+  try {
+    const origem = String(
+      req.query.origem || ""
+    )
+      .trim()
+      .toUpperCase();
+
+    const status = String(
+      req.query.status || ""
+    )
+      .trim()
+      .toUpperCase();
+
+    const cidade = String(
+      req.query.cidade || ""
+    ).trim();
+
+    const bairro = String(
+      req.query.bairro || ""
+    ).trim();
+
+    const busca = String(
+      req.query.busca || ""
+    ).trim();
+
+    const paginaInformada =
+      Number(req.query.pagina || 1);
+
+    const limiteInformado =
+      Number(req.query.limite || 250);
+
+    const pagina =
+      Number.isInteger(paginaInformada) &&
+      paginaInformada > 0
+        ? paginaInformada
+        : 1;
+
+    /*
+     * Proteção para o front não solicitar milhares
+     * de registros em uma única requisição.
+     */
+    const limite = Math.min(
+      Math.max(
+        Number.isInteger(limiteInformado)
+          ? limiteInformado
+          : 250,
+        50
+      ),
+      500
+    );
+
+    const offset =
+      (pagina - 1) * limite;
+
+    const condicoes = [];
+    const valores = [];
+
+    if (
+      origem &&
+      ["IXC", "PIPERUN"].includes(origem)
+    ) {
+      condicoes.push(
+        "origem = ?"
+      );
+
+      valores.push(origem);
+    }
+
+    if (status) {
+      condicoes.push(
+        "status = ?"
+      );
+
+      valores.push(status);
+    }
+
+    if (cidade) {
+      condicoes.push(
+        "cidade = ?"
+      );
+
+      valores.push(cidade);
+    }
+
+    if (bairro) {
+      condicoes.push(
+        "bairro = ?"
+      );
+
+      valores.push(bairro);
+    }
+
+    if (busca) {
+      condicoes.push(`
+        (
+          cliente LIKE ?
+          OR endereco LIKE ?
+          OR numero LIKE ?
+          OR referencia LIKE ?
+          OR motivo_nome LIKE ?
+        )
+      `);
+
+      const termoBusca =
+        `%${busca}%`;
+
+      valores.push(
+        termoBusca,
+        termoBusca,
+        termoBusca,
+        termoBusca,
+        termoBusca
+      );
+    }
+
+    const whereSql =
+      condicoes.length
+        ? `WHERE ${condicoes.join(" AND ")}`
+        : "";
+
+        const [
+          [[resumo]],
+          [origens],
+          [statusResumo],
+          [[totalFiltrado]],
+          [registros],
+          [cidades],
+          [bairros]
+        ] = await Promise.all([
+      db.query(`
+        SELECT
+          COUNT(*) AS total,
+          SUM(
+            CASE
+              WHEN origem = 'IXC'
+              THEN 1
+              ELSE 0
+            END
+          ) AS total_ixc,
+          SUM(
+            CASE
+              WHEN origem = 'PIPERUN'
+              THEN 1
+              ELSE 0
+            END
+          ) AS total_piperun,
+          SUM(
+            CASE
+              WHEN status = 'ATIVA'
+              THEN 1
+              ELSE 0
+            END
+          ) AS total_ativas,
+          SUM(
+            CASE
+              WHEN status <> 'ATIVA'
+              THEN 1
+              ELSE 0
+            END
+          ) AS total_nao_ativas,
+          COUNT(
+            DISTINCT NULLIF(cidade, '')
+          ) AS total_cidades
+        FROM inviabilidades_mapa
+      `),
+
+      db.query(`
+        SELECT
+          origem,
+          COUNT(*) AS total
+        FROM inviabilidades_mapa
+        GROUP BY origem
+        ORDER BY origem
+      `),
+
+      db.query(`
+        SELECT
+          status,
+          COUNT(*) AS total
+        FROM inviabilidades_mapa
+        GROUP BY status
+        ORDER BY status
+      `),
+
+      db.query(
+        `
+        SELECT
+          COUNT(*) AS total
+        FROM inviabilidades_mapa
+        ${whereSql}
+        `,
+        valores
+      ),
+
+      db.query(
+        `
+        SELECT
+          id,
+          origem,
+          origem_id,
+          lead_ixc_id,
+          cliente,
+          motivo_codigo,
+          motivo_nome,
+          categoria,
+          vendedor_nome,
+          vendedor_ixc_id,        
+          cidade,
+          bairro,
+          endereco,
+          numero,
+          complemento,
+          referencia,
+          latitude,
+          longitude,
+          data_origem,
+          data_inviabilidade,
+          status,
+          observacao,
+          sincronizado_em
+        FROM inviabilidades_mapa
+        ${whereSql}
+        ORDER BY
+          data_inviabilidade DESC,
+          id DESC
+        LIMIT ?
+        OFFSET ?
+        `,
+        [
+          ...valores,
+          limite,
+          offset
+        ]
+      ),
+
+      db.query(`
+        SELECT DISTINCT
+          cidade
+        FROM inviabilidades_mapa
+        WHERE cidade IS NOT NULL
+          AND cidade <> ''
+        ORDER BY cidade
+      `),
+
+      db.query(
+        `
+        SELECT DISTINCT
+          bairro
+        FROM inviabilidades_mapa
+        WHERE bairro IS NOT NULL
+          AND bairro <> ''
+          ${
+            cidade
+              ? "AND cidade = ?"
+              : ""
+          }
+        ORDER BY bairro
+        `,
+        cidade
+          ? [cidade]
+          : []
+      )
+    ]);
+
+    const total =
+      Number(
+        totalFiltrado?.total || 0
+      );
+
+    return res.json({
+      sucesso: true,
+
+      resumo: {
+        total:
+          Number(resumo?.total || 0),
+
+        ixc:         
+          Number(resumo?.total_ixc || 0),
+
+        piperun:
+          Number(
+            resumo?.total_piperun || 0
+          ),
+
+        ativas:
+          Number(
+            resumo?.total_ativas || 0
+          ),
+
+        nao_ativas:
+          Number(
+            resumo?.total_nao_ativas || 0
+          ),
+
+        cidades:
+          Number(
+            resumo?.total_cidades || 0
+          )
+      },
+
+      agrupamentos: {
+        origens:
+          origens || [],
+
+        status:
+          statusResumo || []
+      },
+
+      filtros: {
+        cidades: (
+          cidades || []
+        ).map(item => item.cidade),
+
+        bairros: (
+          bairros || []
+        ).map(item => item.bairro)
+      },
+
+      paginacao: {
+        pagina,
+        limite,
+        total,
+        total_paginas:
+          Math.max(
+            Math.ceil(total / limite),
+            1
+          )
+      },
+
+      registros:
+        registros || []
+    });
+  } catch (erro) {
+    console.error(
+      "[INVIABILIDADES] Erro ao consultar registros:",
+      erro
+    );
+
+    return res.status(500).json({
+      erro: true,
+      mensagem:
+        "Não foi possível carregar as inviabilidades."
+    });
+  }
+});
+
+registrarDebugGet(
+  "/api/debug/ixc/diagnostico-leads-inviaveis",
+  async (req, res) => {
+    const inicio = Date.now();
+
+    try {
+      const registrosPorPagina = Math.min(
+        Math.max(
+          Number(req.query.rp || 500),
+          100
+        ),
+        500
+      );
+
+      const limitePaginas = Math.min(
+        Math.max(
+          Number(req.query.paginas || 20),
+          1
+        ),
+        20
+      );
+
+      const resultado =
+        await buscarContatosInviaveisIXCPaginado({
+          registrosPorPagina,
+          limitePaginas,
+          intervaloMs: 250
+        });
+
+      const registrosRecebidos =
+        resultado.registros;
+
+      /*
+       * Mantém apenas registros que realmente
+       * representam leads.
+       */
+      const leads = registrosRecebidos.filter(item =>
+        String(item.lead || "")
+          .trim()
+          .toUpperCase() === "S"
+      );
+
+      const resumo = {
+        total_recebido: registrosRecebidos.length,
+        total_leads: leads.length,
+
+        ativos: 0,
+        inativos: 0,
+
+        com_coordenadas_numericas: 0,
+        sem_coordenadas: 0,
+
+        coordenadas_operacionais: 0,
+        coordenadas_fora_da_area: 0,
+
+        com_cidade_id: 0,
+        sem_cidade_id: 0,
+
+        com_bairro: 0,
+        sem_bairro: 0,
+
+        com_endereco: 0,
+        sem_endereco: 0,
+
+        com_caixa_ftth: 0,
+        sem_caixa_ftth: 0
+      };
+
+      const porMes = {};
+      const porCidadeId = {};
+      const porBairro = {};
+
+      const telefones = new Map();
+      const coordenadas = new Map();
+
+      const coordenadasSuspeitas = [];
+
+      for (const item of leads) {
+        const ativo =
+          String(item.ativo || "")
+            .trim()
+            .toUpperCase();
+
+        if (ativo === "S") {
+          resumo.ativos += 1;
+        } else {
+          resumo.inativos += 1;
+        }
+
+        const possuiCoordenada =
+          coordenadaNumericaIXC(
+            item.latitude,
+            item.longitude
+          );
+
+        if (possuiCoordenada) {
+          resumo.com_coordenadas_numericas += 1;
+        } else {
+          resumo.sem_coordenadas += 1;
+        }
+
+        const coordenadaOperacional =
+          coordenadaOperacionalIXC(
+            item.latitude,
+            item.longitude
+          );
+
+        if (coordenadaOperacional) {
+          resumo.coordenadas_operacionais += 1;
+        } else {
+          resumo.coordenadas_fora_da_area += 1;
+
+          if (coordenadasSuspeitas.length < 50) {
+            coordenadasSuspeitas.push({
+              id: item.id,
+              data_cadastro:
+                item.data_cadastro,
+              cidade_id: item.cidade,
+              bairro: item.bairro,
+              latitude: item.latitude,
+              longitude: item.longitude,
+              distancia_caixa:
+                item.distancia_caixa_mais_proxima
+            });
+          }
+        }
+
+        const cidadeId =
+          String(item.cidade || "").trim();
+
+        if (cidadeId && cidadeId !== "0") {
+          resumo.com_cidade_id += 1;
+
+          porCidadeId[cidadeId] =
+            (porCidadeId[cidadeId] || 0) + 1;
+        } else {
+          resumo.sem_cidade_id += 1;
+        }
+
+        const bairro =
+          String(item.bairro || "").trim();
+
+        if (bairro) {
+          resumo.com_bairro += 1;
+
+          porBairro[bairro] =
+            (porBairro[bairro] || 0) + 1;
+        } else {
+          resumo.sem_bairro += 1;
+        }
+
+        const endereco =
+          String(item.endereco || "").trim();
+
+        if (endereco) {
+          resumo.com_endereco += 1;
+        } else {
+          resumo.sem_endereco += 1;
+        }
+
+        const caixa =
+          String(item.id_caixa_ftth || "").trim();
+
+        if (caixa && caixa !== "0") {
+          resumo.com_caixa_ftth += 1;
+        } else {
+          resumo.sem_caixa_ftth += 1;
+        }
+
+        const mes =
+          obterMesRegistroIXC(
+            item.data_cadastro
+          );
+
+        porMes[mes] =
+          (porMes[mes] || 0) + 1;
+
+        const telefone = normalizarTelefoneIXC(
+          item.fone_whatsapp ||
+          item.fone_celular ||
+          item.nome
+        );
+
+        if (telefone.length >= 10) {
+          if (!telefones.has(telefone)) {
+            telefones.set(telefone, []);
+          }
+
+          telefones.get(telefone).push(
+            String(item.id)
+          );
+        }
+
+        if (possuiCoordenada) {
+          /*
+           * Reduz para seis casas para detectar
+           * pontos praticamente iguais.
+           */
+          const chaveCoordenada = [
+            Number(item.latitude).toFixed(6),
+            Number(item.longitude).toFixed(6)
+          ].join(",");
+
+          if (!coordenadas.has(chaveCoordenada)) {
+            coordenadas.set(
+              chaveCoordenada,
+              []
+            );
+          }
+
+          coordenadas
+            .get(chaveCoordenada)
+            .push(String(item.id));
+        }
+      }
+
+      const telefonesDuplicados = Array.from(
+        telefones.entries()
+      )
+        .filter(([, ids]) => ids.length > 1)
+        .map(([telefone, ids]) => ({
+          telefone,
+          quantidade: ids.length,
+          ids
+        }))
+        .sort(
+          (a, b) =>
+            b.quantidade - a.quantidade
+        );
+
+      const coordenadasDuplicadas = Array.from(
+        coordenadas.entries()
+      )
+        .filter(([, ids]) => ids.length > 1)
+        .map(([coordenada, ids]) => ({
+          coordenada,
+          quantidade: ids.length,
+          ids
+        }))
+        .sort(
+          (a, b) =>
+            b.quantidade - a.quantidade
+        );
+
+      const rankingCidadeId = Object.entries(
+        porCidadeId
+      )
+        .map(([cidade_id, quantidade]) => ({
+          cidade_id,
+          quantidade
+        }))
+        .sort(
+          (a, b) =>
+            b.quantidade - a.quantidade
+        );
+
+      const rankingBairros = Object.entries(
+        porBairro
+      )
+        .map(([bairro, quantidade]) => ({
+          bairro,
+          quantidade
+        }))
+        .sort(
+          (a, b) =>
+            b.quantidade - a.quantidade
+        )
+        .slice(0, 50);
+
+      const distribuicaoMensal =
+        Object.entries(porMes)
+          .map(([mes, quantidade]) => ({
+            mes,
+            quantidade
+          }))
+          .sort((a, b) =>
+            b.mes.localeCompare(a.mes)
+          );
+
+      return res.json({
+        sucesso: true,
+        somente_leitura: true,
+
+        consulta: {
+          recurso: "contato",
+          filtro_ixc:
+            "contato.status_viabilidade = N",
+          filtro_local:
+            "lead = S",
+          registros_por_pagina:
+            registrosPorPagina,
+          limite_paginas:
+            limitePaginas,
+
+          total_ixc:
+            resultado.total_ixc,
+
+          paginas_previstas:
+            resultado.paginas_previstas,
+
+          paginas_processadas:
+            resultado.paginas_processadas,
+
+          consulta_completa:
+            resultado.consulta_completa,
+
+          duracao_ms:
+            Date.now() - inicio
+        },
+
+        resumo,
+
+        distribuicao_mensal:
+          distribuicaoMensal,
+
+        ranking_cidades_id:
+          rankingCidadeId,
+
+        ranking_bairros:
+          rankingBairros,
+
+        duplicidades: {
+          telefones_duplicados:
+            telefonesDuplicados.length,
+
+          coordenadas_duplicadas:
+            coordenadasDuplicadas.length,
+
+          amostra_telefones:
+            telefonesDuplicados.slice(0, 30),
+
+          amostra_coordenadas:
+            coordenadasDuplicadas.slice(0, 30)
+        },
+
+        coordenadas_suspeitas:
+          coordenadasSuspeitas
+      });
+
+    } catch (erro) {
+      console.error(
+        "[IXC INVIABILIDADE] Erro no diagnóstico:",
+        erro.response?.data ||
+        erro.message
+      );
+
+      return res.status(500).json({
+        sucesso: false,
+        mensagem:
+          "Erro ao executar diagnóstico dos leads inviáveis do IXC.",
+        detalhe:
+          erro.response?.data ||
+          erro.message,
+        duracao_ms:
+          Date.now() - inicio
+      });
+    }
+  }
+);
+
+registrarDebugGet(
+  "/api/debug/ixc/contatos-inviaveis",
+  async (req, res) => {
+    try {
+      const limite = Math.min(
+        Math.max(Number(req.query.limite || 10), 1),
+        50
+      );
+
+      const retorno = await buscar(
+        "contato",
+        "contato.status_viabilidade",
+        "N",
+        String(limite)
+      );
+
+      if (retorno?.type === "error") {
+        return res.status(400).json({
+          sucesso: false,
+          recurso: "contato",
+          mensagem:
+            retorno.message ||
+            "O recurso contato não está disponível."
+        });
+      }
+
+      const registros = Array.isArray(retorno?.registros)
+        ? retorno.registros
+        : [];
+
+      return res.json({
+        sucesso: true,
+        somente_leitura: true,
+        recurso: "contato",
+        filtro: {
+          campo: "contato.status_viabilidade",
+          valor: "N"
+        },
+        total_ixc: Number(retorno?.total || 0),
+        total_retornado: registros.length,
+        campos_encontrados:
+          registros.length > 0
+            ? Object.keys(registros[0]).sort()
+            : [],
+        registros
+      });
+
+    } catch (erro) {
+      console.error(
+        "[IXC CONTATO] Erro ao consultar contatos inviáveis:",
+        erro.response?.data || erro.message
+      );
+
+      return res.status(500).json({ 
+        sucesso: false,
+        mensagem:
+          "Erro ao consultar o recurso contato no IXC.",
+        status_http:
+          erro.response?.status || null,
+        detalhe:
+          erro.response?.data ||
+          erro.message
+      });
+    }
+  }
+);
+
+registrarDebugGet(
+  "/api/debug/ixc/leads-inviaveis-reais",
+  async (req, res) => {
+    try {
+      const limite = Math.min(
+        Math.max(Number(req.query.limite || 100), 1),
+        500
+      );
+
+      const retorno = await buscar(
+        "contato",
+        "contato.status_viabilidade",
+        "N",
+        String(limite)
+      );
+
+      if (retorno?.type === "error") {
+        return res.status(400).json({
+          sucesso: false,
+          mensagem:
+            retorno.message ||
+            "Não foi possível consultar os contatos inviáveis."
+        });
+      }
+
+      const registrosRecebidos = Array.isArray(
+        retorno?.registros
+      )
+        ? retorno.registros
+        : [];
+
+      const leadsReais = registrosRecebidos.filter(item =>
+        String(item.lead || "")
+          .trim()
+          .toUpperCase() === "S"
+      );
+
+      const resumo = leadsReais.reduce(
+        (acc, item) => {
+          if (
+            String(item.ativo || "")
+              .trim()
+              .toUpperCase() === "S"
+          ) {
+            acc.ativos += 1;
+          } else {
+            acc.inativos += 1;
+          }
+
+          const latitude = Number(item.latitude);
+          const longitude = Number(item.longitude);
+
+          if (
+            Number.isFinite(latitude) &&
+            Number.isFinite(longitude) &&
+            latitude !== 0 &&
+            longitude !== 0
+          ) {
+            acc.com_coordenadas += 1;
+          } else {
+            acc.sem_coordenadas += 1;
+          }
+
+          return acc;
+        },
+        {
+          ativos: 0,
+          inativos: 0,
+          com_coordenadas: 0,
+          sem_coordenadas: 0
+        }
+      );
+
+      return res.json({
+        sucesso: true,
+        somente_leitura: true,
+
+        filtro_ixc: {
+          campo: "contato.status_viabilidade",
+          valor: "N"
+        },
+
+        filtro_local: {
+          campo: "lead",
+          valor: "S"
+        },
+
+        total_ixc_inviaveis:
+          Number(retorno?.total || 0),
+
+        total_recebido_na_amostra:
+          registrosRecebidos.length,
+
+        total_leads_reais_na_amostra:
+          leadsReais.length,
+
+        resumo_amostra: resumo,
+
+        registros: leadsReais.map(item => ({
+          id: item.id,
+          nome: item.nome,
+          ativo: item.ativo,
+          lead: item.lead,
+          status_viabilidade:
+            item.status_viabilidade,
+          id_cliente: item.id_cliente,
+          data_cadastro: item.data_cadastro,
+          endereco: item.endereco,
+          numero: item.numero,
+          cidade_id: item.cidade,
+          bairro: item.bairro,
+          latitude: item.latitude,
+          longitude: item.longitude,
+          distancia_caixa_mais_proxima:
+            item.distancia_caixa_mais_proxima,
+          id_caixa_ftth: item.id_caixa_ftth,
+          observacao: item.obs
+        }))
+      });
+
+    } catch (erro) {
+      console.error(
+        "[IXC LEADS INVIÁVEIS] Erro:",
+        erro.response?.data || erro.message
+      );
+
+      return res.status(500).json({
+        sucesso: false,
+        mensagem:
+          "Erro ao consultar leads inviáveis no IXC.",
+        detalhe:
+          erro.response?.data ||
+          erro.message
+      });
+    }
+  }
+);
+
+registrarDebugGet(
+  "/api/debug/ixc/descobrir-recurso-leads",
+  async (req, res) => {
+    const idConhecido = String(
+      req.query.id || "13221"
+    ).trim();
+
+    /*
+     * Estes nomes são candidatos de diagnóstico.
+     * A rota não grava nem altera nada no IXC.
+     */
+    const recursosCandidatos = [
+      "crm_leads",
+      "crm_contato",
+      "crm_contatos",
+      "crm_sondagem",
+      "crm_sondagens",
+      "crm_prospect",
+      "crm_prospects"
+    ];
+
+    const resultados = [];
+
+    for (const recurso of recursosCandidatos) {
+      const tentativasQtype = [
+        `${recurso}.id`,
+        "id"
+      ];
+
+      let resultadoRecurso = null;
+
+      for (const qtype of tentativasQtype) {
+        try {
+          const params = {
+            qtype,
+            query: idConhecido,
+            oper: "=",
+            page: "1",
+            rp: "1",
+            sortname: "id",
+            sortorder: "desc"
+          };
+
+          const response = await api.post(
+            `/${recurso}`,
+            params
+          );
+
+          const dados = response.data || {};
+          const registros = Array.isArray(dados.registros)
+            ? dados.registros
+            : [];
+
+          resultadoRecurso = {
+            recurso,
+            qtype,
+            disponivel:
+              dados.type !== "error",
+            tipo_retorno:
+              dados.type || null,
+            mensagem:
+              dados.message || null,
+            total:
+              Number(dados.total || registros.length || 0),
+            registros_retornados:
+              registros.length,
+            campos:
+              registros[0]
+                ? Object.keys(registros[0]).sort()
+                : [],
+            primeiro_registro:
+              registros[0] || null
+          };
+
+          /*
+           * Encontramos um recurso que respondeu
+           * sem rejeitar o endpoint.
+           */
+          if (dados.type !== "error") {
+            break;
+          }
+
+        } catch (erro) {
+          resultadoRecurso = {
+            recurso,
+            qtype,
+            disponivel: false,
+            status_http:
+              erro.response?.status || null,
+            mensagem:
+              erro.response?.data?.message ||
+              erro.response?.data ||
+              erro.message
+          };
+        }
+      }
+
+      resultados.push(resultadoRecurso);
+    }
+
+    return res.json({
+      sucesso: true,
+      somente_leitura: true,
+      id_testado: idConhecido,
+      resultados
+    });
+  }
+);
+
 async function buscarContrato(idContrato) {
   if (!idContrato || idContrato === "0") return null;
 
@@ -1743,6 +2930,1359 @@ async function buscarContratoCache(idContrato) {
 
   return contrato;
 }
+
+async function localizarOSOperacionalCriada({
+  contratoId,
+  clienteId,
+  osPagamentoId,
+  assuntos = ["137", "247", "591", "599"],
+  tentativas = 6,
+  intervaloMs = 1000
+}) {
+  const contrato = String(contratoId || "");
+  const cliente = String(clienteId || "");
+  const osPagamento = String(osPagamentoId || "");
+
+  if (!contrato) {
+    throw new Error(
+      "Contrato não informado para localizar a O.S. operacional."
+    );
+  }
+
+  const assuntosPermitidos = assuntos.map(item =>
+    String(item)
+  );
+
+  for (
+    let tentativa = 1;
+    tentativa <= tentativas;
+    tentativa += 1
+  ) {
+    const retorno = await buscar(
+      "su_oss_chamado",
+      "su_oss_chamado.id_contrato_kit",
+      contrato,
+      "100"
+    );
+
+    const ordens = Array.isArray(retorno?.registros)
+      ? retorno.registros
+      : [];
+
+    console.log(
+      "[TESTE VELOCIDADE] Ordens retornadas pelo IXC:",
+      ordens.map(item => ({
+        id: item.id,
+        assunto: item.id_assunto,
+        status: item.status,
+        contrato:
+          item.id_contrato_kit ||
+          item.id_contrato,
+        cliente: item.id_cliente,
+        os_anterior: item.id_oss_chamado,
+        tarefa: item.id_wfl_tarefa,
+        parametro: item.id_wfl_param_os,
+        abertura: item.data_abertura
+      }))
+    );
+
+    const candidatas = ordens
+      .filter(item => {
+        const mesmoContrato =
+          String(
+            item.id_contrato_kit ||
+            item.id_contrato ||
+            ""
+          ) === contrato;
+
+        const mesmoCliente =
+          !cliente ||
+          String(item.id_cliente || "") === cliente;
+
+        const assuntoOperacional =
+          assuntosPermitidos.includes(
+            String(item.id_assunto || "")
+          );
+
+        return (
+          mesmoContrato &&
+          mesmoCliente &&
+          assuntoOperacional
+        );
+      })
+      .sort(
+        (a, b) =>
+          Number(b.id || 0) -
+          Number(a.id || 0)
+      );
+
+    const encontrada =
+      candidatas[0] || null;
+
+    console.log(
+      "[TESTE VELOCIDADE] Busca da O.S. operacional:",
+      {
+        tentativa,
+        contrato_id: contrato,
+        cliente_id: cliente || null,
+        os_pagamento_id: osPagamento || null,
+        assuntos_permitidos:
+          assuntosPermitidos,
+        total_ordens_contrato:
+          ordens.length,
+        candidatas_operacionais:
+          candidatas.map(item => ({
+            id: item.id,
+            status: item.status,
+            assunto_id: item.id_assunto,
+            tarefa:
+              item.id_wfl_tarefa || null,
+            parametro:
+              item.id_wfl_param_os || null,
+            data_abertura:
+              item.data_abertura || null
+          })),
+        encontrada: encontrada
+          ? {
+              id: encontrada.id,
+              status: encontrada.status,
+              assunto_id:
+                encontrada.id_assunto,
+              tarefa:
+                encontrada.id_wfl_tarefa ||
+                null,
+              parametro:
+                encontrada.id_wfl_param_os ||
+                null,
+              data_abertura:
+                encontrada.data_abertura ||
+                null
+            }
+          : null
+      }
+    );
+
+    if (encontrada) {
+      return encontrada;
+    }
+
+    if (tentativa < tentativas) {
+      await aguardarIXC(intervaloMs);
+    }
+  }
+
+  return null;
+}
+
+async function criarOSAnexoTesteVelocidade({
+  osOperacional
+}) {
+  if (!osOperacional?.id) {
+    throw new Error(
+      "A O.S. operacional é obrigatória para criar a O.S. 679."
+    );
+  }
+
+  const contratoId = String(
+    osOperacional.id_contrato_kit ||
+    osOperacional.id_contrato ||
+    ""
+  );
+
+  const clienteId = String(
+    osOperacional.id_cliente ||
+    ""
+  );
+
+  if (!contratoId || contratoId === "0") {
+    throw new Error(
+      "A O.S. operacional não possui contrato válido."
+    );
+  }
+
+  if (!clienteId || clienteId === "0") {
+    throw new Error(
+      "A O.S. operacional não possui cliente válido."
+    );
+  }
+
+  /*
+   * Proteção contra duplicidade.
+   * Se a rota for repetida, não cria outra O.S. 679.
+   */
+  const retornoOrdensContrato = await buscar(
+    "su_oss_chamado",
+    "su_oss_chamado.id_contrato_kit",
+    contratoId,
+    "100"
+  );
+
+  const ordensContrato = Array.isArray(
+    retornoOrdensContrato?.registros
+  )
+    ? retornoOrdensContrato.registros
+    : [];
+
+    const referenciaEsperada =
+  `REFERENTE À O.S. ${osOperacional.id}`;
+
+  let osTeste = ordensContrato
+      .filter(item =>
+        String(item.id_assunto || "") === "679" &&
+        String(item.id_cliente || "") === clienteId &&
+        String(item.mensagem || "")
+          .toUpperCase()
+          .includes(
+            referenciaEsperada.toUpperCase()
+          )
+      )
+    .sort(
+      (a, b) =>
+        Number(b.id || 0) -
+        Number(a.id || 0)
+    )[0] || null;
+
+  let criadaAgora = false;
+
+  if (!osTeste) {
+      const payloadCriacao = {
+
+          id_cliente: clienteId,
+
+          id_assunto: "679",
+
+          tipo: "C",
+
+          setor: String(
+              osOperacional.setor ||
+              "22"
+          ),
+
+          id_filial: String(
+              osOperacional.id_filial ||
+              "1"
+          ),
+
+          id_tecnico: "0",
+
+          status: "A",
+
+          prioridade: String(
+              osOperacional.prioridade ||
+              "N"
+          ),
+
+          melhor_horario_agenda: String(
+              osOperacional.melhor_horario_agenda ||
+              "Q"
+          ),
+
+          gera_comissao: "S",
+
+          origem_endereco: "M",
+
+          mensagem:
+              `ANEXAR TESTE DE VELOCIDADE REFERENTE À O.S. ${osOperacional.id}.`
+      };
+
+    console.log(
+      "[TESTE VELOCIDADE] Criando O.S. 679:",
+      {
+        os_operacional_id:
+          osOperacional.id,
+        contrato_id:
+          contratoId,
+        cliente_id:
+          clienteId,
+        payload:
+          payloadCriacao
+      }
+    );
+
+
+    const responseCriacao = await api.post(
+      "/su_oss_chamado",
+      payloadCriacao,
+      {
+        headers: {
+          ixcsoft: "inserir"
+        }
+      }
+    );
+
+    const retornoCriacao =
+      responseCriacao.data || {};
+
+    if (
+      String(retornoCriacao.type || "")
+        .toLowerCase() !== "success"
+    ) {
+      throw new Error(
+        retornoCriacao.message ||
+        "O IXC não confirmou a criação da O.S. 679."
+      );
+    }
+
+    const idCriado = String(
+      retornoCriacao.id ||
+      ""
+    );
+
+    if (!idCriado || idCriado === "0") {
+      throw new Error(
+        "O IXC confirmou a criação, mas não retornou o ID da O.S. 679."
+      );
+    }
+
+    await aguardarIXC(300);
+
+    const retornoOSCriada = await buscar(
+      "su_oss_chamado",
+      "su_oss_chamado.id",
+      idCriado,
+      "1"
+    );
+
+    osTeste =
+      retornoOSCriada.registros?.[0] ||
+      null;
+
+    if (!osTeste) {
+      throw new Error(
+        `A O.S. 679 ${idCriado} foi criada, mas não foi localizada para vinculação.`
+      );
+    }
+
+    criadaAgora = true;
+  }
+
+  /*
+   * Localiza o login pelo contrato.
+   * A O.S. operacional pode vir com id_login = 0.
+   */
+  let loginId = String(
+    osOperacional.id_login ||
+    ""
+  );
+
+  if (!loginId || loginId === "0") {
+    const retornoLogins = await buscar(
+      "radusuarios",
+      "radusuarios.id_contrato",
+      contratoId,
+      "20"
+    );
+
+    const loginsContrato = Array.isArray(
+      retornoLogins?.registros
+    )
+      ? retornoLogins.registros
+      : [];
+
+    const loginContrato =
+      loginsContrato.find(item =>
+        String(item.id_cliente || "") ===
+          clienteId &&
+        String(item.ativo || "")
+          .toUpperCase() !== "N"
+      ) ||
+      loginsContrato.find(item =>
+        String(item.id_cliente || "") ===
+        clienteId
+      ) ||
+      loginsContrato[0] ||
+      null;
+
+    loginId = String(
+      loginContrato?.id ||
+      ""
+    );
+  }
+
+  if (!loginId || loginId === "0") {
+    throw new Error(
+      `Nenhum login foi encontrado para o contrato ${contratoId}.`
+    );
+  }
+
+  const payloadEdicao = {
+    ...osTeste,
+
+    tipo: "C",
+
+    gera_comissao: "S",
+
+    id_login:
+      loginId,
+
+    id_contrato_kit:
+      contratoId,
+
+    liberado: String(
+      osOperacional.liberado ||
+      "1"
+    ),
+
+    origem_os_aberta: String(
+      osOperacional.origem_os_aberta ||
+      "P"
+    ),
+
+    id_ticket: String(
+      osOperacional.id_ticket ||
+      "0"
+    ),
+
+    origem_endereco:
+      "L",
+
+    origem_endereco_estrutura: String(
+      osOperacional.origem_endereco_estrutura ||
+      "E"
+    ),
+
+    latitude: String(
+      osOperacional.latitude ||
+      ""
+    ),
+
+    longitude: String(
+      osOperacional.longitude ||
+      ""
+    ),
+
+    endereco: String(
+      osOperacional.endereco ||
+      ""
+    ),
+
+    bairro: String(
+      osOperacional.bairro ||
+      ""
+    ),
+
+    id_cidade: String(
+      osOperacional.id_cidade ||
+      "0"
+    ),
+
+    complemento: String(
+      osOperacional.complemento ||
+      ""
+    ),
+
+    referencia: String(
+      osOperacional.referencia ||
+      ""
+    ),
+
+    id_condominio: String(
+      osOperacional.id_condominio ||
+      "0"
+    ),
+
+    bloco: String(
+      osOperacional.bloco ||
+      ""
+    ),
+
+    apartamento: String(
+      osOperacional.apartamento ||
+      ""
+    )
+  };
+
+  console.log(
+    "[TESTE VELOCIDADE] Vinculando O.S. 679:",
+    {
+      os_operacional_id:
+        osOperacional.id,
+      os_teste_id:
+        osTeste.id,
+      contrato_id:
+        contratoId,
+      cliente_id:
+        clienteId,
+      login_id:
+        loginId,
+      criada_agora:
+        criadaAgora
+    }
+  );
+
+  const responseEdicao = await api.put(
+    `/su_oss_chamado/${osTeste.id}`,
+    payloadEdicao,
+    {
+      headers: {
+        ixcsoft: "editar"
+      }
+    }
+  );
+
+  const retornoEdicao =
+    responseEdicao.data || {};
+
+  if (
+    String(retornoEdicao.type || "")
+      .toLowerCase() !== "success"
+  ) {
+    throw new Error(
+      retornoEdicao.message ||
+      "O IXC não confirmou a vinculação da O.S. 679."
+    );
+  }
+
+  await aguardarIXC(300);
+
+  const retornoValidacao = await buscar(
+    "su_oss_chamado",
+    "su_oss_chamado.id",
+    String(osTeste.id),
+    "1"
+  );
+
+  const osValidada =
+    retornoValidacao.registros?.[0] ||
+    null;
+
+  if (!osValidada) {
+    throw new Error(
+      "A O.S. 679 foi atualizada, mas não pôde ser validada."
+    );
+  }
+
+  const vinculacaoCorreta =
+    String(osValidada.id_cliente || "") ===
+      clienteId &&
+    String(osValidada.id_contrato_kit || "") ===
+      contratoId &&
+    String(osValidada.id_login || "") ===
+      loginId &&
+    String(osValidada.liberado || "") ===
+      "1" &&
+      String(osValidada.tipo || "") ===
+        "C" &&
+      String(osValidada.gera_comissao || "") ===
+        "S";
+
+  if (!vinculacaoCorreta) {
+    throw new Error(
+      "A O.S. 679 foi criada, mas os vínculos não foram confirmados pelo IXC."
+    );
+  }
+
+  console.log(
+    "[TESTE VELOCIDADE] O.S. 679 pronta:",
+    {
+      os_operacional_id:
+        osOperacional.id,
+      os_teste_id:
+        osValidada.id,
+      cliente_id:
+        osValidada.id_cliente,
+      contrato_id:
+        osValidada.id_contrato_kit,
+      login_id:
+        osValidada.id_login,
+      liberado:
+        osValidada.liberado,
+        tipo:
+          osValidada.tipo,
+        gera_comissao:
+          osValidada.gera_comissao,
+      origem_endereco:
+        osValidada.origem_endereco,
+      criada_agora:
+        criadaAgora
+    }
+  );
+
+    return {
+      sucesso: true,
+
+      criada_agora:
+        criadaAgora,
+
+      os_operacional_id:
+        String(osOperacional.id),
+
+      os_teste_velocidade_id:
+        String(osValidada.id),
+
+      cliente_id:
+        String(osValidada.id_cliente),
+
+      contrato_id:
+        String(osValidada.id_contrato_kit),
+
+      login_id:
+        String(osValidada.id_login),
+
+      liberado:
+        String(osValidada.liberado),
+
+      tipo:
+        String(osValidada.tipo),
+
+      gera_comissao:
+        String(osValidada.gera_comissao),
+
+      origem_endereco:
+        String(osValidada.origem_endereco)
+    };
+}
+
+function montarPayloadOSTesteVelocidade({
+  osOperacional
+}) {
+  if (!osOperacional?.id) {
+    throw new Error(
+      "A O.S. operacional é obrigatória para criar a O.S. de teste de velocidade."
+    );
+  }
+
+  const contratoId = String(
+    osOperacional.id_contrato_kit ||
+    osOperacional.id_contrato ||
+    ""
+  );
+
+  const clienteId = String(
+    osOperacional.id_cliente ||
+    ""
+  );
+
+  const loginId = String(
+    osOperacional.id_login ||
+    ""
+  );
+
+  if (!contratoId) {
+    throw new Error(
+      "A O.S. operacional não possui contrato."
+    );
+  }
+
+  if (!clienteId) {
+    throw new Error(
+      "A O.S. operacional não possui cliente."
+    );
+  }
+
+  if (!loginId) {
+    throw new Error(
+      "A O.S. operacional não possui login vinculado."
+    );
+  }
+
+  return {
+    id_cliente: clienteId,
+    id_contrato_kit: contratoId,
+    id_login: loginId,
+
+    id_assunto: "679",
+    setor: String(
+      osOperacional.setor ||
+      "22"
+    ),
+
+    id_filial: String(
+      osOperacional.id_filial ||
+      "1"
+    ),
+
+    id_tecnico: "0",
+
+    status: "A",
+    prioridade: String(
+      osOperacional.prioridade ||
+      "N"
+    ),
+
+    melhor_horario_agenda: String(
+      osOperacional.melhor_horario_agenda ||
+      "Q"
+    ),
+
+    origem_endereco: String(
+      osOperacional.origem_endereco ||
+      "CC"
+    ),
+
+    origem_endereco_estrutura: String(
+      osOperacional.origem_endereco_estrutura ||
+      ""
+    ),
+
+    latitude: String(
+      osOperacional.latitude ||
+      ""
+    ),
+
+    longitude: String(
+      osOperacional.longitude ||
+      ""
+    ),
+
+    endereco: String(
+      osOperacional.endereco ||
+      ""
+    ),
+
+    bairro: String(
+      osOperacional.bairro ||
+      ""
+    ),
+
+    id_cidade: String(
+      osOperacional.id_cidade ||
+      ""
+    ),
+
+    complemento: String(
+      osOperacional.complemento ||
+      ""
+    ),
+
+    referencia: String(
+      osOperacional.referencia ||
+      ""
+    ),
+
+    id_condominio: String(
+      osOperacional.id_condominio ||
+      "0"
+    ),
+
+    bloco: String(
+      osOperacional.bloco ||
+      ""
+    ),
+
+    apartamento: String(
+      osOperacional.apartamento ||
+      ""
+    ),
+
+    mensagem:
+      `ANEXAR TESTE DE VELOCIDADE REFERENTE À O.S. ${osOperacional.id}.`
+  };
+}
+
+registrarDebugPost(
+  "/api/debug/os/:id/criar-teste-velocidade",
+  async (req, res) => {
+    try {
+      const idOSOperacional =
+        String(req.params.id || "").trim();
+
+      if (!idOSOperacional) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "Informe a O.S. operacional."
+        });
+      }
+
+      const retornoOS = await buscar(
+        "su_oss_chamado",
+        "su_oss_chamado.id",
+        idOSOperacional,
+        "1"
+      );
+
+      const osOperacional =
+        retornoOS.registros?.[0];
+
+      if (!osOperacional) {
+        return res.status(404).json({
+          erro: true,
+          mensagem:
+            "O.S. operacional não encontrada."
+        });
+      }
+
+      const assuntosOperacionais = [
+        "137",
+        "247",
+        "591",
+        "599"
+      ];
+
+      if (
+        !assuntosOperacionais.includes(
+          String(
+            osOperacional.id_assunto ||
+            ""
+          )
+        )
+      ) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "A O.S. informada não é uma O.S. operacional reconhecida.",
+          assunto_id:
+            osOperacional.id_assunto ||
+            null
+        });
+      }
+
+      const contratoId = String(
+        osOperacional.id_contrato_kit ||
+        ""
+      );
+
+      /*
+       * Proteção contra duplicidade:
+       * verifica se o contrato já possui
+       * uma O.S. de assunto 679.
+       */
+      const retornoOrdensContrato =
+        await buscar(
+          "su_oss_chamado",
+          "su_oss_chamado.id_contrato_kit",
+          contratoId,
+          "100"
+        );
+
+      const ordensContrato =
+        Array.isArray(
+          retornoOrdensContrato?.registros
+        )
+          ? retornoOrdensContrato.registros
+          : [];
+
+      const osTesteExistente =
+        ordensContrato
+          .filter(item =>
+            String(item.id_assunto || "") ===
+              "679" &&
+            String(item.id_cliente || "") ===
+              String(
+                osOperacional.id_cliente ||
+                ""
+              )
+          )
+          .sort(
+            (a, b) =>
+              Number(b.id || 0) -
+              Number(a.id || 0)
+          )[0] || null;
+
+      if (osTesteExistente) {
+        return res.status(409).json({
+          erro: true,
+          duplicidade: true,
+          mensagem:
+            "Este contrato já possui uma O.S. de teste de velocidade.",
+          os_existente: {
+            id: osTesteExistente.id,
+            status:
+              osTesteExistente.status ||
+              null,
+            assunto_id:
+              osTesteExistente.id_assunto,
+            contrato_id:
+              osTesteExistente
+                .id_contrato_kit ||
+              null,
+            cliente_id:
+              osTesteExistente.id_cliente ||
+              null
+          }
+        });
+      }
+
+      const payload =
+        montarPayloadOSTesteVelocidade({
+          osOperacional
+        });
+
+      console.log(
+        "[TESTE VELOCIDADE] Payload de criação da O.S. 679:",
+        {
+          os_operacional_id:
+            osOperacional.id,
+          contrato_id:
+            contratoId,
+          cliente_id:
+            osOperacional.id_cliente,
+          payload
+        }
+      );
+
+      const response = await api.post(
+        "/su_oss_chamado",
+        payload,
+        {
+          headers: {
+            ixcsoft: "inserir"
+          }
+        }
+      );
+
+      const retornoIXC =
+        response.data || {};
+
+      console.log(
+        "[TESTE VELOCIDADE] Resposta da criação da O.S. 679:",
+        retornoIXC
+      );
+
+      if (
+        String(retornoIXC.type || "")
+          .toLowerCase() !== "success"
+      ) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            retornoIXC.message ||
+            "O IXC não confirmou a criação da O.S.",
+          retorno_ixc:
+            retornoIXC,
+          payload_enviado:
+            payload
+        });
+      }
+
+      return res.json({
+        sucesso: true,
+        mensagem:
+          "O.S. de teste de velocidade criada pelo IXC.",
+        os_operacional_id:
+          osOperacional.id,
+        os_teste_velocidade_id:
+          retornoIXC.id || null,
+        retorno_ixc:
+          retornoIXC,
+        payload_enviado:
+          payload
+      });
+
+    } catch (erro) {
+      console.error(
+        "[TESTE VELOCIDADE] Erro ao criar O.S. 679:",
+        {
+          mensagem:
+            erro?.message || null,
+          status:
+            erro?.response?.status || null,
+          retorno_ixc:
+            erro?.response?.data || null
+        }
+      );
+
+      return res.status(500).json({
+        erro: true,
+        mensagem:
+          erro?.response?.data?.message ||
+          erro?.message ||
+          "Erro ao criar a O.S. de teste de velocidade.",
+        status_ixc:
+          erro?.response?.status || null,
+        retorno_ixc:
+          erro?.response?.data || null
+      });
+    }
+  }
+);
+
+registrarDebugPost(
+  "/api/debug/os/:idOperacional/vincular-teste-velocidade/:idTeste",
+  async (req, res) => {
+    try {
+      const idOperacional =
+        String(req.params.idOperacional || "").trim();
+
+      const idTeste =
+        String(req.params.idTeste || "").trim();
+
+      const [
+        retornoOperacional,
+        retornoTeste
+      ] = await Promise.all([
+        buscar(
+          "su_oss_chamado",
+          "su_oss_chamado.id",
+          idOperacional,
+          "1"
+        ),
+
+        buscar(
+          "su_oss_chamado",
+          "su_oss_chamado.id",
+          idTeste,
+          "1"
+        )
+      ]);
+
+      const osOperacional =
+        retornoOperacional.registros?.[0];
+
+      const osTesteAtual =
+        retornoTeste.registros?.[0];
+
+      if (!osOperacional) {
+        return res.status(404).json({
+          erro: true,
+          mensagem:
+            "O.S. operacional não encontrada."
+        });
+      }
+
+      if (!osTesteAtual) {
+        return res.status(404).json({
+          erro: true,
+          mensagem:
+            "O.S. de teste de velocidade não encontrada."
+        });
+      }
+
+      if (
+        String(osTesteAtual.id_assunto || "") !==
+        "679"
+      ) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "A O.S. de destino não possui o assunto 679."
+        });
+      }
+
+      if (
+        String(osOperacional.id_cliente || "") !==
+        String(osTesteAtual.id_cliente || "")
+      ) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "As duas O.S. não pertencem ao mesmo cliente."
+        });
+      }
+
+      const loginId =
+        String(osOperacional.id_login || "");
+
+      const contratoId =
+        String(
+          osOperacional.id_contrato_kit ||
+          ""
+        );
+
+      if (!loginId || loginId === "0") {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "A O.S. operacional não possui login válido."
+        });
+      }
+
+      if (!contratoId || contratoId === "0") {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "A O.S. operacional não possui contrato válido."
+        });
+      }
+
+      const payload = {
+        ...osTesteAtual,
+
+        id_login:
+          loginId,
+
+        id_contrato_kit:
+          contratoId,
+
+          liberado: String(
+            osOperacional.liberado ||
+            "1"
+          ),
+
+          origem_os_aberta: String(
+            osOperacional.origem_os_aberta ||
+            "P"
+          ),
+
+          id_ticket: String(
+            osOperacional.id_ticket ||
+            "0"
+          ),
+
+        origem_endereco:
+          "L",
+
+        origem_endereco_estrutura:
+          String(
+            osOperacional
+              .origem_endereco_estrutura ||
+            "E"
+          ),
+
+        latitude:
+          String(
+            osOperacional.latitude ||
+            ""
+          ),
+
+        longitude:
+          String(
+            osOperacional.longitude ||
+            ""
+          ),
+
+        endereco:
+          String(
+            osOperacional.endereco ||
+            ""
+          ),
+
+        bairro:
+          String(
+            osOperacional.bairro ||
+            ""
+          ),
+
+        id_cidade:
+          String(
+            osOperacional.id_cidade ||
+            "0"
+          ),
+
+        complemento:
+          String(
+            osOperacional.complemento ||
+            ""
+          ),
+
+        referencia:
+          String(
+            osOperacional.referencia ||
+            ""
+          ),
+
+        id_condominio:
+          String(
+            osOperacional.id_condominio ||
+            "0"
+          ),
+
+        bloco:
+          String(
+            osOperacional.bloco ||
+            ""
+          ),
+
+        apartamento:
+          String(
+            osOperacional.apartamento ||
+            ""
+          )
+      };
+
+      console.log(
+        "[TESTE VELOCIDADE] Atualizando vínculos da O.S. 679:",
+        {
+          os_operacional_id:
+            idOperacional,
+          os_teste_id:
+            idTeste,
+          login_id:
+            loginId,
+          contrato_id:
+            contratoId
+        }
+      );
+
+      const response = await api.put(
+        `/su_oss_chamado/${idTeste}`,
+        payload,
+        {
+          headers: {
+            ixcsoft: "editar"
+          }
+        }
+      );
+
+      await aguardarIXC(500);
+
+      const retornoValidacao =
+        await buscar(
+          "su_oss_chamado",
+          "su_oss_chamado.id",
+          idTeste,
+          "1"
+        );
+
+      const osAtualizada =
+        retornoValidacao.registros?.[0] ||
+        null;
+
+      return res.json({
+        sucesso:
+          response.data?.type === "success",
+
+        mensagem:
+          response.data?.message ||
+          "Atualização enviada ao IXC.",
+
+        retorno_ixc:
+          response.data,
+
+        validacao: osAtualizada
+          ? {
+              id:
+                osAtualizada.id,
+              id_cliente:
+                osAtualizada.id_cliente,
+              id_login:
+                osAtualizada.id_login,
+              id_contrato_kit:
+                osAtualizada.id_contrato_kit,
+              origem_endereco:
+                osAtualizada.origem_endereco,
+              endereco:
+                osAtualizada.endereco,
+              latitude:
+                osAtualizada.latitude,
+              longitude:
+                osAtualizada.longitude
+            }
+          : null
+      });
+
+    } catch (erro) {
+      console.error(
+        "[TESTE VELOCIDADE] Erro ao vincular O.S. 679:",
+        {
+          mensagem:
+            erro?.message || null,
+          status:
+            erro?.response?.status || null,
+          retorno_ixc:
+            erro?.response?.data || null
+        }
+      );
+
+      return res.status(500).json({
+        erro: true,
+        mensagem:
+          erro?.response?.data?.message ||
+          erro?.message ||
+          "Erro ao vincular a O.S. de teste de velocidade.",
+        retorno_ixc:
+          erro?.response?.data ||
+          null
+      });
+    }
+  }
+);
+
+registrarDebugPost(
+  "/api/debug/os/:id/payload-teste-velocidade",
+  async (req, res) => {
+    try {
+      const idOSOperacional =
+        String(req.params.id || "");
+
+      const retornoOS =
+        await buscar(
+          "su_oss_chamado",
+          "su_oss_chamado.id",
+          idOSOperacional,
+          "1"
+        );
+
+      const osOperacional =
+        retornoOS.registros?.[0];
+
+      if (!osOperacional) {
+        return res.status(404).json({
+          erro: true,
+          mensagem:
+            "O.S. operacional não encontrada."
+        });
+      }
+
+      const assuntosOperacionais = [
+        "137",
+        "247",
+        "591",
+        "599"
+      ];
+
+      if (
+        !assuntosOperacionais.includes(
+          String(
+            osOperacional.id_assunto ||
+            ""
+          )
+        )
+      ) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "A O.S. informada não é uma O.S. operacional reconhecida."
+        });
+      }
+
+      const operadorIXC =
+        req.session?.usuario
+          ?.colaborador_ixc_id ||
+        "677";
+
+      const payload =
+        montarPayloadOSTesteVelocidade({
+          osOperacional,
+          operadorIXC
+        });
+
+      return res.json({
+        sucesso: true,
+        somente_diagnostico: true,
+        nenhuma_os_criada: true,
+
+        os_operacional: {
+          id:
+            osOperacional.id,
+          cliente_id:
+            osOperacional.id_cliente,
+          contrato_id:
+            osOperacional.id_contrato_kit ||
+            osOperacional.id_contrato ||
+            null,
+          assunto_id:
+            osOperacional.id_assunto,
+          setor:
+            osOperacional.setor ||
+            osOperacional.id_setor ||
+            null,
+          filial_id:
+            osOperacional.id_filial ||
+            null
+        },
+
+        endpoint_futuro:
+          "/su_oss_chamado",
+
+        header_futuro: {
+          ixcsoft: "inserir"
+        },
+
+        payload
+      });
+
+    } catch (erro) {
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao montar payload da O.S. de teste de velocidade"
+      );
+    }
+  }
+);
 
 async function limparAlertaCliente(idCliente) {
   if (!idCliente || String(idCliente) === "0") {
@@ -3905,6 +6445,1332 @@ app.get( "/api/relatorios-comerciais/ativacoes", exigirLogin, exigirPermissao("v
         "Erro ao gerar relatório comercial de ativações"
       );
     }
+  }
+);
+
+// =========================================================
+// RELATÓRIOS COMERCIAIS - CHURN COMERCIAL
+// =========================================================
+
+
+function dataIXCValida(valor) {
+  const data = String(valor || "").slice(0, 10);
+
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(data) &&
+    data !== "0000-00-00"
+  );
+}
+
+function calcularDiasEntreDatas(
+  dataInicial,
+  dataFinal
+) {
+  if (
+    !dataIXCValida(dataInicial) ||
+    !dataIXCValida(dataFinal)
+  ) {
+    return null;
+  }
+
+  const inicio =
+    new Date(`${String(dataInicial).slice(0, 10)}T00:00:00`);
+
+  const fim =
+    new Date(`${String(dataFinal).slice(0, 10)}T00:00:00`);
+
+  if (
+    Number.isNaN(inicio.getTime()) ||
+    Number.isNaN(fim.getTime())
+  ) {
+    return null;
+  }
+
+  const diferenca =
+    Math.floor(
+      (fim.getTime() - inicio.getTime()) /
+      (1000 * 60 * 60 * 24)
+    );
+
+  return diferenca >= 0
+    ? diferenca
+    : null;
+}
+
+function classificarFaixaCancelamento(
+  diasPermanencia
+) {
+  const dias =
+    Number(diasPermanencia);
+
+  if (!Number.isFinite(dias)) {
+    return "NAO_IDENTIFICADO";
+  }
+
+  if (dias <= 30) {
+    return "ATE_30_DIAS";
+  }
+
+  if (dias <= 60) {
+    return "DE_31_A_60_DIAS";
+  }
+
+  if (dias <= 90) {
+    return "DE_61_A_90_DIAS";
+  }
+
+  return "ACIMA_DE_90_DIAS";
+}
+
+function classificarCategoriaCancelamentoPorTexto(
+  contrato
+) {
+  const texto =
+    normalizarTextoRelatorio(
+      contrato.obs_cancelamento ||
+      ""
+    );
+
+  if (
+    texto.includes("INADIMPL") ||
+    texto.includes("FINANCEIR") ||
+    texto.includes("FALTA DE PAGAMENTO") ||
+    texto.includes("NAO PAGAMENTO")
+  ) {
+    return "INADIMPLENCIA";
+  }
+
+  if (
+    texto.includes("INSATISFAC") ||
+    texto.includes("RECLAMAC") ||
+    texto.includes("QUALIDADE") ||
+    texto.includes("INSTABILIDADE") ||
+    texto.includes("LENTIDAO")
+  ) {
+    return "INSATISFACAO";
+  }
+
+  if (
+    texto.includes("MUDANCA") ||
+    texto.includes("MUDOU") ||
+    texto.includes("ENDERECO")
+  ) {
+    return "MUDANCA_DE_ENDERECO";
+  }
+
+  if (
+    texto.includes("CONCORRENT") ||
+    texto.includes("OUTRO PROVEDOR")
+  ) {
+    return "CONCORRENCIA";
+  }
+
+  if (
+    texto.includes("SEM VIABILIDADE") ||
+    texto.includes("INVIABILIDADE")
+  ) {
+    return "INVIABILIDADE";
+  }
+
+  return "OUTROS";
+}
+
+const CLASSIFICACAO_MOTIVOS_CANCELAMENTO = {
+  "4": {
+    natureza: "CHURN_REAL",
+    categoria: "INADIMPLENCIA"
+  },
+
+  "9": {
+    natureza: "CHURN_REAL",
+    categoria: "INSATISFACAO_CONEXAO"
+  },
+
+  "10": {
+    natureza: "CHURN_REAL",
+    categoria: "INSATISFACAO_FINANCEIRO"
+  },
+
+  "11": {
+    natureza: "CHURN_REAL",
+    categoria: "INSATISFACAO_ATENDIMENTO"
+  },
+
+  "15": {
+    natureza: "CHURN_REAL",
+    categoria: "CONCORRENCIA"
+  },
+
+  "57": {
+    natureza: "CHURN_REAL",
+    categoria: "MUDANCA_SEM_VIABILIDADE"
+  },
+
+  "241": {
+    natureza: "CHURN_REAL",
+    categoria: "DEMORA_MANUTENCAO"
+  },
+
+  "261": {
+    natureza: "CHURN_REAL",
+    categoria: "PROBLEMAS_FINANCEIROS"
+  },
+
+  "267": {
+    natureza: "CHURN_REAL",
+    categoria: "INSATISFACAO_COMERCIAL"
+  },
+
+  "269": {
+    natureza: "CHURN_REAL",
+    categoria: "INSATISFACAO_OPERACIONAL"
+  },
+
+  "7": {
+    natureza: "MIGRACAO_INTERNA",
+    categoria: "TROCA_TITULARIDADE"
+  },
+
+  "104": {
+    natureza: "MIGRACAO_INTERNA",
+    categoria: "NOVO_CONTRATO"
+  },
+
+  "141": {
+    natureza: "MIGRACAO_INTERNA",
+    categoria: "MIGRACAO_FIBRASIL"
+  },
+
+  "219": {
+    natureza: "AJUSTE_ADMINISTRATIVO",
+    categoria: "CONTRATO_DUPLICADO"
+  },
+
+  "235": {
+    natureza: "AJUSTE_ADMINISTRATIVO",
+    categoria: "TESTE"
+  },
+
+  "24": {
+    natureza: "PRE_ATIVACAO",
+    categoria: "NAO_ATIVADO_DE_FATO"
+  },
+
+  "210": {
+    natureza: "PRE_ATIVACAO",
+    categoria: "SEM_VIABILIDADE"
+  },
+  "12": {
+  natureza: "CHURN_REAL",
+  categoria: "MOTIVOS_PESSOAIS"
+},
+
+"73": {
+  natureza: "CHURN_REAL",
+  categoria: "MUDANCA_CONCORRENCIA"
+},
+
+"138": {
+  natureza: "CHURN_REAL",
+  categoria: "MUDANCA_OUTRO_ESTADO"
+},
+
+"139": {
+  natureza: "CHURN_REAL",
+  categoria: "MUDANCA_SEM_COBERTURA"
+},
+
+"140": {
+  natureza: "CHURN_REAL",
+  categoria: "MUDANCA_SEM_VIABILIDADE"
+},
+
+"188": {
+  natureza: "CHURN_REAL",
+  categoria: "CONCORRENCIA"
+},
+
+  "38": {
+    natureza: "AJUSTE_ADMINISTRATIVO",
+    categoria: "DESLIGAMENTO_FUNCIONARIO"
+  },
+
+  "114": {
+    natureza: "MIGRACAO_INTERNA",
+    categoria: "TROCA_TITULARIDADE"
+  },
+
+  "174": {
+    natureza: "MIGRACAO_INTERNA",
+    categoria: "TROCA_TITULARIDADE"
+  },
+
+  "249": {
+    natureza: "CHURN_REAL",
+    categoria: "FECHAMENTO_ESTABELECIMENTO"
+  },
+
+  "255": {
+    natureza: "PRE_ATIVACAO",
+    categoria: "DESISTENCIA_CONTRATACAO"
+  }
+};
+
+function classificarCancelamentoContrato(
+  contrato
+) {
+  const motivoId =
+    String(
+      contrato.motivo_cancelamento || ""
+    );
+
+  const texto =
+    normalizarTextoRelatorio(
+      contrato.obs_cancelamento || ""
+    );
+
+  /*
+   * Motivo 180 é ambíguo:
+   * pode ser desistência antes da ativação
+   * ou churn real por motivos pessoais.
+   */
+  if (motivoId === "180") {
+    if (
+      texto.includes("NUNCA CHEGOU A SER ATIVO") ||
+      texto.includes("NUNCA FOI ATIVADO") ||
+      texto.includes("DESISTIU DA CONTRATACAO") ||
+      texto.includes("DESISTENCIA DA CONTRATACAO")
+    ) {
+      return {
+        motivo_id: motivoId,
+        natureza: "PRE_ATIVACAO",
+        categoria: "DESISTENCIA_CONTRATACAO",
+        origem_classificacao:
+          "MOTIVO_ID_E_TEXTO"
+      };
+    }
+
+    return {
+      motivo_id: motivoId,
+      natureza: "CHURN_REAL",
+      categoria: "MOTIVOS_PESSOAIS",
+      origem_classificacao:
+        "MOTIVO_ID_E_TEXTO"
+    };
+  }
+
+  const classificacaoPorId =
+    CLASSIFICACAO_MOTIVOS_CANCELAMENTO[
+      motivoId
+    ];
+
+  if (classificacaoPorId) {
+    return {
+      motivo_id: motivoId,
+      ...classificacaoPorId,
+      origem_classificacao: "MOTIVO_ID"
+    };
+  }
+
+  return {
+    motivo_id: motivoId,
+    natureza: "NAO_CLASSIFICADO",
+    categoria:
+      classificarCategoriaCancelamentoPorTexto(
+        contrato
+      ),
+    origem_classificacao: "TEXTO_FALLBACK"
+  };
+}
+
+const cacheRelatorioChurnComercial = {};
+
+const consultasChurnComercialEmAndamento =
+  new Map();
+
+const TEMPO_CACHE_CHURN_COMERCIAL_MS =
+  5 * 60 * 1000;
+
+const MAX_CACHE_CHURN_COMERCIAL = 20;
+
+function limparCacheChurnComercial() {
+  const agora = Date.now();
+
+  for (
+    const [chave, item]
+    of Object.entries(
+      cacheRelatorioChurnComercial
+    )
+  ) {
+    if (
+      !item ||
+      agora - item.criadoEm >
+        TEMPO_CACHE_CHURN_COMERCIAL_MS
+    ) {
+      delete cacheRelatorioChurnComercial[
+        chave
+      ];
+    }
+  }
+
+  const chaves =
+    Object.keys(
+      cacheRelatorioChurnComercial
+    );
+
+  if (
+    chaves.length <=
+    MAX_CACHE_CHURN_COMERCIAL
+  ) {
+    return;
+  }
+
+  chaves
+    .sort(
+      (a, b) =>
+        cacheRelatorioChurnComercial[a]
+          .criadoEm -
+        cacheRelatorioChurnComercial[b]
+          .criadoEm
+    )
+    .slice(
+      0,
+      chaves.length -
+        MAX_CACHE_CHURN_COMERCIAL
+    )
+    .forEach(chave => {
+      delete cacheRelatorioChurnComercial[
+        chave
+      ];
+    });
+}
+
+
+function calcularMaturidadeCoorte(
+  dataAtivacao
+) {
+  const hoje =
+    new Date();
+
+  const dataHoje =
+    [
+      hoje.getFullYear(),
+      String(
+        hoje.getMonth() + 1
+      ).padStart(2, "0"),
+      String(
+        hoje.getDate()
+      ).padStart(2, "0")
+    ].join("-");
+
+  const idadeDias =
+    calcularDiasEntreDatas(
+      dataAtivacao,
+      dataHoje
+    );
+
+  return {
+    idade_dias:
+      idadeDias,
+
+    madura_30_dias:
+      Number.isFinite(idadeDias) &&
+      idadeDias >= 30,
+
+    madura_60_dias:
+      Number.isFinite(idadeDias) &&
+      idadeDias >= 60,
+
+    madura_90_dias:
+      Number.isFinite(idadeDias) &&
+      idadeDias >= 90
+  };
+}
+
+
+function classificarEscopoChurn({
+  segmento
+}) {
+  const valor =
+    String(segmento || "")
+      .trim()
+      .toUpperCase();
+
+  if (
+    valor === "RESIDENCIAL" ||
+    valor === "EMPRESARIAL"
+  ) {
+    return "COMERCIAL";
+  }
+
+  if (
+    valor === "LINK_DEDICADO" ||
+    valor === "REDE_NEUTRA"
+  ) {
+    return "ESPECIAL";
+  }
+
+  if (
+    valor === "FUNCIONARIO" ||
+    valor === "INTERNO"
+  ) {
+    return "INTERNO";
+  }
+
+  return "OUTROS";
+}
+
+
+async function montarRelatorioChurnComercial(
+  dataInicial,
+  dataFinal
+) {
+  const datas =
+    gerarDatasPeriodo(
+      dataInicial,
+      dataFinal
+    );
+
+  const contratosMap =
+    new Map();
+
+  /*
+   * O período é baseado na data de ativação.
+   * Portanto, buscamos os contratos ativados
+   * em cada dia da coorte.
+   */
+  for (const data of datas) {
+    const retorno =
+      await buscar(
+        "cliente_contrato",
+        "cliente_contrato.data_ativacao",
+        data,
+        "1000"
+      );
+
+    for (
+      const contrato
+      of retorno.registros || []
+    ) {
+      if (!contrato.id) {
+        continue;
+      }
+
+      contratosMap.set(
+        String(contrato.id),
+        contrato
+      );
+    }
+  }
+
+  const contratos =
+    [...contratosMap.values()];
+
+  const registrosProcessados =
+    await mapearComConcorrencia(
+      contratos,
+      6,
+      async contrato => {
+        /*
+         * Mantemos apenas ativação e
+         * reativação comercial.
+         */
+        const tipoMovimento =
+          classificarMotivoAtivacao(
+            contrato.id_motivo_inclusao
+          );
+
+        if (!tipoMovimento) {
+          return null;
+        }
+
+        const vendedorNome =
+          nomeVendedorRelatorioAtivacoes(
+            contrato
+          );
+
+        if (
+          !vendedorPermitidoRelatorioAtivacoes(
+            vendedorNome
+          )
+        ) {
+          return null;
+        }
+
+        const dataAtivacao =
+          String(
+            contrato.data_ativacao || ""
+          ).slice(0, 10);
+
+        if (
+          !dataIXCValida(
+            dataAtivacao
+          )
+        ) {
+          return null;
+        }
+
+        const dataCancelamento =
+          dataIXCValida(
+            contrato.data_cancelamento
+          )
+            ? String(
+                contrato.data_cancelamento
+              ).slice(0, 10)
+            : null;
+
+        const cancelado =
+          Boolean(dataCancelamento);
+
+        const diasPermanencia =
+          cancelado
+            ? calcularDiasEntreDatas(
+                dataAtivacao,
+                dataCancelamento
+              )
+            : null;
+
+        const faixaCancelamento =
+          cancelado
+            ? classificarFaixaCancelamento(
+                diasPermanencia
+              )
+            : "NAO_CANCELADO";
+
+        const classificacao =
+          cancelado
+            ? classificarCancelamentoContrato(
+                contrato
+              )
+            : {
+                motivo_id: null,
+                natureza:
+                  "NAO_CANCELADO",
+                categoria:
+                  "NAO_CANCELADO",
+                origem_classificacao:
+                  null
+              };
+
+        const maturidade =
+          calcularMaturidadeCoorte(
+            dataAtivacao
+          );
+
+        const [
+          cliente,
+          plano,
+          filial
+        ] =
+          await Promise.all([
+            buscarClienteCache(
+              contrato.id_cliente
+            ),
+
+            obterPlanoRelatorioAtivacoes(
+              contrato.id_vd_contrato
+            ),
+
+            obterFilialRelatorioAtivacoes(
+              contrato.id_filial
+            )
+          ]);
+
+        const cidadeId =
+          String(
+            cliente?.cidade ||
+            contrato.cidade ||
+            ""
+          );
+
+        const cidadeNome =
+          cidadeId
+            ? await buscarCidadeIXCCache(
+                cidadeId
+              )
+            : "-";
+
+        const valorMensal =
+          numeroIXC(
+            contrato.valor_contrato ||
+            contrato.valor ||
+            plano?.valor_contrato
+          );
+
+        const taxaInstalacao =
+          numeroIXC(
+            contrato.taxa_instalacao
+          );
+
+          const segmento =
+        classificarSegmentoPlano(
+          plano,
+          contrato
+        );
+
+      const escopoChurn =
+        classificarEscopoChurn({
+          segmento
+        });
+
+        return {
+          contrato_id:
+            String(contrato.id),
+
+          cliente_id:
+            String(
+              contrato.id_cliente || ""
+            ),
+
+          cliente:
+            cliente?.razao ||
+            cliente?.nome ||
+            cliente?.fantasia ||
+            `Cliente ID ${contrato.id_cliente}`,
+
+          data_ativacao:
+            dataAtivacao,
+
+          data_cancelamento:
+            dataCancelamento,
+
+          cancelado,
+
+          dias_permanencia:
+            diasPermanencia,
+
+          faixa_cancelamento:
+            faixaCancelamento,
+
+          motivo_inclusao_id:
+            String(
+              contrato.id_motivo_inclusao ||
+              ""
+            ),
+
+          tipo_movimento:
+            tipoMovimento,
+
+          motivo_cancelamento_id:
+            cancelado
+              ? String(
+                  contrato
+                    .motivo_cancelamento ||
+                  ""
+                )
+              : null,
+
+          observacao_cancelamento:
+            cancelado
+              ? String(
+                  contrato
+                    .obs_cancelamento ||
+                  ""
+                ).trim()
+              : null,
+
+          natureza_cancelamento:
+            classificacao.natureza,
+
+          categoria_cancelamento:
+            classificacao.categoria,
+
+          origem_classificacao:
+            classificacao
+              .origem_classificacao,
+
+          vendedor_id:
+            String(
+              contrato.id_vendedor || ""
+            ),
+
+          vendedor:
+            vendedorNome,
+
+          filial_id:
+            filial?.id ||
+            String(
+              contrato.id_filial || ""
+            ),
+
+          filial:
+            filial?.nome ||
+            "-",
+
+          cidade_id:
+            cidadeId || null,
+
+          cidade:
+            cidadeNome || "-",
+
+          bairro:
+            cliente?.bairro ||
+            contrato.bairro ||
+            "-",
+
+          plano_id:
+            String(
+              contrato.id_vd_contrato ||
+              ""
+            ),
+
+          plano:
+            plano?.nome ||
+            contrato.contrato ||
+            contrato
+              .descricao_aux_plano_venda ||
+            "-",
+
+          segmento,
+          escopo_churn: escopoChurn,
+
+          valor_mensal:
+            Number(
+              valorMensal.toFixed(2)
+            ),
+
+          taxa_instalacao:
+            Number(
+              taxaInstalacao.toFixed(2)
+            ),
+
+          responsavel_cancelamento_id:
+            cancelado
+              ? String(
+                  contrato
+                    .id_responsavel_cancelamento ||
+                  ""
+                )
+              : null,
+
+          origem_cancelamento:
+            cancelado
+              ? String(
+                  contrato
+                    .origem_cancelamento ||
+                  ""
+                )
+              : null,
+
+          parcelas_atraso:
+            Number(
+              contrato.num_parcelas_atraso ||
+              0
+            ),
+
+          status_contrato:
+            String(
+              contrato.status || "-"
+            ),
+
+          status_acesso:
+            String(
+              contrato.status_internet ||
+              "-"
+            ),
+
+          idade_coorte_dias:
+            maturidade.idade_dias,
+
+          madura_30_dias:
+            maturidade
+              .madura_30_dias,
+
+          madura_60_dias:
+            maturidade
+              .madura_60_dias,
+
+          madura_90_dias:
+            maturidade
+              .madura_90_dias
+        };
+      }
+    );
+
+  const registros =
+    registrosProcessados.filter(Boolean);
+
+    const motivosOutrosMap =
+  new Map();
+
+for (const item of registros) {
+  if (!item.cancelado) {
+    continue;
+  }
+
+  if (
+    item.categoria_cancelamento !==
+    "OUTROS"
+  ) {
+    continue;
+  }
+
+  const motivoId =
+    String(
+      item.motivo_cancelamento_id ||
+      "SEM_ID"
+    );
+
+  if (!motivosOutrosMap.has(motivoId)) {
+    motivosOutrosMap.set(motivoId, {
+      motivo_id: motivoId,
+      quantidade: 0,
+      observacoes: []
+    });
+  }
+
+  const grupo =
+    motivosOutrosMap.get(motivoId);
+
+  grupo.quantidade += 1;
+
+  const observacao =
+    String(
+      item.observacao_cancelamento || ""
+    ).trim();
+
+  if (
+    observacao &&
+    grupo.observacoes.length < 5 &&
+    !grupo.observacoes.includes(observacao)
+  ) {
+    grupo.observacoes.push(observacao);
+  }
+}
+
+const motivosOutros =
+  [...motivosOutrosMap.values()]
+    .sort(
+      (a, b) =>
+        b.quantidade -
+        a.quantidade
+    );
+
+
+
+  const cancelados =
+    registros.filter(
+      item => item.cancelado
+    );
+
+  const churnReal =
+    cancelados.filter(
+      item =>
+        item.natureza_cancelamento ===
+        "CHURN_REAL"
+    );
+
+  const cancelados30 =
+    churnReal.filter(
+      item =>
+        item.faixa_cancelamento ===
+        "ATE_30_DIAS"
+    );
+
+  const cancelados60 =
+    churnReal.filter(
+      item =>
+        item.faixa_cancelamento ===
+        "DE_31_A_60_DIAS"
+    );
+
+  const cancelados90 =
+    churnReal.filter(
+      item =>
+        item.faixa_cancelamento ===
+        "DE_61_A_90_DIAS"
+    );
+
+  const churnAte90 =
+    churnReal.filter(
+      item =>
+        Number.isFinite(
+          item.dias_permanencia
+        ) &&
+        item.dias_permanencia <= 90
+    );
+
+  /*
+   * Denominadores maduros.
+   * São essenciais para não comparar
+   * coortes incompletas.
+   */
+  const coorteMadura30 =
+    registros.filter(
+      item => item.madura_30_dias
+    );
+
+  const coorteMadura60 =
+    registros.filter(
+      item => item.madura_60_dias
+    );
+
+  const coorteMadura90 =
+    registros.filter(
+      item => item.madura_90_dias
+    );
+
+  const churn30Maduros =
+    cancelados30.filter(
+      item => item.madura_30_dias
+    );
+
+  const churnAte60Maduros =
+    churnReal.filter(
+      item =>
+        item.madura_60_dias &&
+        Number.isFinite(
+          item.dias_permanencia
+        ) &&
+        item.dias_permanencia <= 60
+    );
+
+  const churnAte90Maduros =
+    churnAte90.filter(
+      item => item.madura_90_dias
+    );
+
+  const calcularPercentual = (
+    total,
+    base
+  ) => {
+    if (!base) {
+      return 0;
+    }
+
+    return Number(
+      (
+        (total / base) *
+        100
+      ).toFixed(2)
+    );
+  };
+
+  const receitaPerdida90 =
+    churnAte90.reduce(
+      (total, item) =>
+        total +
+        numeroIXC(
+          item.valor_mensal
+        ),
+      0
+    );
+
+  const taxaInstalacao90 =
+    churnAte90.reduce(
+      (total, item) =>
+        total +
+        numeroIXC(
+          item.taxa_instalacao
+        ),
+      0
+    );
+
+  return {
+    periodo_coorte: {
+      inicio: dataInicial,
+      fim: dataFinal
+    },
+
+    resumo: {
+      total_ativados:
+        registros.length,
+
+      total_cancelados:
+        cancelados.length,
+
+      total_churn_real:
+        churnReal.length,
+
+      cancelados_ate_30_dias:
+        cancelados30.length,
+
+      cancelados_31_a_60_dias:
+        cancelados60.length,
+
+      cancelados_61_a_90_dias:
+        cancelados90.length,
+
+      cancelados_ate_90_dias:
+        churnAte90.length,
+
+      cancelados_acima_90_dias:
+        churnReal.filter(
+          item =>
+            item.faixa_cancelamento ===
+            "ACIMA_DE_90_DIAS"
+        ).length,
+
+      migracoes_internas:
+        cancelados.filter(
+          item =>
+            item.natureza_cancelamento ===
+            "MIGRACAO_INTERNA"
+        ).length,
+
+      pre_ativacao:
+        cancelados.filter(
+          item =>
+            item.natureza_cancelamento ===
+            "PRE_ATIVACAO"
+        ).length,
+
+      ajustes_administrativos:
+        cancelados.filter(
+          item =>
+            item.natureza_cancelamento ===
+            "AJUSTE_ADMINISTRATIVO"
+        ).length,
+
+      nao_classificados:
+        cancelados.filter(
+          item =>
+            item.natureza_cancelamento ===
+            "NAO_CLASSIFICADO"
+        ).length,
+
+      receita_mensal_perdida_90_dias:
+        Number(
+          receitaPerdida90.toFixed(2)
+        ),
+
+      taxa_instalacao_cancelada_90_dias:
+        Number(
+          taxaInstalacao90.toFixed(2)
+        )
+    },
+
+    maturidade: {
+      coorte_madura_30_dias:
+        coorteMadura30.length,
+
+      coorte_madura_60_dias:
+        coorteMadura60.length,
+
+      coorte_madura_90_dias:
+        coorteMadura90.length,
+
+      taxa_churn_30_dias:
+        calcularPercentual(
+          churn30Maduros.length,
+          coorteMadura30.length
+        ),
+
+        diagnostico: {
+          motivos_outros:
+            motivosOutros
+        },
+
+      taxa_churn_ate_60_dias:
+        calcularPercentual(
+          churnAte60Maduros.length,
+          coorteMadura60.length
+        ),
+
+      taxa_churn_ate_90_dias:
+        calcularPercentual(
+          churnAte90Maduros.length,
+          coorteMadura90.length
+        )
+    },
+    
+
+    registros
+  };
+}
+
+app.get(
+  "/api/relatorios-comerciais/churn",
+  exigirLogin,
+  exigirPermissao(
+    "ver_relatorios_comerciais"
+  ),
+  async (req, res) => {
+    try {
+      const inicio =
+        String(
+          req.query.inicio || ""
+        );
+
+      const fim =
+        String(
+          req.query.fim || ""
+        );
+
+      if (
+        !dataIXCValida(inicio) ||
+        !dataIXCValida(fim)
+      ) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "Informe inicio e fim no formato YYYY-MM-DD."
+        });
+      }
+
+      const diasPeriodo =
+        calcularDiasEntreDatas(
+          inicio,
+          fim
+        );
+
+      if (
+        diasPeriodo === null ||
+        diasPeriodo < 0
+      ) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "O período informado é inválido."
+        });
+      }
+
+      /*
+       * Mantemos a mesma proteção
+       * da rota de ativações.
+       */
+      if (diasPeriodo > 63) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "O período máximo permitido é de 63 dias."
+        });
+      }
+
+      limparCacheChurnComercial();
+
+      const chaveCache =
+        `${inicio}|${fim}`;
+
+      const cache =
+        cacheRelatorioChurnComercial[
+          chaveCache
+        ];
+
+      if (
+        cache &&
+        Date.now() - cache.criadoEm <
+          TEMPO_CACHE_CHURN_COMERCIAL_MS
+      ) {
+        return res.json({
+          ...cache.dados,
+          cache: true,
+          atualizado_em:
+            new Date(
+              cache.criadoEm
+            ).toLocaleString(
+              "pt-BR"
+            )
+        });
+      }
+
+      if (
+        consultasChurnComercialEmAndamento
+          .has(chaveCache)
+      ) {
+        const dados =
+          await consultasChurnComercialEmAndamento
+            .get(chaveCache);
+
+        return res.json({
+          ...dados,
+          cache: true,
+          compartilhado: true,
+          atualizado_em:
+            new Date()
+              .toLocaleString(
+                "pt-BR"
+              )
+        });
+      }
+
+      const consulta =
+        montarRelatorioChurnComercial(
+          inicio,
+          fim
+        );
+
+      consultasChurnComercialEmAndamento
+        .set(
+          chaveCache,
+          consulta
+        );
+
+      try {
+        const dados =
+          await consulta;
+
+        const criadoEm =
+          Date.now();
+
+        cacheRelatorioChurnComercial[
+          chaveCache
+        ] = {
+          criadoEm,
+          dados
+        };
+
+        limparCacheChurnComercial();
+
+        return res.json({
+          ...dados,
+          cache: false,
+          atualizado_em:
+            new Date(
+              criadoEm
+            ).toLocaleString(
+              "pt-BR"
+            )
+        });
+
+      } finally {
+        consultasChurnComercialEmAndamento
+          .delete(chaveCache);
+      }
+
+        } catch (erro) {
+          console.error(
+            "\n[CHURN COMERCIAL] ERRO AO GERAR RELATÓRIO"
+          );
+
+          console.error(
+            "[CHURN COMERCIAL] Mensagem:",
+            erro?.message
+          );
+
+          console.error(
+            "[CHURN COMERCIAL] Código:",
+            erro?.code
+          );
+
+          console.error(
+            "[CHURN COMERCIAL] Status externo:",
+            erro?.response?.status
+          );
+
+          console.error(
+            "[CHURN COMERCIAL] Resposta externa:",
+            erro?.response?.data
+          );
+
+          console.error(
+            "[CHURN COMERCIAL] Stack:",
+            erro?.stack
+          );
+
+          return res.status(500).json({
+            erro: true,
+            mensagem:
+              erro?.message ||
+              "Não foi possível concluir a operação.",
+
+            codigo:
+              erro?.code || null,
+
+            etapa:
+              "relatorio_churn_comercial"
+          });
+        }
   }
 );
 
@@ -6474,6 +10340,347 @@ registrarDebugGet("/api/debug-link-dedicado-financeiro", async (req, res) => {
   }
 });
 
+registrarDebugGet(
+  "/api/debug/motivos-cancelamento",
+  async (req, res) => {
+    try {
+      const retorno = await buscar(
+        "motivo_cancelamento",
+        "motivo_cancelamento.id",
+        "0",
+        "1000"
+      );
+
+      const registros =
+        retorno.registros || [];
+
+      return res.json({
+        sucesso: true,
+        endpoint: "motivo_cancelamento",
+        total: registros.length,
+        campos:
+          registros.length
+            ? Object.keys(registros[0]).sort()
+            : [],
+        motivos: registros
+      });
+
+    } catch (erro) {
+      return res.status(500).json({
+        erro: true,
+        endpoint_testado:
+          "motivo_cancelamento",
+        mensagem:
+          erro.response?.data ||
+          erro.message
+      });
+    }
+  }
+);
+
+registrarDebugGet(
+  "/api/debug/descobrir-motivos-cancelamento",
+  async (req, res) => {
+    const motivoId =
+      String(req.query.id || "269");
+
+    const candidatos = [
+      {
+        endpoint: "motivo_cancelamento",
+        qtypes: [
+          "motivo_cancelamento.id",
+          "id"
+        ]
+      },
+      {
+        endpoint:
+          "cliente_contrato_motivo_cancelamento",
+        qtypes: [
+          "cliente_contrato_motivo_cancelamento.id",
+          "id"
+        ]
+      },
+      {
+        endpoint: "motivos_cancelamento",
+        qtypes: [
+          "motivos_cancelamento.id",
+          "id"
+        ]
+      },
+      {
+        endpoint: "tipo_cancelamento",
+        qtypes: [
+          "tipo_cancelamento.id",
+          "id"
+        ]
+      },
+      {
+        endpoint: "cancelamento_motivo",
+        qtypes: [
+          "cancelamento_motivo.id",
+          "id"
+        ]
+      }
+    ];
+
+    const resultados = [];
+
+    for (const candidato of candidatos) {
+      for (const qtype of candidato.qtypes) {
+        try {
+          const retorno = await buscar(
+            candidato.endpoint,
+            qtype,
+            motivoId,
+            "10"
+          );
+
+          const registros =
+            retorno.registros || [];
+
+          resultados.push({
+            endpoint:
+              candidato.endpoint,
+
+            qtype,
+
+            motivo_id_testado:
+              motivoId,
+
+            sucesso_requisicao:
+              true,
+
+            total:
+              registros.length,
+
+            total_ixc:
+              retorno.total || null,
+
+            campos:
+              registros.length
+                ? Object.keys(
+                    registros[0]
+                  ).sort()
+                : [],
+
+            registros
+          });
+
+        } catch (erro) {
+          resultados.push({
+            endpoint:
+              candidato.endpoint,
+
+            qtype,
+
+            motivo_id_testado:
+              motivoId,
+
+            sucesso_requisicao:
+              false,
+
+            status:
+              erro.response?.status ||
+              null,
+
+            mensagem:
+              erro.response?.data ||
+              erro.message
+          });
+        }
+      }
+    }
+
+    return res.json({
+      sucesso: true,
+      motivo_id_testado:
+        motivoId,
+      resultados
+    });
+  }
+);
+
+registrarDebugGet(
+  "/api/debug/mapear-motivos-cancelamento",
+  async (req, res) => {
+    try {
+      const inicio =
+        String(req.query.inicio || "");
+
+      const fim =
+        String(req.query.fim || "");
+
+      if (
+        !/^\d{4}-\d{2}-\d{2}$/.test(inicio) ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(fim)
+      ) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "Informe inicio e fim no formato YYYY-MM-DD."
+        });
+      }
+
+      const datas =
+        gerarDatasPeriodo(inicio, fim);
+
+      const contratosMap =
+        new Map();
+
+      for (const data of datas) {
+        const retorno =
+          await buscar(
+            "cliente_contrato",
+            "cliente_contrato.data_cancelamento",
+            data,
+            "1000"
+          );
+
+        for (
+          const contrato
+          of retorno.registros || []
+        ) {
+          if (!contrato.id) continue;
+
+          contratosMap.set(
+            String(contrato.id),
+            contrato
+          );
+        }
+      }
+
+      const mapaMotivos =
+        new Map();
+
+      for (
+        const contrato
+        of contratosMap.values()
+      ) {
+        const motivoId =
+          String(
+            contrato.motivo_cancelamento ||
+            "0"
+          );
+
+        if (
+          !motivoId ||
+          motivoId === "0"
+        ) {
+          continue;
+        }
+
+        if (!mapaMotivos.has(motivoId)) {
+          mapaMotivos.set(motivoId, {
+            motivo_id: motivoId,
+            total: 0,
+            observacoes: new Map(),
+            exemplos: []
+          });
+        }
+
+        const item =
+          mapaMotivos.get(motivoId);
+
+        item.total += 1;
+
+        const observacao =
+          String(
+            contrato.obs_cancelamento ||
+            ""
+          ).trim();
+
+        if (observacao) {
+          item.observacoes.set(
+            observacao,
+            (
+              item.observacoes.get(
+                observacao
+              ) || 0
+            ) + 1
+          );
+        }
+
+        if (item.exemplos.length < 5) {
+          item.exemplos.push({
+            contrato_id:
+              String(contrato.id),
+
+            cliente_id:
+              String(
+                contrato.id_cliente || ""
+              ),
+
+            data_ativacao:
+              contrato.data_ativacao ||
+              null,
+
+            data_cancelamento:
+              contrato.data_cancelamento ||
+              null,
+
+            observacao:
+              observacao || null
+          });
+        }
+      }
+
+      const motivos =
+        [...mapaMotivos.values()]
+          .map(item => ({
+            motivo_id:
+              item.motivo_id,
+
+            total:
+              item.total,
+
+            observacoes:
+              [...item.observacoes.entries()]
+                .map(
+                  ([texto, quantidade]) => ({
+                    texto,
+                    quantidade
+                  })
+                )
+                .sort(
+                  (a, b) =>
+                    b.quantidade -
+                    a.quantidade
+                )
+                .slice(0, 20),
+
+            exemplos:
+              item.exemplos
+          }))
+          .sort(
+            (a, b) =>
+              b.total - a.total
+          );
+
+      return res.json({
+        sucesso: true,
+        periodo: {
+          inicio,
+          fim
+        },
+        total_contratos_cancelados:
+          contratosMap.size,
+        total_motivos:
+          motivos.length,
+        motivos
+      });
+
+    } catch (erro) {
+      return responderErroInterno(
+        req,
+        res,
+        erro,
+        "Erro ao mapear motivos de cancelamento"
+      );
+    }
+  }
+);
+
+
 
 registrarDebugGet("/api/debug-link-dedicado-regra/:contratoId", async (req, res) => {
   try {
@@ -7943,156 +12150,423 @@ registrarDebugPost("/api/os/:id/teste-finalizar-pagamento", async (req, res) => 
   }
 });
 
-app.post("/api/os/:id/finalizar-pagamento-ativacao", exigirLogin, exigirPermissao("finalizar_pagamento_ativacao"), async (req, res) => {
-  try {
-    const idOS = req.params.id;
-    let { mensagem } = req.body;
+app.post( "/api/os/:id/finalizar-pagamento-ativacao", exigirLogin, exigirPermissao("finalizar_pagamento_ativacao"), async (req, res) => {
+    try {
+      const idOS = req.params.id;
+      let { mensagem } = req.body;
 
-    const retornoOS = await buscar(
-      "su_oss_chamado",
-      "su_oss_chamado.id",
-      idOS,
-      "1"
-    );
+      const retornoOS = await buscar(
+        "su_oss_chamado",
+        "su_oss_chamado.id",
+        idOS,
+        "1"
+      );
 
-    const os = retornoOS.registros?.[0];
+      const os = retornoOS.registros?.[0];
 
-    if (!os) {
-      return res.status(404).json({
-        erro: true,
-        mensagem: "O.S. não encontrada."
-      });
-    }
-
-    if (os.status === "F") {
-      return res.status(400).json({
-        erro: true,
-        mensagem: "Esta O.S. já está finalizada."
-      });
-    }
-
-          const ehPagamentoAtivacaoNormal =
-            os.id_assunto === "641" &&
-            os.id_wfl_tarefa === "1113";
-
-          const ehPagamentoFibrasil =
-            os.id_wfl_tarefa === "260" ||
-            String(os.mensagem || "").toUpperCase().includes("PROCESSO DE ATIVAÇÃO FIBRASIL");
-
-          if (!ehPagamentoAtivacaoNormal && !ehPagamentoFibrasil) {
-            return res.status(400).json({
-              erro: true,
-              mensagem: "Esta O.S. não é de pagamento de ativação reconhecida."
-            });
-          }
-
-    if (!mensagem || !mensagem.trim()) {
-      const cliente = await buscarCliente(os.id_cliente);
-      mensagem = cliente?.alerta || "";
-    }
-
-    if (!mensagem || !mensagem.trim()) {
-      return res.status(400).json({
-        erro: true,
-        mensagem: "Não foi encontrada observação no campo Alerta do cliente."
-      });
-    }
-
-    const contrato = await buscarContrato(os.id_contrato_kit);
-
-    const ehReativacaoComercial = contrato?.id_motivo_inclusao === "8";
-
-    const proximaTarefa = ehPagamentoFibrasil
-          ? "214"
-          : ehReativacaoComercial
-            ? "1005"
-            : "25";
-
-        const fluxo = ehPagamentoFibrasil
-          ? "ATIVAÇÃO FIBRASIL"
-          : ehReativacaoComercial
-            ? "REATIVAÇÃO COMERCIAL"
-            : "ATIVAÇÃO COMERCIAL";
-
-    const agora = new Date().toISOString().slice(0, 19).replace("T", " ");
-
-    const operadorIXC = String(req.session.usuario?.colaborador_ixc_id || "677");
-
-    const payload = {
-      id_chamado: idOS,
-      status: "F",
-      id_evento: "6",
-      mensagem: mensagem.trim(),
-      historico: "",
-      id_tecnico: operadorIXC,
-      id_operador: operadorIXC,
-      id_equipe: "0",
-      finaliza_processo: "N",
-      gera_comissao: "S",
-      data_inicio: agora,
-      data_final: agora,
-      id_proxima_tarefa: proximaTarefa,
-      id_su_diagnostico: "1453",
-      id_diagnostico_especifico: "0",
-      tipo_cobranca: "NENHUM"
-    };
-
-    const response = await api.post("/su_oss_chamado_fechar", payload, {
-      headers: {
-        ixcsoft: "inserir"
+      if (!os) {
+        return res.status(404).json({
+          erro: true,
+          mensagem: "O.S. não encontrada."
+        });
       }
+
+      if (String(os.status || "") === "F") {
+        return res.status(400).json({
+          erro: true,
+          mensagem: "Esta O.S. já está finalizada."
+        });
+      }
+
+      const assuntoId = String(os.id_assunto || "");
+      const tarefaAtual = String(os.id_wfl_tarefa || "");
+
+      const ehPagamentoAtivacaoNormal =
+        assuntoId === "641" &&
+        tarefaAtual === "1113";
+
+      const ehPagamentoFibrasil =
+        tarefaAtual === "260" ||
+        String(os.mensagem || "")
+          .toUpperCase()
+          .includes("PROCESSO DE ATIVAÇÃO FIBRASIL");
+
+      if (
+        !ehPagamentoAtivacaoNormal &&
+        !ehPagamentoFibrasil
+      ) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "Esta O.S. não é de pagamento de ativação reconhecida."
+        });
+      }
+
+      if (
+        typeof mensagem !== "string" ||
+        !mensagem.trim()
+      ) {
+        const cliente = await buscarCliente(
+          os.id_cliente
+        );
+
+        mensagem = cliente?.alerta || "";
+      }
+
+      if (
+        typeof mensagem !== "string" ||
+        !mensagem.trim()
+      ) {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            "Não foi encontrada observação no campo Alerta do cliente."
+        });
+      }
+
+      const contrato = await buscarContrato(
+        os.id_contrato_kit
+      );
+
+      const ehReativacaoComercial =
+        String(
+          contrato?.id_motivo_inclusao || ""
+        ) === "8";
+
+      const proximaTarefa = ehPagamentoFibrasil
+        ? "214"
+        : ehReativacaoComercial
+          ? "1005"
+          : "25";
+
+      const fluxo = ehPagamentoFibrasil
+        ? "ATIVAÇÃO FIBRASIL"
+        : ehReativacaoComercial
+          ? "REATIVAÇÃO COMERCIAL"
+          : "ATIVAÇÃO COMERCIAL";
+
+      const agora = new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ");
+
+      const operadorIXC = String(
+        req.session.usuario?.colaborador_ixc_id ||
+        "677"
+      );
+
+      const payload = {
+        id_chamado: idOS,
+        status: "F",
+        id_evento: "6",
+        mensagem: mensagem.trim(),
+        historico: "",
+        id_tecnico: operadorIXC,
+        id_operador: operadorIXC,
+        id_equipe: "0",
+        finaliza_processo: "N",
+        gera_comissao: "S",
+        data_inicio: agora,
+        data_final: agora,
+        id_proxima_tarefa: proximaTarefa,
+        id_su_diagnostico: "1453",
+        id_diagnostico_especifico: "0",
+        tipo_cobranca: "NENHUM"
+      };
+
+            console.log(
+              "[ABERTURA ATIVACAO] Payload enviado ao IXC:",
+              {
+                os_origem: idOS,
+                contrato_id:
+                  os.id_contrato_kit ||
+                  os.id_contrato ||
+                  null,
+                cliente_id:
+                  os.id_cliente ||
+                  null,
+                assunto_id:
+                  String(os.id_assunto || ""),
+                tarefa_atual:
+                  String(os.id_wfl_tarefa || ""),
+                fluxo,
+                proxima_tarefa:
+                  proximaTarefa,
+                operador_ixc:
+                  operadorIXC,
+                payload
+              }
+            );
+
+            const response = await api.post(
+              "/su_oss_chamado_fechar",
+              payload,
+              {
+                headers: {
+                  ixcsoft: "inserir"
+                }
+              }
+            );
+
+            console.log(
+              "[ABERTURA ATIVACAO] Resposta do IXC:",
+              {
+                os_origem:
+                  idOS,
+                contrato_id:
+                  os.id_contrato_kit ||
+                  os.id_contrato ||
+                  null,
+                cliente_id:
+                  os.id_cliente ||
+                  null,
+                fluxo,
+                proxima_tarefa:
+                  proximaTarefa,
+                resposta:
+                  response.data
+              }
+            );
+
+      if (response.data?.type !== "success") {
+        return res.status(400).json({
+          erro: true,
+          mensagem:
+            response.data?.message ||
+            "IXC não finalizou a O.S.",
+          retorno: response.data
+        });
+      }
+
+      let osOperacionalLocalizada = null;
+      let resultadoTesteVelocidade = null;
+
+try {
+  osOperacionalLocalizada =
+    await localizarOSOperacionalCriada({
+      contratoId:
+        os.id_contrato_kit ||
+        os.id_contrato ||
+        null,
+
+      clienteId:
+        os.id_cliente ||
+        null,
+
+      osPagamentoId:
+        idOS,
+
+      tentativas: 6,
+      intervaloMs: 1000
     });
 
-    if (response.data?.type !== "success") {
-      return res.status(400).json({
-        erro: true,
-        mensagem: response.data?.message || "IXC não finalizou a O.S.",
-        retorno: response.data
-      });
+  if (osOperacionalLocalizada) {
+    console.log(
+      "[TESTE VELOCIDADE] O.S. operacional localizada com sucesso:",
+      {
+        fluxo,
+        os_pagamento_id:
+          idOS,
+
+        os_operacional_id:
+          osOperacionalLocalizada.id,
+
+        contrato_id:
+          osOperacionalLocalizada.id_contrato_kit ||
+          osOperacionalLocalizada.id_contrato ||
+          null,
+
+        cliente_id:
+          osOperacionalLocalizada.id_cliente ||
+          null,
+
+        assunto_id:
+          osOperacionalLocalizada.id_assunto ||
+          null,
+
+        status:
+          osOperacionalLocalizada.status ||
+          null,
+
+        tarefa:
+          osOperacionalLocalizada.id_wfl_tarefa ||
+          null,
+
+        parametro:
+          osOperacionalLocalizada.id_wfl_param_os ||
+          null
+
+          
+      }
+    );
+
+    try {
+  resultadoTesteVelocidade =
+    await criarOSAnexoTesteVelocidade({
+      osOperacional:
+        osOperacionalLocalizada
+    });
+} catch (erroTesteVelocidade) {
+  resultadoTesteVelocidade = {
+    sucesso: false,
+    erro: true,
+    mensagem:
+      erroTesteVelocidade?.message ||
+      "Erro ao criar a O.S. de teste de velocidade."
+  };
+
+  console.error(
+    "[TESTE VELOCIDADE] Falha na criação ou vinculação da O.S. 679:",
+    {
+      fluxo,
+      os_pagamento_id:
+        idOS,
+      os_operacional_id:
+        osOperacionalLocalizada.id,
+      contrato_id:
+        osOperacionalLocalizada.id_contrato_kit ||
+        osOperacionalLocalizada.id_contrato ||
+        null,
+      cliente_id:
+        osOperacionalLocalizada.id_cliente ||
+        null,
+      mensagem:
+        erroTesteVelocidade?.message ||
+        null,
+      retorno_ixc:
+        erroTesteVelocidade?.response?.data ||
+        null
     }
+  );
+}
+
+
+  } else {
+    console.warn(
+      "[TESTE VELOCIDADE] O.S. operacional não localizada após as tentativas:",
+      {
+        fluxo,
+        os_pagamento_id:
+          idOS,
+
+        contrato_id:
+          os.id_contrato_kit ||
+          os.id_contrato ||
+          null,
+
+        cliente_id:
+          os.id_cliente ||
+          null
+      }
+    );
+  }
+} catch (erroLocalizacao) {
+  console.error(
+    "[TESTE VELOCIDADE] Erro ao localizar a O.S. operacional:",
+    {
+      fluxo,
+      os_pagamento_id:
+        idOS,
+
+      contrato_id:
+        os.id_contrato_kit ||
+        os.id_contrato ||
+        null,
+
+      cliente_id:
+        os.id_cliente ||
+        null,
+
+      mensagem:
+        erroLocalizacao?.message ||
+        null,
+
+      retorno_ixc:
+        erroLocalizacao?.response?.data ||
+        null
+    }
+  );
+}
 
       let retornoLimpezaAlerta = null;
 
       try {
-        retornoLimpezaAlerta = await limparAlertaCliente(os.id_cliente);
+        retornoLimpezaAlerta =
+          await limparAlertaCliente(
+            os.id_cliente
+          );
       } catch (erroLimpeza) {
         retornoLimpezaAlerta = {
           erro: true,
-          mensagem: erroLimpeza.response?.data || erroLimpeza.message
+          mensagem:
+            erroLimpeza.response?.data ||
+            erroLimpeza.message
         };
       }
 
-    await registrarLogSistema(req, {
-        acao: "FINALIZOU_PAGAMENTO_ATIVACAO",
-        modulo: "Pagamentos de Ativação",
-        os_id: String(idOS),
-        cliente: os.id_cliente ? `Cliente ID ${os.id_cliente}` : null,
-        detalhes: `Fluxo: ${fluxo} | Próxima tarefa: ${proximaTarefa}`
+      await registrarLogSistema(req, {
+        acao:
+          "FINALIZOU_PAGAMENTO_ATIVACAO",
+        modulo:
+          "Pagamentos de Ativação",
+        os_id:
+          String(idOS),
+        cliente:
+          os.id_cliente
+            ? `Cliente ID ${os.id_cliente}`
+            : null,
+        detalhes:
+          `Fluxo: ${fluxo} | Próxima tarefa: ${proximaTarefa}`
       });
 
-        res.json({
-          sucesso: true,
-          mensagem: `O.S. de pagamento finalizada. Fluxo enviado para ${fluxo}.`,
-          fluxo,
-          proxima_tarefa: proximaTarefa,
-          limpeza_alerta: retornoLimpezaAlerta,
-          os: {
-            id: os.id,
-            contrato: os.id_contrato_kit,
-            cliente: os.id_cliente
-          },
-          retorno: response.data
-        });
+      return res.json({
+        sucesso: true,
+        mensagem:
+          `O.S. de pagamento finalizada. Fluxo enviado para ${fluxo}.`,
+        fluxo,
+        proxima_tarefa:
+          proximaTarefa,
+              os_operacional: osOperacionalLocalizada
+      ? {
+          id:
+            osOperacionalLocalizada.id,
+          assunto_id:
+            osOperacionalLocalizada.id_assunto,
+          contrato_id:
+            osOperacionalLocalizada.id_contrato_kit ||
+            osOperacionalLocalizada.id_contrato ||
+            null,
+          cliente_id:
+            osOperacionalLocalizada.id_cliente ||
+            null
+        }
+      : null,
 
-  } catch (erro) {
+    teste_velocidade:
+      resultadoTesteVelocidade,
+        limpeza_alerta:
+          retornoLimpezaAlerta,
+        os: {
+          id:
+            os.id,
+          contrato:
+            os.id_contrato_kit,
+          cliente:
+            os.id_cliente
+        },
+        retorno:
+          response.data
+      });
+    } catch (erro) {
       return responderErroInterno(
         req,
         res,
         erro,
         "Erro ao finalizar pagamento de ativação"
       );
+    }
   }
-});
+);
 
 async function registrarLogSistema(req, dados = {}) {
   try {
@@ -8158,6 +12632,97 @@ app.get("/api/relatorios/logs-sistema", exigirLogin, async (req, res) => {
     });
   }
 });
+
+registrarDebugGet(
+  "/api/debug/ixc/oss-contrato/:contratoId",
+  async (req, res) => {
+    try {
+      const contratoId =
+        String(
+          req.params.contratoId || ""
+        );
+
+      const retorno = await buscar(
+        "su_oss_chamado",
+        "su_oss_chamado.id_contrato_kit",
+        contratoId,
+        "100"
+      );
+
+      const ordens =
+        retorno.registros || [];
+
+      const resultado = ordens
+        .map(os => ({
+          id: os.id,
+          protocolo: os.protocolo,
+          assunto_id: String(
+            os.id_assunto || ""
+          ),
+          status: os.status,
+          cliente_id: os.id_cliente,
+          contrato_id:
+            os.id_contrato_kit ||
+            os.id_contrato ||
+            null,
+          setor_id:
+            os.setor ||
+            os.id_setor ||
+            null,
+          tecnico_id:
+            os.id_tecnico ||
+            null,
+          origem:
+            os.origem_os_aberta ||
+            os.origem ||
+            null,
+          id_wfl_tarefa:
+            os.id_wfl_tarefa ||
+            null,
+          id_wfl_param_os:
+            os.id_wfl_param_os ||
+            null,
+          id_os_anterior:
+            os.id_oss_chamado ||
+            null,
+          data_abertura:
+            os.data_abertura ||
+            null,
+          descricao:
+            os.mensagem ||
+            ""
+        }))
+        .sort(
+          (a, b) =>
+            Number(b.id || 0) -
+            Number(a.id || 0)
+        );
+
+      return res.json({
+        sucesso: true,
+        contrato_id: contratoId,
+        total: resultado.length,
+        ativacoes: resultado.filter(
+          item =>
+            item.assunto_id === "137"
+        ),
+        anexos_teste_velocidade:
+          resultado.filter(
+            item =>
+              item.assunto_id === "679"
+          ),
+        ordens: resultado
+      });
+    } catch (erro) {
+      return res.status(500).json({
+        erro: true,
+        mensagem:
+          erro.response?.data ||
+          erro.message
+      });
+    }
+  }
+);
 
 registrarDebugGet("/api/debug-ranking-churn-classificacao", async (req, res) => {
   try {
