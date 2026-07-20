@@ -97,7 +97,7 @@
         fecharMenusModulos();
       "
     >
-      🔄 Churn
+      🔄 Ranking Churn
     </button>
 
     <button
@@ -2583,7 +2583,7 @@ async function abrirTelaRankingChurn() {
     <section class="churn-page">
       <div class="churn-header">
         <h1>🔄 Ranking Churn</h1>
-        <p>Recuperação e renovação de contratos da equipe de RC.</p>
+        <p>Recuperação e renovação de contratos da equipe RC.</p>
       </div>
 
       
@@ -2801,6 +2801,94 @@ function gerarTabelaRankingChurn(ranking) {
     </div>
   `;
 }
+
+
+function fecharModalComEsc() {
+  if (
+    document.getElementById("modalObservacaoConfirmacao")?.style.display ===
+    "flex"
+  ) {
+    cancelarObservacaoConfirmacao();
+    return;
+  }
+
+  if (
+    document.getElementById("modalMotivoReagendamento")?.style.display ===
+    "flex"
+  ) {
+    fecharModalMotivoReagendamento();
+    return;
+  }
+
+  if (
+    document.getElementById("modalResetarSenha")?.style.display === "flex"
+  ) {
+    fecharModalResetarSenha();
+    return;
+  }
+
+  if (
+    document.getElementById("modalConfirmacaoPadrao")?.style.display ===
+    "flex"
+  ) {
+    responderModalConfirmacaoPadrao(false);
+    return;
+  }
+
+  if (
+    document.getElementById("modalConfirmacaoOS")?.style.display === "flex"
+  ) {
+    responderModalOS(false);
+    return;
+  }
+
+  if (
+    document.getElementById("modalConfirmarCliente")?.style.display ===
+    "flex"
+  ) {
+    responderModalConfirmarCliente(false);
+    return;
+  }
+
+  if (
+    document.getElementById("modalDetalheDashboard")?.style.display ===
+    "flex"
+  ) {
+    fecharModalDetalheDashboard();
+    return;
+  }
+
+  if (
+    document.getElementById("modalAlterarSenha")?.style.display === "flex"
+  ) {
+    fecharModalAlterarSenha();
+    return;
+  }
+
+  if (
+    document.getElementById("modalAprovarPortalCliente")?.style.display ===
+    "flex"
+  ) {
+    fecharModalAprovarPortalCliente();
+    return;
+  }
+}
+
+document.addEventListener("keydown", function (event) {
+  if (event.key !== "Escape") return;
+
+  if (
+    event.ctrlKey ||
+    event.altKey ||
+    event.metaKey
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+
+  fecharModalComEsc();
+});
 
 
     /*
@@ -4482,8 +4570,8 @@ function gerarTabelaAtivacoes(lista) {
   });
 
   return `
-    <table>
-      <thead>
+  <div class="tabela-wrapper">
+    <table class="tabela-operacional">
         <tr>
           <th>OS</th>
           <th>Tipo</th>
@@ -4511,10 +4599,9 @@ function gerarTabelaAtivacoes(lista) {
                     class="tecnico-maleta"
                     title="Filtrar O.S. deste técnico"
                     onclick='aplicarFiltroTecnico(${JSON.stringify(item.tecnico_id)}, ${JSON.stringify(item.tecnico)})'
-                    style="background:${item.cor_tecnico || "#94a3b8"}"
-                  ></span>
+                    style="background:${item.cor_tecnico || "#94a3b8"}" 
+                  ></span> 
                   ${item.tecnico}
-                </span>
               </td>
             <td>${item.situacao_os}</td>
             <td>${item.grade}</td>
@@ -4529,11 +4616,12 @@ function gerarTabelaAtivacoes(lista) {
               Reagendar
             </button>
           </td>
-            <td>
           </tr>
         `).join("")}
       </tbody>
     </table>
+  </div>
+
   `;
 }
 
@@ -4655,6 +4743,7 @@ function gerarTabelaPagamentosAtivacao(lista) {
 
 function gerarTabelaBlocoPagamentos(lista) {
   return `
+  <div class="tabela-pagamentos-wrapper">
     <table class="tabela-pagamentos">
       <thead>
         <tr>
@@ -4711,6 +4800,7 @@ function gerarTabelaBlocoPagamentos(lista) {
         `).join("")}
       </tbody>
     </table>
+    </div>
   `;
 }
 
@@ -12759,6 +12849,15 @@ document.addEventListener(
   }
 );
 
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Escape") return;
+
+  // Evita disparar durante combinações de teclas
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+  fecharModalComEsc();
+});
+
 function aplicarBuscaDetalhamentoAtivacoes() {
   const campo =
     document.getElementById(
@@ -17565,6 +17664,22 @@ document.addEventListener(
   "DOMContentLoaded",
   iniciarProtecaoAutofillDashboard
 );
+
+function fecharModalAtivo() {
+  const modais = document.querySelectorAll(".modal-overlay");
+
+  // Percorre do último para o primeiro
+  for (let i = modais.length - 1; i >= 0; i--) {
+    const modal = modais[i];
+
+    if (getComputedStyle(modal).display !== "none") {
+      modal.style.display = "none";
+      return true;
+    }
+  }
+
+  return false;
+}
 
 
   </script>

@@ -1,0 +1,71 @@
+/* =========================================================
+   FORMULÁRIOS
+   ========================================================= */
+
+.input-modal {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+
+/* =========================================================
+   RESPONSIVIDADE DOS FORMULÁRIOS E FILTROS
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .filtros,
+  .filtros-container,
+  .filtros-grid,
+  .form-grid,
+  .form-row,
+  .campo-grupo,
+  .grupo-filtros {
+    max-width: 100%;
+  }
+
+  input,
+  select,
+  textarea {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .filtros,
+  .filtros-container,
+  .grupo-filtros {
+    width: 100%;
+  }
+
+  .filtros-grid,
+  .form-grid,
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .campo,
+  .campo-grupo,
+  .form-group {
+    width: 100%;
+    min-width: 0;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 5px;
+  }
+}

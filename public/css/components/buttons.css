@@ -1,0 +1,78 @@
+/* =========================================================
+   BOTÕES GENÉRICOS
+   ========================================================= */
+
+.btn {
+  border: 0;
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 12px;
+  transition: 0.2s ease;
+}
+
+.btn:hover {
+  opacity: 0.88;
+}
+
+.btn-primary {
+  background: #0f766e;
+  color: white;
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: white;
+}
+
+.btn-small {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+/* =========================================================
+   RESPONSIVIDADE DOS BOTÕES
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .acoes,
+  .acoes-container,
+  .grupo-botoes,
+  .botoes-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .acoes .btn,
+  .acoes-container .btn,
+  .grupo-botoes .btn,
+  .botoes-container .btn {
+    flex: 1 1 150px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .acoes,
+  .acoes-container,
+  .grupo-botoes,
+  .botoes-container {
+    flex-direction: column;
+  }
+
+  .acoes .btn,
+  .acoes-container .btn,
+  .grupo-botoes .btn,
+  .botoes-container .btn {
+    width: 100%;
+    flex: none;
+  }
+}

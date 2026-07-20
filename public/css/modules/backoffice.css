@@ -1,0 +1,97 @@
+/* =========================================================
+   RANKING BACKOFFICE / PENALIDADES E DETALHAMENTO
+   ========================================================= */
+
+
+.tabela-scroll-backoffice {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 18px;
+}
+
+.tabela-scroll-backoffice table {
+  min-width: 1180px;
+}
+
+.tabela-scroll-backoffice th,
+.tabela-scroll-backoffice td {
+  white-space: nowrap;
+}
+
+.tabela-scroll-backoffice td:nth-child(2),
+.tabela-scroll-backoffice td:nth-child(4) {
+  white-space: normal;
+  min-width: 260px;
+}
+
+.tabela-scroll-backoffice .btn {
+  white-space: nowrap;
+}
+
+/* =========================================================
+   RESPONSIVIDADE - RANKING BACKOFFICE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .tabela-scroll-backoffice {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabela-scroll-backoffice table {
+    min-width: 1050px;
+  }
+
+  .tabela-scroll-backoffice th,
+  .tabela-scroll-backoffice td {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .tabela-scroll-backoffice td:nth-child(2),
+  .tabela-scroll-backoffice td:nth-child(4) {
+    min-width: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tabela-scroll-backoffice {
+    margin-bottom: 14px;
+    border-radius: 12px;
+  }
+
+  .tabela-scroll-backoffice table {
+    min-width: 980px;
+  }
+
+  .tabela-scroll-backoffice th,
+  .tabela-scroll-backoffice td {
+    padding: 9px 10px;
+    font-size: 11px;
+  }
+
+  .tabela-scroll-backoffice td:nth-child(2),
+  .tabela-scroll-backoffice td:nth-child(4) {
+    min-width: 200px;
+  }
+
+  .tabela-scroll-backoffice .btn {
+    min-height: 34px;
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabela-scroll-backoffice table {
+    min-width: 920px;
+  }
+
+  .tabela-scroll-backoffice td:nth-child(2),
+  .tabela-scroll-backoffice td:nth-child(4) {
+    min-width: 180px;
+  }
+}

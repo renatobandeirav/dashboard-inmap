@@ -1,0 +1,1210 @@
+    /* =========================================================
+       CSS 10 - RANKING COMERCIAL / ESTILOS LEGADOS
+       ========================================================= */
+
+        .ranking-pro-card {
+            background: #ffffff;
+            border-radius: 22px;
+            padding: 34px;
+            box-shadow: 0 12px 34px rgba(15, 23, 42, 0.12);
+          }
+
+          .ranking-pro-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 26px;
+            text-align: center;
+          }
+
+          .ranking-pro-header h1 {
+            font-size: 34px;
+            color: #020617;
+          }
+
+          .ranking-pro-header p {
+            color: #64748b;
+            margin-top: 6px;
+          }
+
+          .ranking-pro-resumo {
+            text-align: right;
+          }
+
+          .ranking-pro-resumo strong {
+            display: block;
+            font-size: 26px;
+            color: #0f766e;
+          }
+
+          .ranking-pro-resumo span {
+            color: #64748b;
+            font-weight: 700;
+          }
+
+          .ranking-pro-metricas {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(220px, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
+          }
+
+          .ranking-pro-metricas div {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 18px;
+          }
+
+          .ranking-pro-metricas span {
+            display: block;
+            color: #64748b;
+            font-weight: 700;
+            margin-bottom: 8px;
+          }
+
+          .ranking-pro-metricas strong {
+            font-size: 22px;
+            color: #0f766e;
+          }
+
+          .ranking-podio {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 28px;
+          }
+
+          .ranking-podio-card {
+            border-radius: 22px;
+            padding: 28px;
+            border: 1px solid #cbd5e1;
+            text-align: center;
+          }
+
+          .podium-1 {
+            background: #fff7ed;
+            border-color: #f59e0b;
+          }
+
+          .podium-2 {
+            background: #f8fafc;
+            border-color: #94a3b8;
+          }
+
+          .podium-3 {
+            background: #fff1e8;
+            border-color: #ea580c;
+          }
+
+          .ranking-medalha {
+            font-size: 34px;
+            margin-bottom: 12px;
+          }
+
+          .ranking-podio-card h2 {
+            font-size: 19px;
+            color: #020617;
+            margin-bottom: 14px;
+          }
+
+          .ranking-receita {
+            font-size: 28px;
+            font-weight: 900;
+            color: #00c853;
+            margin-bottom: 20px;
+          }
+
+          .ranking-linha {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 0;
+            font-size: 14px;
+          }
+
+          .ranking-linha span {
+            color: #475569;
+            font-weight: 700;
+          }
+
+          .ranking-linha strong {
+            color: #020617;
+          }
+
+          .ranking-grid-restante {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+          }
+
+          .ranking-mini-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 22px;
+          }
+
+          .ranking-mini-topo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+          }
+
+          .ranking-mini-topo strong {
+            font-size: 28px;
+            color: #020617;
+          }
+
+          .ranking-mini-topo span {
+            font-size: 20px;
+            font-weight: 900;
+            color: #00c853;
+          }
+
+          .ranking-mini-card h3 {
+            font-size: 17px;
+            margin-bottom: 16px;
+            color: #020617;
+          }
+
+        .ranking-filtros {
+          display: grid;
+          grid-template-columns: 360px 360px 220px;
+          gap: 16px;
+          align-items: start;
+          justify-content: start;
+          margin-bottom: 16px;
+        }
+
+        .ranking-filtros.ranking-filtros-completo {
+          grid-template-columns: minmax(240px, 1fr) minmax(240px, 1fr) 220px 160px;
+        }
+
+        .ranking-filtros-sem-extra {
+        grid-template-columns: minmax(240px, 1fr) minmax(240px, 1fr) 220px !important;
+      }
+
+        .ranking-campo {
+          min-width: 0;
+        }
+
+          .ranking-campo label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #0f172a;
+          }
+
+          .ranking-campo small {
+            display: block;
+            margin-top: -6px;
+            color: #64748b;
+            font-size: 12px;
+          }
+
+          .btn-ranking-buscar {
+            height: 44px;
+            padding: 0 22px;
+            margin-bottom: 12px;
+          }
+
+          @media (max-width: 1000px) {
+            .ranking-podio,
+            .ranking-grid-restante,
+            .ranking-pro-metricas {
+              grid-template-columns: 1fr;
+            }
+
+            .ranking-pro-header {
+              flex-direction: column;
+              gap: 16px;
+              text-align: center;
+            }
+
+            .ranking-pro-resumo {
+              text-align: center;
+            }
+          }
+        
+        .ranking-logo {
+            width: 260px;
+            max-width: 100%;
+            margin: 0 auto 18px;
+            display: block;
+          }
+
+          .ranking-barra {
+              height: 10px;
+              background: #334155;
+              border-radius: 999px;
+              overflow: hidden;
+              margin-top: 10px;
+            }
+
+            .ranking-barra div {
+              height: 100%;
+              background: #22c55e;
+              border-radius: 999px;
+            }
+
+            .ranking-page {
+            background: transparent;
+          }
+
+        .ranking-filtro-card {
+          background: #ffffff;
+          border-radius: 16px;
+          padding: 24px;
+          margin-bottom: 22px;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        }
+
+          .ranking-campo label {
+            display: block;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: #0f172a;
+          }
+
+          .ranking-campo .input-modal {
+            height: 54px;
+            font-size: 18px;
+            margin-bottom: 6px;
+          }
+
+          .ranking-campo small {
+            display: block;
+            color: #64748b;
+            font-size: 13px;
+          }
+
+            .btn-ranking-buscar,
+            .btn-ranking-geral {
+              height: 54px;
+              width: 100%;
+              margin-top: 27px;
+              margin-bottom: 0;
+              border-radius: 12px;
+              font-size: 15px;
+              font-weight: 800;
+
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              gap: 8px;
+
+              white-space: nowrap;
+              line-height: 1;
+            }
+
+      .btn-ranking-geral {
+        background: #ffffff;
+        color: #2563eb;
+        border: 1px solid #2563eb;
+        cursor: pointer;
+        transition: all .2s ease;
+      }
+
+      .btn-ranking-geral:hover,
+      .btn-ranking-geral.ativo {
+        background: #2563eb;
+        color: white;
+      }
+
+      .ranking-info-box {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #2563eb;
+        padding: 14px 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        margin-bottom: 22px;
+      }
+
+      .ranking-info-box span {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        background: #2563eb;
+        color: white;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+      }
+
+          .regras-receita-layout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 18px;
+  align-items: start;
+  margin-top: 18px;
+}
+
+.regras-receita-card {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.regras-receita-card .subtitulo {
+  margin-bottom: 18px;
+  line-height: 1.4;
+}
+
+.regras-receita-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.campo-regra {
+  display: flex;
+  flex-direction: column;
+}
+
+.campo-regra label {
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: #0f172a;
+}
+
+.campo-regra .input-modal {
+  height: 44px;
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+.btn-regra-receita {
+  width: 100%;
+  height: 46px;
+  border-radius: 10px;
+  margin-top: 4px;
+}
+
+.regras-receita-tabela-card {
+  width: 100%;
+  overflow-x: auto;
+}
+
+
+
+.metas-filtro-mes {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  margin: 18px 0 24px;
+}
+
+.metas-campo-mes {
+  display: flex;
+  flex-direction: column;
+}
+
+.metas-campo-mes label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.metas-campo-mes .input-modal {
+  width: 200px;
+  height: 44px;
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+@media (max-width: 1000px) {
+  .regras-receita-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+    /* =========================================================
+       CSS 11 - RANKING COMERCIAL / LAYOUT CORPORATIVO ATUAL
+       ========================================================= */
+
+.ranking-corporativo {
+  background: transparent;
+}
+
+.ranking-corp-header {
+  margin-bottom: 22px;
+}
+
+.ranking-corp-header h1 {
+  font-size: 32px;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.ranking-corp-header p {
+  color: #64748b;
+  font-size: 16px;
+}
+
+.ranking-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  background: white;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 22px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.ranking-kpi {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 22px;
+  border-right: 1px solid #e5e7eb;
+}
+
+.ranking-kpi:last-child {
+  border-right: 0;
+}
+
+.ranking-kpi span {
+  display: block;
+  color: #334155;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.ranking-kpi strong {
+  display: block;
+  font-size: 24px;
+  color: #0f172a;
+}
+
+.kpi-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: white;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.16);
+}
+
+.kpi-icon.azul { background: #2563eb; }
+.kpi-icon.verde { background: #16a34a; }
+.kpi-icon.laranja { background: #f59e0b; }
+.kpi-icon.roxo { background: #7c3aed; }
+
+.verde-texto,
+.receita-verde {
+  color: #16a34a !important;
+}
+
+.laranja-texto {
+  color: #f59e0b !important;
+}
+
+.roxo-texto {
+  color: #7c3aed !important;
+}
+
+.percentual-azul {
+  color: #2563eb;
+}
+
+.falta-vermelho {
+  color: #dc2626;
+}
+
+.ranking-table-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.ranking-corp-table th {
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 13px;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px 18px;
+}
+
+.ranking-corp-table td {
+  padding: 16px 18px;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.ranking-vendedor-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ranking-avatar-mini {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.ranking-barra-tabela {
+  height: 7px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 7px;
+  width: 130px;
+}
+
+.ranking-barra-tabela div {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 999px;
+}
+
+.ranking-footer-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.ranking-corp-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.ranking-corp-header-content {
+    width: 100%;
+}
+
+.ranking-corp-header h1 {
+    margin: 0;
+    font-size: 42px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.ranking-corp-header p {
+    margin-top: 8px;
+    font-size: 18px;
+    color: #64748b;
+}
+
+.btn-ranking-geral {
+  background: #ffffff;
+  color: #2563eb;
+  border: 1px solid #2563eb;
+  border-radius: 12px;
+  padding: 14px 22px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+
+.btn-ranking-geral:hover {
+  background: #2563eb;
+  color: white;
+}
+
+.acoes-ranking {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-ranking-geral.ativo {
+  background: #2563eb;
+  color: white;
+}
+
+@media (max-width: 1100px) {
+  .ranking-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ranking-kpi {
+    border-right: 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+}
+
+@media (max-width: 700px) {
+  .ranking-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .ranking-footer-info {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 700px) {
+  .ranking-filtros {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-ranking-buscar,
+  .btn-ranking-geral {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .ranking-table-card {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ranking-corp-table {
+    min-width: 900px;
+  }
+
+  .ranking-table-card table {
+    width: max-content;
+    min-width: 900px;
+  }
+
+  .ranking-filtro-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .ranking-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .ranking-kpi {
+    border-right: 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .ranking-corp-header h1 {
+    font-size: 26px;
+  }
+
+  .ranking-corp-header p {
+    font-size: 14px;
+  }
+}
+
+/* =========================================================
+   RESPONSIVIDADE COMPLETA - RANKING COMERCIAL
+   ========================================================= */
+
+@media (max-width: 1200px) {
+  .ranking-page,
+  .ranking-corporativo {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .ranking-filtros,
+  .ranking-filtros.ranking-filtros-completo,
+  .ranking-filtros-sem-extra {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .ranking-podio,
+  .ranking-grid-restante {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .regras-receita-layout {
+    grid-template-columns: 360px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1100px) {
+  .ranking-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+  }
+
+  .ranking-kpi {
+    min-width: 0;
+    border-right: 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .ranking-kpi:nth-child(odd) {
+    border-right: 1px solid #e5e7eb;
+  }
+
+  .ranking-kpi:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+
+  .ranking-kpi strong {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 900px) {
+  .ranking-pro-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 22px;
+    border-radius: 18px;
+  }
+
+  .ranking-pro-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .ranking-pro-header h1 {
+    font-size: 28px;
+    line-height: 1.2;
+  }
+
+  .ranking-pro-resumo {
+    text-align: left;
+  }
+
+  .ranking-pro-resumo strong {
+    font-size: 23px;
+    overflow-wrap: anywhere;
+  }
+
+  .ranking-pro-metricas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .ranking-pro-metricas div {
+    min-width: 0;
+    padding: 15px;
+  }
+
+  .ranking-pro-metricas strong {
+    display: block;
+    overflow-wrap: anywhere;
+  }
+
+  .ranking-podio,
+  .ranking-grid-restante {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .ranking-podio-card,
+  .ranking-mini-card {
+    min-width: 0;
+    padding: 18px;
+  }
+
+  .ranking-receita {
+    font-size: 24px;
+    overflow-wrap: anywhere;
+  }
+
+  .ranking-mini-topo {
+    gap: 10px;
+  }
+
+  .ranking-mini-topo strong,
+  .ranking-mini-topo span {
+    overflow-wrap: anywhere;
+  }
+
+  .ranking-filtro-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 18px;
+  }
+
+  .ranking-filtros,
+  .ranking-filtros.ranking-filtros-completo,
+  .ranking-filtros-sem-extra {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px;
+  }
+
+  .ranking-campo {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .ranking-campo .input-modal {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  .ranking-info-box {
+    align-items: flex-start;
+  }
+
+  .ranking-corp-header h1 {
+    font-size: 32px;
+    line-height: 1.15;
+  }
+
+  .ranking-corp-header p {
+    font-size: 15px;
+  }
+
+  .ranking-kpis {
+    padding: 14px;
+  }
+
+  .ranking-kpi {
+    padding: 14px 16px;
+  }
+
+  .ranking-kpi strong {
+    font-size: 21px;
+  }
+
+  .kpi-icon {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    font-size: 19px;
+  }
+
+  .ranking-table-card {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ranking-corp-table {
+    min-width: 900px;
+  }
+
+  .ranking-footer-info {
+    flex-wrap: wrap;
+  }
+
+  .regras-receita-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .regras-receita-card,
+  .regras-receita-tabela-card {
+    min-width: 0;
+  }
+
+  .regras-receita-tabela-card {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 768px) {
+  .ranking-corp-header,
+  .ranking-pro-header {
+    text-align: left;
+  }
+
+  .ranking-corp-header {
+    margin-bottom: 18px;
+  }
+
+  .ranking-corp-header h1 {
+    font-size: 25px;
+  }
+
+  .ranking-corp-header p {
+    font-size: 14px;
+  }
+
+  .ranking-pro-card {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .ranking-pro-header h1 {
+    font-size: 24px;
+  }
+
+  .ranking-pro-resumo strong {
+    font-size: 21px;
+  }
+
+  .ranking-pro-metricas {
+    grid-template-columns: 1fr;
+  }
+
+  .ranking-podio-card,
+  .ranking-mini-card {
+    padding: 15px;
+    border-radius: 14px;
+  }
+
+  .ranking-medalha {
+    font-size: 29px;
+  }
+
+  .ranking-receita {
+    font-size: 21px;
+  }
+
+  .ranking-linha {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .ranking-linha span,
+  .ranking-linha strong {
+    overflow-wrap: anywhere;
+  }
+
+  .ranking-mini-topo strong {
+    font-size: 23px;
+  }
+
+  .ranking-mini-topo span {
+    font-size: 17px;
+  }
+
+  .ranking-filtro-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .ranking-filtros,
+  .ranking-filtros.ranking-filtros-completo,
+  .ranking-filtros-sem-extra {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+
+  .ranking-campo .input-modal {
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .btn-ranking-buscar,
+  .btn-ranking-geral {
+    width: 100%;
+    height: 48px;
+    margin-top: 0;
+  }
+
+  .acoes-ranking {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .acoes-ranking .btn-ranking-geral,
+  .acoes-ranking button {
+    width: 100%;
+  }
+
+  .ranking-info-box {
+    gap: 10px;
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .ranking-info-box span {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+  }
+
+  .ranking-kpis {
+    grid-template-columns: 1fr;
+    padding: 10px 14px;
+  }
+
+  .ranking-kpi,
+  .ranking-kpi:nth-child(odd),
+  .ranking-kpi:nth-last-child(-n + 2) {
+    border-right: 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .ranking-kpi:last-child {
+    border-bottom: 0;
+  }
+
+  .ranking-kpi {
+    padding: 14px 4px;
+  }
+
+  .ranking-kpi strong {
+    font-size: 20px;
+  }
+
+  .kpi-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+  }
+
+  .ranking-corp-table {
+    min-width: 820px;
+    font-size: 12px;
+  }
+
+  .ranking-table-card table {
+    width: max-content;
+    min-width: 820px;
+  }
+
+  .ranking-corp-table th,
+  .ranking-corp-table td {
+    padding: 9px 10px;
+    white-space: nowrap;
+  }
+
+  .ranking-vendedor-cell {
+    gap: 8px;
+  }
+
+  .ranking-avatar-mini {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+
+  .ranking-barra-tabela {
+    width: 100px;
+  }
+
+  .ranking-footer-info {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .metas-filtro-mes {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .metas-campo-mes {
+    width: 100%;
+  }
+
+  .metas-campo-mes .input-modal {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  .metas-filtro-mes button,
+  .metas-filtro-mes .btn {
+    width: 100%;
+  }
+
+  .regras-receita-layout {
+    gap: 12px;
+  }
+
+  .regras-receita-card {
+    padding: 14px;
+  }
+
+  .campo-regra .input-modal {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ranking-corp-header h1 {
+    font-size: 22px;
+  }
+
+  .ranking-pro-card {
+    padding: 13px;
+  }
+
+  .ranking-pro-header h1 {
+    font-size: 21px;
+  }
+
+  .ranking-pro-metricas div {
+    padding: 13px;
+  }
+
+  .ranking-podio-card,
+  .ranking-mini-card {
+    padding: 13px;
+  }
+
+  .ranking-receita {
+    font-size: 19px;
+  }
+
+  .ranking-linha {
+    font-size: 13px;
+  }
+
+  .ranking-kpis {
+    border-radius: 13px;
+  }
+
+  .ranking-kpi {
+    gap: 11px;
+  }
+
+  .ranking-kpi span {
+    font-size: 12px;
+  }
+
+  .ranking-kpi strong {
+    font-size: 18px;
+  }
+
+  .kpi-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    font-size: 17px;
+  }
+
+  .ranking-corp-table {
+    min-width: 760px;
+  }
+
+  .ranking-table-card table {
+    min-width: 760px;
+  }
+
+  .ranking-barra-tabela {
+    width: 80px;
+  }
+
+  .ranking-info-box {
+    flex-direction: column;
+  }
+}

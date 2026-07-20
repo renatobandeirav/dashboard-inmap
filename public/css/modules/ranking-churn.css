@@ -1,0 +1,598 @@
+/* =========================================================
+       CSS 13 - RANKING CHURN / RECUPERAÇÃO E RENOVAÇÃO
+       ========================================================= */
+
+.churn-page {
+  background: transparent;
+}
+
+.churn-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.churn-header h1 {
+  font-size: 42px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.churn-header p {
+  color: #64748b;
+  font-size: 17px;
+}
+
+.churn-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.churn-kpi {
+  background: white;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.churn-kpi span {
+  display: block;
+  color: #64748b;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.churn-kpi strong {
+  display: block;
+  font-size: 28px;
+  color: #0f172a;
+}
+
+.churn-kpi.receita strong {
+  color: #16a34a;
+}
+
+.churn-kpi.upgrade strong {
+  color: #2563eb;
+}
+
+.churn-kpi.downgrade strong {
+  color: #dc2626;
+}
+
+.churn-kpi.manteve strong {
+  color: #f59e0b;
+}
+
+.churn-table-card {
+  background: white;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.churn-table th {
+  background: #ffffff;
+  color: #0f172a;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px;
+}
+
+.churn-table td {
+  padding: 16px;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.churn-rc-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.churn-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0369a1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.churn-badge {
+  display: inline-flex;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.churn-badge.upgrade {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.churn-badge.downgrade {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.churn-badge.manteve {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+@media (max-width: 1000px) {
+  .churn-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .churn-kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
+.linhaResumo {
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.linhaResumo:hover {
+  background: rgba(59,130,246,.08);
+}
+
+.linhaResumo:hover .badge {
+  transform: scale(1.05);
+}
+
+.linhaResumo .badge {
+  transition: transform .2s ease;
+}
+
+@media (max-width: 768px) {
+.churn-table-card {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+        }
+
+.churn-table {
+    min-width: 900px;
+    }
+
+  .churn-table-card table {
+    width: max-content;
+    min-width: 900px;
+  }
+
+  .churn-header h1 {
+    font-size: 26px;
+  }
+
+  .churn-header p {
+    font-size: 14px;
+  }
+}
+
+.churn-visao-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.churn-resumo-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.churn-resumo-item {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 110px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 13px;
+  background: #f8fafc;
+}
+
+.churn-resumo-posicao {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #e2e8f0;
+  color: #334155;
+  font-weight: 900;
+}
+
+.churn-resumo-identidade {
+  min-width: 0;
+}
+
+.churn-resumo-identidade strong {
+  display: block;
+  color: #0f172a;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.churn-resumo-identidade span {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.churn-resumo-barra {
+  height: 5px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.churn-resumo-barra div {
+  height: 100%;
+  border-radius: 999px;
+  background: #0d7b73;
+}
+
+.churn-resumo-resultado {
+  text-align: right;
+}
+
+.churn-resumo-resultado strong {
+  display: block;
+  color: #2563eb;
+  font-size: 15px;
+}
+
+.churn-resumo-resultado span {
+  display: block;
+  margin-top: 4px;
+  color: #15803d;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.churn-faixas-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.churn-faixa-card {
+  padding: 16px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.churn-faixa-card span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.churn-faixa-card strong {
+  display: block;
+  margin: 8px 0 5px;
+  color: #0f172a;
+  font-size: 26px;
+}
+
+.churn-faixa-card small {
+  color: #475569;
+}
+
+.churn-alerta-classificacao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid #fed7aa;
+  border-radius: 14px;
+  background: #fff7ed;
+}
+
+.churn-alerta-classificacao strong {
+  display: block;
+  color: #9a3412;
+}
+
+.churn-alerta-classificacao span {
+  display: block;
+  margin-top: 4px;
+  color: #c2410c;
+  font-size: 12px;
+}
+
+@media (max-width: 1000px) {
+  .churn-visao-grid,
+  .churn-faixas-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .churn-resumo-item {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .churn-resumo-resultado {
+    grid-column: 2;
+    text-align: left;
+  }
+}
+
+/* =========================================================
+   RESPONSIVIDADE COMPLETA - RANKING CHURN
+   ========================================================= */
+
+@media (max-width: 1200px) {
+  .churn-page {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .churn-visao-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .churn-faixas-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .churn-header {
+    margin-bottom: 18px;
+  }
+
+  .churn-header h1 {
+    font-size: 32px;
+    line-height: 1.15;
+  }
+
+  .churn-header p {
+    font-size: 15px;
+  }
+
+  .churn-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .churn-kpi {
+    min-width: 0;
+    padding: 18px;
+  }
+
+  .churn-kpi strong {
+    font-size: 24px;
+    overflow-wrap: anywhere;
+  }
+
+  .churn-visao-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .churn-faixas-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .churn-faixa-card {
+    min-width: 0;
+    padding: 14px;
+  }
+
+  .churn-faixa-card strong {
+    font-size: 22px;
+    overflow-wrap: anywhere;
+  }
+
+  .churn-table-card {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .churn-table {
+    min-width: 900px;
+  }
+
+  .churn-alerta-classificacao {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .churn-header {
+    text-align: left;
+  }
+
+  .churn-header h1 {
+    font-size: 25px;
+  }
+
+  .churn-header p {
+    font-size: 14px;
+  }
+
+  .churn-kpis {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .churn-kpi {
+    padding: 15px;
+    border-radius: 14px;
+  }
+
+  .churn-kpi span {
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+
+  .churn-kpi strong {
+    font-size: 22px;
+  }
+
+  .churn-table-card {
+    border-radius: 14px;
+  }
+
+  .churn-table {
+    min-width: 820px;
+    font-size: 12px;
+  }
+
+  .churn-table-card table {
+    width: max-content;
+    min-width: 820px;
+  }
+
+  .churn-table th,
+  .churn-table td {
+    padding: 9px 10px;
+    white-space: nowrap;
+  }
+
+  .churn-rc-cell {
+    gap: 8px;
+  }
+
+  .churn-avatar {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+
+  .churn-badge {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .churn-visao-grid {
+    gap: 10px;
+  }
+
+  .churn-resumo-item {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .churn-resumo-posicao {
+    width: 32px;
+    height: 32px;
+  }
+
+  .churn-resumo-identidade strong {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .churn-resumo-resultado {
+    grid-column: 2;
+    text-align: left;
+  }
+
+  .churn-faixas-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .churn-faixa-card {
+    padding: 13px;
+  }
+
+  .churn-faixa-card strong {
+    font-size: 21px;
+  }
+
+  .churn-alerta-classificacao {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .churn-alerta-classificacao .btn,
+  .churn-alerta-classificacao button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .churn-header {
+    margin-bottom: 14px;
+  }
+
+  .churn-header h1 {
+    font-size: 22px;
+  }
+
+  .churn-kpi {
+    padding: 13px;
+  }
+
+  .churn-kpi strong {
+    font-size: 20px;
+  }
+
+  .churn-table {
+    min-width: 760px;
+  }
+
+  .churn-table-card table {
+    min-width: 760px;
+  }
+
+  .churn-resumo-item {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .churn-resumo-posicao {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .churn-resumo-identidade strong {
+    font-size: 12px;
+  }
+
+  .churn-resumo-resultado {
+    grid-column: 1 / -1;
+    padding-left: 38px;
+  }
+
+  .churn-alerta-classificacao {
+    padding: 12px;
+    border-radius: 12px;
+  }
+}

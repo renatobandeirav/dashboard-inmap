@@ -1,0 +1,142 @@
+/* =========================================================
+   PAGAMENTOS DE ATIVAÇÃO / BADGES
+   ========================================================= */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-pago {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-aberto {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-aguardando {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.valor-taxa {
+  font-weight: 800;
+  color: #0f766e;
+}
+
+.linha-pagamento-pago {
+  background: #ecfdf5;
+}
+
+.linha-pagamento-aberto {
+  background: #f8fafc;
+}
+
+.tabela-pagamentos td {
+  vertical-align: middle;
+}
+
+.acoes-pagamento {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tabela-pagamentos-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* =========================================================
+   RESPONSIVIDADE - PAGAMENTOS DE ATIVAÇÃO
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .tabela-pagamentos {
+    min-width: 820px;
+  }
+
+  .tabela-pagamentos th,
+  .tabela-pagamentos td {
+    padding: 10px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .acoes-pagamento {
+    flex-wrap: nowrap;
+  }
+
+  .status-badge {
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .tabela-pagamentos {
+    min-width: 760px;
+  }
+
+  .tabela-pagamentos th,
+  .tabela-pagamentos td {
+    padding: 9px 10px;
+    font-size: 11px;
+  }
+
+  .status-badge {
+    gap: 5px;
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  .valor-taxa {
+    font-size: 12px;
+  }
+
+  .acoes-pagamento {
+    gap: 5px;
+  }
+
+  .acoes-pagamento .btn,
+  .acoes-pagamento button {
+    min-height: 34px;
+    padding: 7px 9px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabela-pagamentos {
+    min-width: 700px;
+  }
+
+  .status-badge {
+    font-size: 10px;
+    padding: 4px 7px;
+  }
+
+  .acoes-pagamento .btn,
+  .acoes-pagamento button {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tabela-pagamentos-wrapper {
+    border-radius: 12px;
+  }
+}

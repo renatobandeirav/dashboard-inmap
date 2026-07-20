@@ -1,0 +1,186 @@
+/* =========================================================
+   TABELAS GERAIS
+   ========================================================= */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+th,
+td {
+  padding: 14px;
+  border-bottom: 1px solid #edf2f7;
+  text-align: left;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+th {
+  background: #0d7b73;
+  color: white;
+  font-weight: 600;
+  padding: 14px;
+  font-size: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+tbody tr {
+  transition: .15s;
+}
+
+tbody tr:hover {
+  background: #f8fbfd;
+}
+
+tr:hover {
+  background: #f8fafc;
+}
+
+.tabela-container {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  overflow-x: auto;
+}
+
+.tabela-container h2 {
+  font-size: 18px;
+  margin-bottom: 14px;
+  color: #0f172a;
+}
+
+/* =========================================================
+   RESPONSIVIDADE DAS TABELAS
+   ========================================================= */
+
+@media (max-width: 768px) {
+  table {
+    min-width: 720px;
+  }
+
+  th,
+  td {
+    padding: 10px;
+    font-size: 12px;
+  }
+}
+
+/* =========================================================
+   RESPONSIVIDADE DAS TABELAS
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .table-container,
+  .tabela-container,
+  .tabela-scroll,
+  .table-responsive {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    max-width: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-container,
+  .tabela-container,
+  .tabela-scroll,
+  .table-responsive {
+    border-radius: 10px;
+  }
+
+  table {
+    min-width: 700px;
+    font-size: 12px;
+  }
+
+  th,
+  td {
+    padding: 9px 10px;
+    white-space: nowrap;
+  }
+
+  th {
+    font-size: 11px;
+  }
+
+  td .btn,
+  td button {
+    min-height: 34px;
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  table {
+    min-width: 640px;
+  }
+
+  th,
+  td {
+    padding: 8px;
+  }
+}
+
+/* =========================================================
+   TABELAS DA ÁREA OPERACIONAL
+   ========================================================= */
+
+.tabela-wrapper,
+.table-wrapper,
+.table-responsive,
+.tabela-container,
+.tabela-scroll,
+.tabela-pagamentos-wrapper {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tabela-wrapper table,
+.table-wrapper table,
+.table-responsive table,
+.tabela-container table,
+.tabela-scroll table,
+.tabela-pagamentos-wrapper table {
+  width: max-content;
+  min-width: 100%;
+}
+
+/* =========================================================
+   TABELA OPERACIONAL RESPONSIVA
+   ========================================================= */
+
+.tabela-wrapper {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tabela-wrapper .tabela-operacional {
+  width: max-content;
+  min-width: 100%;
+}
+
+.tabela-operacional th,
+.tabela-operacional td {
+  white-space: nowrap;
+}

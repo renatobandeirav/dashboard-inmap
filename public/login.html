@@ -129,38 +129,86 @@
       font-size: 14px;
     }
 
-          .rodape-icons {
-            position: fixed;
-            left: 50%;
-            bottom: 34px;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 58px;
-            color: #ffffff;
-            font-size: 13px;
-            font-weight: 900;
-            text-align: center;
-            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.95);
-            z-index: 2;
-          }
+.rodape-icons {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
 
-          .rodape-icons div {
-            min-width: 95px;
-          }
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(20px, 3vw, 58px);
 
-          .rodape-icons svg {
-            display: block;
-            margin: 0 auto 9px;
-            color: #38bdf8;
-            width: 42px;
-            height: 42px;
-            filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.95));
-          }
+  width: min(720px, calc(100% - 40px));
+  max-width: 100%;
 
-          .rodape-icons div:nth-child(3) svg {
-            color:  #38bdf8;
-            filter: drop-shadow(0 0 12px rgba(74, 222, 128, 0.95));
-          }
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.95);
+
+  z-index: 2;
+}
+
+.rodape-icons div {
+  flex: 0 1 120px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.rodape-icons svg {
+  display: block;
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 7px;
+  color: #38bdf8;
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.95));
+}
+
+.rodape-icons div:nth-child(3) svg {
+  color: #38bdf8;
+  filter: drop-shadow(0 0 12px rgba(74, 222, 128, 0.95));
+}
+
+/* Ajuste para monitores com pouca altura útil */
+@media (max-height: 850px) and (min-width: 801px) {
+  .login-card {
+    padding: 28px 30px;
+  }
+
+  .logo {
+    width: 190px;
+    margin-bottom: 12px;
+  }
+
+  .login-card p {
+    margin-bottom: 18px;
+  }
+
+  .seguro {
+    margin-top: 18px;
+  }
+
+  .assinatura-sistema {
+    margin-top: 18px;
+  }
+
+  .rodape-icons {
+    bottom: 8px;
+    font-size: 11px;
+    gap: 30px;
+  }
+
+  .rodape-icons svg {
+    width: 30px;
+    height: 30px;
+    margin-bottom: 5px;
+  }
+}
+
+
 
     @media (max-width: 800px) {
       .rodape-icons {
@@ -300,7 +348,7 @@
 
         <div class="titulo-versao">
             Dashboard Comercial           
-              <span>v1.17.0</span>
+              <span>v1.18.0</span>
         </div>
 
         <div class="autor">
