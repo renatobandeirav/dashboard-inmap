@@ -14820,7 +14820,7 @@ function gerarPaginacaoCancelamentos(
   `;
 }
 
-function exportarCancelamentosExcel() {
+async function exportarCancelamentosExcel() {
   if (
     typeof XLSX === "undefined"
   ) {
@@ -14848,6 +14848,15 @@ function exportarCancelamentosExcel() {
     return;
   }
 
+  mostrarToastPadrao(
+    "Preparando Excel",
+    "Consultando o histórico dos contratos selecionados."
+  );
+
+  /*
+   * Mantém a exportação atual:
+   * uma linha por contrato cancelado.
+   */
   const linhas =
     registros.map(item => ({
       "Contrato":
@@ -14936,61 +14945,268 @@ function exportarCancelamentosExcel() {
         ""
     }));
 
-  const planilha =
+  /*
+   * Nova aba:
+   * uma linha por evento relevante do histórico.
+   */
+  const linhasHistorico = [];
+
+  let contratosProcessados = 0;
+  let contratosComErro = 0;
+
+  /*
+   * Consulta um contrato por vez para evitar
+   * várias requisições simultâneas ao IXC.
+   */
+  for (const item of registros) {
+    const contratoId =
+      String(
+        item.contrato_id || ""
+      ).trim();
+
+    if (!contratoId) {
+      continue;
+    }
+
+    try {
+      const resposta = await fetch(
+        `/api/debug-historico-cancelamento/${encodeURIComponent(
+          contratoId
+        )}`
+      );
+
+      const dados =
+        await resposta.json();
+
+      if (
+        !resposta.ok ||
+        dados.erro
+      ) {
+        throw new Error(
+          dados.mensagem ||
+          "Não foi possível consultar o histórico."
+        );
+      }
+
+      const contrato =
+        dados.contrato || {};
+
+      const ordens =
+        Array.isArray(
+          dados.ordens_servico
+        )
+          ? dados.ordens_servico
+          : [];
+
+      const eventos =
+        montarEventosLinhaTempoCancelamento(
+          ordens,
+          contrato
+        );
+
+      /*
+       * Inclui os eventos resumidos exatamente
+       * como aparecem na linha do tempo do modal.
+       */
+      for (const evento of eventos) {
+        linhasHistorico.push({
+          "Contrato":
+            contratoId,
+
+          "Cliente":
+            contrato.cliente ||
+            item.cliente ||
+            "",
+
+          "Data e hora":
+            formatarDataHoraDiagnostico(
+              evento.data
+            ),
+
+          "Evento":
+            evento.tipo || "",
+
+          "Descrição":
+            evento.descricao || "",
+
+          "O.S.":
+            evento.os_id || "",
+
+          "Vendedor":
+            item.vendedor || "",
+
+          "Filial":
+            item.filial || "",
+
+          "Cidade":
+            item.cidade || "",
+
+          "Plano":
+            item.plano || ""
+        });
+      }
+
+      /*
+       * Caso o contrato não possua nenhum evento
+       * relevante, registra isso na planilha.
+       */
+      if (!eventos.length) {
+        linhasHistorico.push({
+          "Contrato":
+            contratoId,
+
+          "Cliente":
+            contrato.cliente ||
+            item.cliente ||
+            "",
+
+          "Data e hora":
+            "",
+
+          "Evento":
+            "SEM HISTÓRICO RELEVANTE",
+
+          "Descrição":
+            "Nenhum evento relevante foi identificado nas O.S. consultadas.",
+
+          "O.S.":
+            "",
+
+          "Vendedor":
+            item.vendedor || "",
+
+          "Filial":
+            item.filial || "",
+
+          "Cidade":
+            item.cidade || "",
+
+          "Plano":
+            item.plano || ""
+        });
+      }
+
+      contratosProcessados += 1;
+
+    } catch (erro) {
+      contratosComErro += 1;
+
+      console.error(
+        `Erro ao exportar histórico do contrato ${contratoId}:`,
+        erro
+      );
+
+      /*
+       * O erro de um contrato não impede
+       * a exportação dos demais.
+       */
+      linhasHistorico.push({
+        "Contrato":
+          contratoId,
+
+        "Cliente":
+          item.cliente || "",
+
+        "Data e hora":
+          "",
+
+        "Evento":
+          "HISTÓRICO INDISPONÍVEL",
+
+        "Descrição":
+          erro.message ||
+          "Não foi possível consultar o histórico deste contrato.",
+
+        "O.S.":
+          "",
+
+        "Vendedor":
+          item.vendedor || "",
+
+        "Filial":
+          item.filial || "",
+
+        "Cidade":
+          item.cidade || "",
+
+        "Plano":
+          item.plano || ""
+      });
+    }
+  }
+
+  /*
+   * Primeira aba: Cancelamentos.
+   */
+  const planilhaCancelamentos =
     XLSX.utils.json_to_sheet(
       linhas
     );
 
-  /*
-   * Largura das colunas.
-   */
-  planilha["!cols"] = [
-    { wch: 12 },
-    { wch: 38 },
-    { wch: 16 },
-    { wch: 20 },
-    { wch: 19 },
-    { wch: 22 },
-    { wch: 34 },
-    { wch: 22 },
-    { wch: 22 },
-    { wch: 28 },
-    { wch: 35 },
-    { wch: 18 },
-    { wch: 24 },
-    { wch: 28 },
-    { wch: 12 },
-    { wch: 48 },
-    { wch: 70 },
-    { wch: 15 },
-    { wch: 18 },
-    { wch: 25 }
+  planilhaCancelamentos["!cols"] = [
+    { wch: 14 }, // Contrato
+    { wch: 38 }, // Cliente
+    { wch: 18 }, // Ativação
+    { wch: 20 }, // Cancelamento
+    { wch: 20 }, // Dias
+    { wch: 24 }, // Faixa
+    { wch: 30 }, // Vendedor
+    { wch: 22 }, // Filial
+    { wch: 22 }, // Cidade
+    { wch: 24 }, // Bairro
+    { wch: 42 }, // Plano
+    { wch: 20 }, // Segmento
+    { wch: 24 }, // Natureza
+    { wch: 30 }, // Categoria
+    { wch: 12 }, // Motivo ID
+    { wch: 38 }, // Motivo
+    { wch: 70 }, // Descrição
+    { wch: 16 }, // Mensalidade
+    { wch: 20 }, // Taxa
+    { wch: 28 }  // Responsável
   ];
 
   /*
-   * Formatação monetária nas colunas
-   * Mensalidade e Taxa de instalação.
+   * Segunda aba: Histórico.
    */
-  for (
-    let linha = 2;
-    linha <= linhas.length + 1;
-    linha++
+  const planilhaHistorico =
+    XLSX.utils.json_to_sheet(
+      linhasHistorico
+    );
+
+  planilhaHistorico["!cols"] = [
+    { wch: 14 }, // Contrato
+    { wch: 38 }, // Cliente
+    { wch: 22 }, // Data e hora
+    { wch: 24 }, // Evento
+    { wch: 75 }, // Descrição
+    { wch: 14 }, // O.S.
+    { wch: 30 }, // Vendedor
+    { wch: 22 }, // Filial
+    { wch: 22 }, // Cidade
+    { wch: 42 }  // Plano
+  ];
+
+  /*
+   * Ativa o filtro automático no cabeçalho
+   * das duas abas.
+   */
+  if (
+    planilhaCancelamentos["!ref"]
   ) {
-    const mensalidade =
-      planilha[`R${linha}`];
+    planilhaCancelamentos["!autofilter"] = {
+      ref:
+        planilhaCancelamentos["!ref"]
+    };
+  }
 
-    const taxa =
-      planilha[`S${linha}`];
-
-    if (mensalidade) {
-      mensalidade.z =
-        'R$ #,##0.00';
-    }
-
-    if (taxa) {
-      taxa.z =
-        'R$ #,##0.00';
-    }
+  if (
+    planilhaHistorico["!ref"]
+  ) {
+    planilhaHistorico["!autofilter"] = {
+      ref:
+        planilhaHistorico["!ref"]
+    };
   }
 
   const livro =
@@ -14998,27 +15214,36 @@ function exportarCancelamentosExcel() {
 
   XLSX.utils.book_append_sheet(
     livro,
-    planilha,
+    planilhaCancelamentos,
     "Cancelamentos"
   );
 
-  const periodoInicio =
-    dadosDashboardCancelamentosGlobais
-      ?.periodo_coorte?.inicio || "";
+  XLSX.utils.book_append_sheet(
+    livro,
+    planilhaHistorico,
+    "Histórico"
+  );
 
-  const periodoFim =
-    dadosDashboardCancelamentosGlobais
-      ?.periodo_coorte?.fim || "";
+  /*
+   * Gera o nome do arquivo com a data atual.
+   */
+  const agora =
+    new Date();
+
+  const dataArquivo = [
+    agora.getFullYear(),
+
+    String(
+      agora.getMonth() + 1
+    ).padStart(2, "0"),
+
+    String(
+      agora.getDate()
+    ).padStart(2, "0")
+  ].join("-");
 
   const nomeArquivo =
-    [
-      "cancelamentos",
-      periodoInicio,
-      periodoFim
-    ]
-      .filter(Boolean)
-      .join("_") +
-    ".xlsx";
+    `cancelamentos-com-historico-${dataArquivo}.xlsx`;
 
   XLSX.writeFile(
     livro,
@@ -15026,8 +15251,10 @@ function exportarCancelamentosExcel() {
   );
 
   mostrarToastPadrao(
-    "Excel gerado",
-    `${registros.length} registro(s) exportado(s).`
+    "Excel exportado",
+    contratosComErro
+      ? `${contratosProcessados} contrato(s) processado(s) e ${contratosComErro} histórico(s) indisponível(is).`
+      : `${contratosProcessados} contrato(s) exportado(s) com histórico.`
   );
 }
 
@@ -15255,16 +15482,13 @@ function limparBuscaDetalhamentoCancelamentos() {
   renderizarDashboardCancelamentosFiltrado();
 }
 
-
-function abrirDetalheCancelamento(
+async function abrirDetalheCancelamento(
   contratoId
 ) {
   const item =
     registrosDashboardCancelamentosFiltrados
       .find(registro =>
-        String(
-          registro.contrato_id
-        ) ===
+        String(registro.contrato_id) ===
         String(contratoId)
       );
 
@@ -15278,197 +15502,994 @@ function abrirDetalheCancelamento(
     return;
   }
 
-  const observacao =
-    String(
-      item.observacao_cancelamento || ""
-    ).trim();
-
-  const html = `
-    <div class="crm-detalhe-grid">
-
-      <div>
-        <span>Cliente</span>
-        <strong>
-          ${escaparHTMLCancelamentos(
-            item.cliente || "-"
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Contrato</span>
-        <strong>
-          ${escaparHTMLCancelamentos(
-            item.contrato_id || "-"
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Data da ativação</span>
-        <strong>
-          ${formatarDataCancelamento(
-            item.data_ativacao
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Data do cancelamento</span>
-        <strong>
-          ${formatarDataCancelamento(
-            item.data_cancelamento
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Permanência</span>
-        <strong>
-          ${obterTextoPermanenciaCancelamento(
-            item
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Faixa de permanência</span>
-        <strong>
-          ${escaparHTMLCancelamentos(
-            formatarNomeCategoriaCancelamento(
-              item.faixa_cancelamento ||
-              "-"
-            )
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Vendedor</span>
-        <strong>
-          ${escaparHTMLCancelamentos(
-            item.vendedor || "-"
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Filial</span>
-        <strong>
-          ${escaparHTMLCancelamentos(
-            item.filial || "-"
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Cidade</span>
-        <strong>
-          ${escaparHTMLCancelamentos(
-            item.cidade || "-"
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Bairro</span>
-        <strong>
-          ${escaparHTMLCancelamentos(
-            item.bairro || "-"
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Plano</span>
-        <strong>
-          ${escaparHTMLCancelamentos(
-            item.plano || "-"
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Mensalidade</span>
-        <strong>
-          ${formatarMoedaCancelamentos(
-            item.valor_mensal
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Natureza</span>
-        <strong>
-          ${escaparHTMLCancelamentos(
-            formatarNomeCategoriaCancelamento(
-              item.natureza_cancelamento ||
-              "-"
-            )
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Categoria</span>
-        <strong>
-          ${escaparHTMLCancelamentos(
-            formatarNomeCategoriaCancelamento(
-              item.categoria_cancelamento ||
-              "-"
-            )
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Motivo do IXC</span>
-        <strong>
-          ${escaparHTMLCancelamentos(
-            obterDescricaoMotivoCancelamento(
-              item
-            )
-          )}
-        </strong>
-      </div>
-
-      <div>
-        <span>Responsável pelo cancelamento</span>
-        <strong>
-          ID
-          ${escaparHTMLCancelamentos(
-            item.responsavel_cancelamento_id ||
-            "-"
-          )}
-        </strong>
-      </div>
-
-    </div>
-
-    <div class="crm-detalhe-observacao">
-      <span>
-        Descrição do cancelamento
-      </span>
-
-      <p>
-        ${
-          observacao
-            ? escaparHTMLCancelamentos(
-                observacao
-              )
-            : "Nenhuma descrição registrada."
-        }
-      </p>
-    </div>
-  `;
-
   abrirModalDetalheDashboard(
     item.cliente ||
       `Contrato ${item.contrato_id}`,
-    `Cancelamento do contrato ${item.contrato_id}`,
-    html
+    `Diagnóstico do contrato ${item.contrato_id}`,
+    `
+      <div
+        style="
+          padding:30px;
+          text-align:center;
+        "
+      >
+        <div class="loading">
+          Carregando histórico do cancelamento...
+        </div>
+
+        <p class="subtitulo">
+          Consultando as O.S. vinculadas ao contrato.
+        </p>
+      </div>
+    `
+  );
+
+  try {
+    const resposta = await fetch(
+      `/api/debug-historico-cancelamento/${encodeURIComponent(
+        contratoId
+      )}`
+    );
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || dados.erro) {
+      throw new Error(
+        dados.mensagem ||
+        "Não foi possível carregar o histórico."
+      );
+    }
+
+    const contrato =
+      dados.contrato || {};
+
+    const ordens =
+      Array.isArray(dados.ordens_servico)
+        ? dados.ordens_servico
+        : [];
+
+    const eventos =
+      montarEventosLinhaTempoCancelamento(
+        ordens,
+        contrato
+      );
+
+    const diagnostico =
+      gerarDiagnosticoResumoCancelamento(
+        ordens,
+        contrato
+      );
+
+    const conteudo =
+      document.getElementById(
+        "modalDetalheConteudo"
+      );
+
+    if (!conteudo) {
+      return;
+    }
+
+    conteudo.innerHTML = `
+      <div
+        style="
+          display:grid;
+          grid-template-columns:
+            repeat(auto-fit, minmax(180px, 1fr));
+          gap:12px;
+          margin-bottom:18px;
+        "
+      >
+        ${gerarCardDiagnosticoCancelamento(
+          "Cliente",
+          contrato.cliente ||
+          item.cliente ||
+          "-"
+        )}
+
+        ${gerarCardDiagnosticoCancelamento(
+          "Contrato",
+          contrato.id ||
+          item.contrato_id ||
+          "-"
+        )}
+
+        ${gerarCardDiagnosticoCancelamento(
+          "Plano",
+          contrato.plano ||
+          item.plano ||
+          "-"
+        )}
+
+        ${gerarCardDiagnosticoCancelamento(
+          "Tempo ativo",
+          formatarDiasDiagnostico(
+            contrato.dias_ativo ??
+            item.dias_permanencia
+          )
+        )}
+
+        ${gerarCardDiagnosticoCancelamento(
+          "Ativação",
+          formatarDataCancelamento(
+            contrato.data_ativacao ||
+            item.data_ativacao
+          )
+        )}
+
+        ${gerarCardDiagnosticoCancelamento(
+          "Cancelamento",
+          formatarDataCancelamento(
+            contrato.data_cancelamento ||
+            item.data_cancelamento
+          )
+        )}
+      </div>
+
+      <div
+        style="
+          border:1px solid #dfe5ec;
+          border-radius:12px;
+          padding:18px;
+          margin-bottom:18px;
+          background:#ffffff;
+        "
+      >
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            gap:16px;
+            flex-wrap:wrap;
+            margin-bottom:14px;
+          "
+        >
+          <div>
+            <span
+              style="
+                display:block;
+                font-size:12px;
+                color:#667085;
+                margin-bottom:5px;
+              "
+            >
+              Causa principal
+            </span>
+
+            <strong
+              style="
+                font-size:18px;
+              "
+            >
+              ${escaparHTMLCancelamentos(
+                diagnostico.causa_principal
+              )}
+            </strong>
+          </div>
+
+          <div>
+            <span
+              style="
+                display:block;
+                font-size:12px;
+                color:#667085;
+                margin-bottom:5px;
+              "
+            >
+              Causa contribuinte
+            </span>
+
+            <strong>
+              ${escaparHTMLCancelamentos(
+                diagnostico.causa_contribuinte
+              )}
+            </strong>
+          </div>
+
+          <div>
+            <span
+              style="
+                display:block;
+                font-size:12px;
+                color:#667085;
+                margin-bottom:5px;
+              "
+            >
+              Confiança
+            </span>
+
+            <strong>
+              ${escaparHTMLCancelamentos(
+                diagnostico.confianca
+              )}
+            </strong>
+          </div>
+        </div>
+
+        <p
+          style="
+            margin:0;
+            line-height:1.6;
+          "
+        >
+          ${escaparHTMLCancelamentos(
+            diagnostico.resumo
+          )}
+        </p>
+      </div>
+
+      <div
+        style="
+          border:1px solid #dfe5ec;
+          border-radius:12px;
+          padding:18px;
+          background:#ffffff;
+        "
+      >
+        <div style="margin-bottom:18px;">
+          <h3 style="margin:0 0 5px;">
+            Linha do tempo
+          </h3>
+
+          <span class="subtitulo">
+            Somente os eventos relevantes do caso
+          </span>
+        </div>
+
+        ${
+          eventos.length
+            ? eventos
+                .map(evento =>
+                  gerarEventoLinhaTempoCancelamento(
+                    evento
+                  )
+                )
+                .join("")
+            : `
+                <p class="subtitulo">
+                  Nenhum evento relevante foi identificado neste contrato.
+                </p>
+              `
+        }
+
+        <details
+          style="
+            margin-top:18px;
+            border-top:1px solid #eaecf0;
+            padding-top:16px;
+          "
+        >
+          <summary
+            style="
+              cursor:pointer;
+              font-weight:600;
+            "
+          >
+            Ver O.S. consideradas
+            (${ordens.length})
+          </summary>
+
+          <div style="margin-top:14px;">
+            ${gerarListaOSDiagnosticoCancelamento(
+              ordens
+            )}
+          </div>
+        </details>
+      </div>
+    `;
+  } catch (erro) {
+    const conteudo =
+      document.getElementById(
+        "modalDetalheConteudo"
+      );
+
+    if (conteudo) {
+      conteudo.innerHTML = `
+        <div class="erro">
+          Não foi possível carregar o diagnóstico:
+          ${escaparHTMLCancelamentos(
+            erro.message
+          )}
+        </div>
+      `;
+    }
+
+    console.error(
+      "Erro ao abrir diagnóstico do cancelamento:",
+      erro
+    );
+  }
+}
+
+function gerarCardDiagnosticoCancelamento(
+  titulo,
+  valor
+) {
+  return `
+    <div
+      style="
+        border:1px solid #dfe5ec;
+        border-radius:10px;
+        padding:14px;
+        background:#ffffff;
+      "
+    >
+      <span
+        style="
+          display:block;
+          font-size:12px;
+          color:#667085;
+          margin-bottom:5px;
+        "
+      >
+        ${escaparHTMLCancelamentos(titulo)}
+      </span>
+
+      <strong>
+        ${escaparHTMLCancelamentos(
+          valor || "-"
+        )}
+      </strong>
+    </div>
+  `;
+}
+
+function formatarDiasDiagnostico(valor) {
+  const dias = Number(valor);
+
+  if (!Number.isFinite(dias)) {
+    return "-";
+  }
+
+  return dias === 1
+    ? "1 dia"
+    : `${dias} dias`;
+}
+
+function normalizarTextoDiagnostico(valor) {
+  return String(valor || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .trim();
+}
+
+function obterTextoCompletoOSDiagnostico(os) {
+  return normalizarTextoDiagnostico(
+    [
+      os.mensagem,
+      os.mensagem_resposta
+    ].join(" ")
   );
 }
+
+function ehOSAutomaticaCancelamento(os) {
+  const texto =
+    obterTextoCompletoOSDiagnostico(os);
+
+  const tecnicoId =
+    String(
+      os.tecnico_id ??
+      os.id_tecnico ??
+      "0"
+    );
+
+  const status =
+    String(
+      os.status_codigo ??
+      os.status ??
+      ""
+    ).toUpperCase();
+
+  return (
+    texto.includes(
+      "DESCRICAO OS ANTERIOR: CONTRATO CANCELADO"
+    ) &&
+    tecnicoId === "0" &&
+    (
+      status === "A" ||
+      status === "AG"
+    )
+  );
+}
+
+function selecionarOSRelevantesCancelamento(
+  ordens
+) {
+  return (ordens || []).filter(os => {
+    if (ehOSAutomaticaCancelamento(os)) {
+      return false;
+    }
+
+    const texto =
+      obterTextoCompletoOSDiagnostico(os);
+
+    const termosRelevantes = [
+      "ATIVACAO REALIZADA",
+      "SEM CONEXAO",
+      "DESCONEXAO",
+      "INSTABILIDADE",
+      "SUPORTE TECNICO",
+      "DYING GASP",
+      "GPON_DGI",
+      "VISITA",
+      "AGENDAMENTO",
+      "REVERSAO DE CANCELAMENTO",
+      "SOLICITACAO DE CANCELAMENTO",
+      "DEVOLUCAO DE VALORES",
+      "DESCONTO",
+      "NPS"
+    ];
+
+    return termosRelevantes.some(
+      termo => texto.includes(termo)
+    );
+  });
+}
+
+function identificarTipoEventoCancelamento(
+  os
+) {
+  const texto =
+    obterTextoCompletoOSDiagnostico(os);
+
+  if (
+    texto.includes(
+      "DEVOLUCAO DE VALORES"
+    ) ||
+    texto.includes(
+      "PAGAMENTO EFETUADO"
+    )
+  ) {
+    return "DEVOLUÇÃO";
+  }
+
+  if (
+    texto.includes(
+      "REVERSAO DE CANCELAMENTO"
+    ) ||
+    texto.includes(
+      "ACORDO OFERECIDO"
+    )
+  ) {
+    return "RETENÇÃO";
+  }
+
+  if (
+    texto.includes(
+      "SOLICITACAO DE CANCELAMENTO"
+    ) ||
+    texto.includes(
+      "MOTIVO DO CANCELAMENTO"
+    )
+  ) {
+    return "CANCELAMENTO";
+  }
+
+  if (
+    texto.includes("SEM CONEXAO") ||
+    texto.includes("DESCONEXAO") ||
+    texto.includes("INSTABILIDADE") ||
+    texto.includes("DYING GASP") ||
+    texto.includes("GPON_DGI")
+  ) {
+    return "SUPORTE";
+  }
+
+  if (
+    texto.includes("VISITA") ||
+    texto.includes("AGENDAMENTO") ||
+    texto.includes("CLIENTE 24H")
+  ) {
+    return "OPERACIONAL";
+  }
+
+  if (
+    texto.includes(
+      "ATIVACAO REALIZADA"
+    )
+  ) {
+    return "ATIVAÇÃO";
+  }
+
+  if (
+    texto.includes("NPS")
+  ) {
+    return "PESQUISA";
+  }
+
+  return "OUTRO";
+}
+
+function gerarDescricaoEventoCancelamento(
+  tipo,
+  os
+) {
+  const texto =
+    obterTextoCompletoOSDiagnostico(os);
+
+  if (tipo === "ATIVAÇÃO") {
+    return "Instalação registrada como concluída.";
+  }
+
+  if (tipo === "SUPORTE") {
+    if (
+      texto.includes("DYING GASP") ||
+      texto.includes("GPON_DGI")
+    ) {
+      return "Foram identificadas desconexões e possível falha elétrica ou no equipamento.";
+    }
+
+    return "Cliente relatou ausência de conexão ou instabilidade.";
+  }
+
+  if (tipo === "OPERACIONAL") {
+    return "Foi solicitada visita ou atuação operacional para resolver o problema.";
+  }
+
+  if (tipo === "RETENÇÃO") {
+    return "Houve tentativa de retenção e oferta de solução ao cliente.";
+  }
+
+  if (tipo === "CANCELAMENTO") {
+    return "Cliente solicitou o cancelamento após a falta de solução do problema.";
+  }
+
+  if (tipo === "DEVOLUÇÃO") {
+    return "Foi registrada devolução de valores ao cliente.";
+  }
+
+  if (tipo === "PESQUISA") {
+    const resultadoNps =
+      String(
+        os.mensagem_resposta || ""
+      ).match(/NPS:\s*(\d+)/i);
+
+    return resultadoNps
+      ? `Pesquisa registrada com NPS ${resultadoNps[1]}.`
+      : "Pesquisa de satisfação registrada.";
+  }
+
+  return "Evento registrado no histórico da O.S.";
+}
+
+function montarEventosLinhaTempoCancelamento(
+  ordens,
+  contrato
+) {
+  const relevantes =
+    selecionarOSRelevantesCancelamento(
+      ordens
+    );
+
+  const eventos = [];
+  const chavesIncluidas =
+    new Set();
+
+  for (const os of relevantes) {
+    const tipo =
+      identificarTipoEventoCancelamento(
+        os
+      );
+
+    if (tipo === "OUTRO") {
+      continue;
+    }
+
+    const data =
+      os.data_referencia ||
+      os.data_abertura ||
+      os.data_fechamento ||
+      os.data_final ||
+      os.ultima_atualizacao ||
+      "";
+
+    const dataHora =
+      String(data).slice(0, 16);
+
+    const chave =
+      `${tipo}_${dataHora}`;
+
+    if (
+      chavesIncluidas.has(chave)
+    ) {
+      continue;
+    }
+
+    chavesIncluidas.add(chave);
+
+    eventos.push({
+      tipo,
+      data,
+      descricao:
+        gerarDescricaoEventoCancelamento(
+          tipo,
+          os
+        ),
+      os_id:
+        os.os_id ||
+        os.id ||
+        ""
+    });
+  }
+
+  const possuiCancelamento =
+    eventos.some(
+      evento =>
+        evento.tipo ===
+        "CANCELAMENTO"
+    );
+
+  if (
+    !possuiCancelamento &&
+    contrato.data_cancelamento
+  ) {
+    eventos.push({
+      tipo: "CANCELAMENTO",
+      data:
+        contrato.data_cancelamento,
+      descricao:
+        "Contrato registrado como cancelado.",
+      os_id: ""
+    });
+  }
+
+  return eventos.sort(
+    (a, b) =>
+      String(a.data || "")
+        .localeCompare(
+          String(b.data || "")
+        )
+  );
+}
+
+function gerarEventoLinhaTempoCancelamento(
+  evento
+) {
+  const data =
+    evento.data
+      ? formatarDataHoraDiagnostico(
+          evento.data
+        )
+      : "-";
+
+  return `
+    <div
+      style="
+        display:grid;
+        grid-template-columns:18px 1fr;
+        gap:12px;
+        padding-bottom:18px;
+      "
+    >
+      <div
+        style="
+          position:relative;
+          display:flex;
+          justify-content:center;
+        "
+      >
+        <span
+          style="
+            width:12px;
+            height:12px;
+            margin-top:4px;
+            border-radius:50%;
+            background:#344054;
+            display:block;
+            position:relative;
+            z-index:2;
+          "
+        ></span>
+
+        <span
+          style="
+            position:absolute;
+            top:16px;
+            bottom:-18px;
+            width:2px;
+            background:#eaecf0;
+          "
+        ></span>
+      </div>
+
+      <div>
+        <span
+          style="
+            display:block;
+            font-size:12px;
+            color:#667085;
+            margin-bottom:4px;
+          "
+        >
+          ${escaparHTMLCancelamentos(data)}
+        </span>
+
+        <strong
+          style="
+            display:block;
+            margin-bottom:4px;
+          "
+        >
+          ${escaparHTMLCancelamentos(
+            evento.tipo
+          )}
+        </strong>
+
+        <p
+          style="
+            margin:0;
+            line-height:1.5;
+          "
+        >
+          ${escaparHTMLCancelamentos(
+            evento.descricao
+          )}
+        </p>
+
+        ${
+          evento.os_id
+            ? `
+                <small
+                  style="
+                    color:#98a2b3;
+                  "
+                >
+                  O.S.
+                  ${escaparHTMLCancelamentos(
+                    evento.os_id
+                  )}
+                </small>
+              `
+            : ""
+        }
+      </div>
+    </div>
+  `;
+}
+
+function formatarDataHoraDiagnostico(
+  valor
+) {
+  if (
+    !valor ||
+    valor ===
+      "0000-00-00 00:00:00"
+  ) {
+    return "-";
+  }
+
+  const texto =
+    String(valor)
+      .replace("T", " ");
+
+  const data =
+    texto.slice(0, 10);
+
+  const hora =
+    texto.length >= 16
+      ? texto.slice(11, 16)
+      : "";
+
+  const dataFormatada =
+    formatarDataCancelamento(data);
+
+  return hora
+    ? `${dataFormatada} às ${hora}`
+    : dataFormatada;
+}
+
+function gerarDiagnosticoResumoCancelamento(
+  ordens,
+  contrato
+) {
+  const relevantes =
+    selecionarOSRelevantesCancelamento(
+      ordens
+    );
+
+  const texto =
+    relevantes
+      .map(
+        obterTextoCompletoOSDiagnostico
+      )
+      .join(" ");
+
+  const possuiTecnico =
+    [
+      "SEM CONEXAO",
+      "DESCONEXAO",
+      "INSTABILIDADE",
+      "DYING GASP",
+      "GPON_DGI",
+      "TROCA DE EQUIPAMENTO"
+    ].some(
+      termo =>
+        texto.includes(termo)
+    );
+
+  const possuiAtendimento =
+    [
+      "REPASSADO ENTRE OS ATENDENTES",
+      "NAO TER SIDO SOLUCIONADO",
+      "NAO HOUVE AGENDAMENTO",
+      "NAO OBTEVE AGENDAMENTO",
+      "INSATISFACAO COM O ATENDIMENTO"
+    ].some(
+      termo =>
+        texto.includes(termo)
+    );
+
+  let causaPrincipal =
+    "Não identificada";
+
+  let causaContribuinte =
+    "Sem causa contribuinte identificada";
+
+  let confianca =
+    "Baixa";
+
+  let resumo =
+    "Não foi possível identificar uma causa clara apenas pelas O.S. disponíveis.";
+
+  if (possuiTecnico) {
+    causaPrincipal =
+      "Problema técnico";
+
+    confianca =
+      "Alta";
+
+    resumo =
+      "O histórico indica que o cliente apresentou problema de conexão após a ativação e que foi necessária atuação técnica.";
+  }
+
+  if (
+    possuiTecnico &&
+    possuiAtendimento
+  ) {
+    causaContribuinte =
+      "Falha operacional ou de atendimento";
+
+    resumo =
+      "O cliente apresentou instabilidade ou desconexões após a ativação. O suporte identificou necessidade de atuação técnica, mas o histórico também registra demora, ausência de agendamento ou falta de solução antes do cancelamento.";
+  } else if (
+    possuiAtendimento
+  ) {
+    causaPrincipal =
+      "Atendimento ou operação";
+
+    confianca =
+      "Média";
+
+    resumo =
+      "O histórico registra insatisfação com o atendimento, ausência de solução ou dificuldade no agendamento antes do cancelamento.";
+  }
+
+  return {
+    causa_principal:
+      causaPrincipal,
+
+    causa_contribuinte:
+      causaContribuinte,
+
+    confianca,
+
+    resumo
+  };
+}
+
+function gerarListaOSDiagnosticoCancelamento(
+  ordens
+) {
+  const relevantes =
+    selecionarOSRelevantesCancelamento(
+      ordens
+    );
+
+  if (!relevantes.length) {
+    return `
+      <p class="subtitulo">
+        Nenhuma O.S. relevante foi encontrada.
+      </p>
+    `;
+  }
+
+  return relevantes
+    .map(os => {
+      const osId =
+        os.os_id ||
+        os.id ||
+        "-";
+
+      const data =
+        os.data_referencia ||
+        os.data_abertura ||
+        os.data_fechamento ||
+        os.data_final ||
+        os.ultima_atualizacao ||
+        "";
+
+        const status =
+          os.status_descricao ||
+          os.status ||
+          "-";
+
+      const descricao =
+        os.mensagem ||
+        os.mensagem_resposta ||
+        "Sem descrição.";
+
+      return `
+        <div
+          style="
+            border:1px solid #eaecf0;
+            border-radius:8px;
+            padding:12px;
+            margin-bottom:10px;
+          "
+        >
+          <div
+            style="
+              display:flex;
+              justify-content:space-between;
+              gap:12px;
+              flex-wrap:wrap;
+              margin-bottom:7px;
+            "
+          >
+            <strong>
+              O.S.
+              ${escaparHTMLCancelamentos(
+                osId
+              )}
+            </strong>
+
+            <span>
+              ${escaparHTMLCancelamentos(
+                formatarDataHoraDiagnostico(
+                  data
+                )
+              )}
+            </span>
+          </div>
+
+          <small>
+            Status:
+            ${escaparHTMLCancelamentos(
+              status
+            )}
+          </small>
+
+          <details
+            style="
+              margin-top:8px;
+            "
+          >
+            <summary
+              style="
+                cursor:pointer;
+              "
+            >
+              Ver descrição
+            </summary>
+
+            <p
+              style="
+                white-space:pre-wrap;
+                line-height:1.5;
+              "
+            >
+              ${escaparHTMLCancelamentos(
+                descricao
+              )}
+            </p>
+          </details>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+
 
 function agruparVisaoGeralCancelamentos(
   baseCoorte,

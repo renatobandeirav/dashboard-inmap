@@ -2077,7 +2077,7 @@ app.get("/api/inviabilidades", exigirLogin, async (req, res) => {
           sincronizado_em
         FROM inviabilidades_mapa
         ${whereSql}
-        ORDER BY
+        ORDER BY  
           data_inviabilidade DESC,
           id DESC
         LIMIT ?
@@ -3083,6 +3083,10 @@ async function criarOSAnexoTesteVelocidade({
     );
   }
 
+  const osOperacionalId = String(
+    osOperacional.id
+  );
+
   const contratoId = String(
     osOperacional.id_contrato_kit ||
     osOperacional.id_contrato ||
@@ -3106,9 +3110,14 @@ async function criarOSAnexoTesteVelocidade({
     );
   }
 
+  const referenciaEsperada =
+    `REFERENTE À O.S. ${osOperacionalId}`;
+
   /*
    * Proteção contra duplicidade.
-   * Se a rota for repetida, não cria outra O.S. 679.
+   *
+   * Antes de criar, procura uma O.S. 679 já vinculada
+   * ao mesmo contrato, cliente e O.S. operacional.
    */
   const retornoOrdensContrato = await buscar(
     "su_oss_chamado",
@@ -3123,147 +3132,112 @@ async function criarOSAnexoTesteVelocidade({
     ? retornoOrdensContrato.registros
     : [];
 
-    const referenciaEsperada =
-  `REFERENTE À O.S. ${osOperacional.id}`;
+  let osTeste =
+    ordensContrato
+      .filter(item => {
+        const mesmoAssunto =
+          String(item.id_assunto || "") ===
+          "679";
 
-  let osTeste = ordensContrato
-      .filter(item =>
-        String(item.id_assunto || "") === "679" &&
-        String(item.id_cliente || "") === clienteId &&
-        String(item.mensagem || "")
-          .toUpperCase()
-          .includes(
-            referenciaEsperada.toUpperCase()
-          )
-      )
-    .sort(
-      (a, b) =>
-        Number(b.id || 0) -
-        Number(a.id || 0)
-    )[0] || null;
+        const mesmoCliente =
+          String(item.id_cliente || "") ===
+          clienteId;
 
-  let criadaAgora = false;
+        const mesmaReferencia =
+          String(item.mensagem || "")
+            .toUpperCase()
+            .includes(
+              referenciaEsperada.toUpperCase()
+            );
 
-  if (!osTeste) {
-      const payloadCriacao = {
+        return (
+          mesmoAssunto &&
+          mesmoCliente &&
+          mesmaReferencia
+        );
+      })
+      .sort(
+        (a, b) =>
+          Number(b.id || 0) -
+          Number(a.id || 0)
+      )[0] || null;
 
-          id_cliente: clienteId,
-
-          id_assunto: "679",
-
-          tipo: "C",
-
-          setor: String(
-              osOperacional.setor ||
-              "22"
-          ),
-
-          id_filial: String(
-              osOperacional.id_filial ||
-              "1"
-          ),
-
-          id_tecnico: "0",
-
-          status: "A",
-
-          prioridade: String(
-              osOperacional.prioridade ||
-              "N"
-          ),
-
-          melhor_horario_agenda: String(
-              osOperacional.melhor_horario_agenda ||
-              "Q"
-          ),
-
-          gera_comissao: "S",
-
-          origem_endereco: "M",
-
-          mensagem:
-              `ANEXAR TESTE DE VELOCIDADE REFERENTE À O.S. ${osOperacional.id}.`
-      };
-
+  /*
+   * Se já existir, não cria novamente.
+   */
+  if (osTeste) {
     console.log(
-      "[TESTE VELOCIDADE] Criando O.S. 679:",
+      "[TESTE VELOCIDADE] O.S. 679 já existente:",
       {
         os_operacional_id:
-          osOperacional.id,
-        contrato_id:
-          contratoId,
+          osOperacionalId,
+
+        os_teste_id:
+          osTeste.id,
+
         cliente_id:
-          clienteId,
-        payload:
-          payloadCriacao
+          osTeste.id_cliente,
+
+        contrato_id:
+          osTeste.id_contrato_kit,
+
+        login_id:
+          osTeste.id_login,
+
+        status:
+          osTeste.status
       }
     );
 
+    return {
+      sucesso: true,
 
-    const responseCriacao = await api.post(
-      "/su_oss_chamado",
-      payloadCriacao,
-      {
-        headers: {
-          ixcsoft: "inserir"
-        }
-      }
-    );
+      criada_agora: false,
 
-    const retornoCriacao =
-      responseCriacao.data || {};
+      os_operacional_id:
+        osOperacionalId,
 
-    if (
-      String(retornoCriacao.type || "")
-        .toLowerCase() !== "success"
-    ) {
-      throw new Error(
-        retornoCriacao.message ||
-        "O IXC não confirmou a criação da O.S. 679."
-      );
-    }
+      os_teste_velocidade_id:
+        String(osTeste.id),
 
-    const idCriado = String(
-      retornoCriacao.id ||
-      ""
-    );
+      cliente_id:
+        String(osTeste.id_cliente || ""),
 
-    if (!idCriado || idCriado === "0") {
-      throw new Error(
-        "O IXC confirmou a criação, mas não retornou o ID da O.S. 679."
-      );
-    }
+      contrato_id:
+        String(
+          osTeste.id_contrato_kit || ""
+        ),
 
-    await aguardarIXC(300);
+      login_id:
+        String(osTeste.id_login || ""),
 
-    const retornoOSCriada = await buscar(
-      "su_oss_chamado",
-      "su_oss_chamado.id",
-      idCriado,
-      "1"
-    );
+      liberado:
+        String(osTeste.liberado || ""),
 
-    osTeste =
-      retornoOSCriada.registros?.[0] ||
-      null;
+      tipo:
+        String(osTeste.tipo || ""),
 
-    if (!osTeste) {
-      throw new Error(
-        `A O.S. 679 ${idCriado} foi criada, mas não foi localizada para vinculação.`
-      );
-    }
+      gera_comissao:
+        String(
+          osTeste.gera_comissao || ""
+        ),
 
-    criadaAgora = true;
+      origem_endereco:
+        String(
+          osTeste.origem_endereco || ""
+        )
+    };
   }
 
   /*
-   * Localiza o login pelo contrato.
-   * A O.S. operacional pode vir com id_login = 0.
+   * Localiza o login relacionado ao contrato.
    */
   let loginId = String(
     osOperacional.id_login ||
     ""
   );
+
+  let loginContrato = null;
 
   if (!loginId || loginId === "0") {
     const retornoLogins = await buscar(
@@ -3279,13 +3253,18 @@ async function criarOSAnexoTesteVelocidade({
       ? retornoLogins.registros
       : [];
 
-    const loginContrato =
-      loginsContrato.find(item =>
-        String(item.id_cliente || "") ===
-          clienteId &&
-        String(item.ativo || "")
-          .toUpperCase() !== "N"
-      ) ||
+    loginContrato =
+      loginsContrato.find(item => {
+        const mesmoCliente =
+          String(item.id_cliente || "") ===
+          clienteId;
+
+        const loginAtivo =
+          String(item.ativo || "")
+            .toUpperCase() !== "N";
+
+        return mesmoCliente && loginAtivo;
+      }) ||
       loginsContrato.find(item =>
         String(item.id_cliente || "") ===
         clienteId
@@ -3305,12 +3284,317 @@ async function criarOSAnexoTesteVelocidade({
     );
   }
 
+  /*
+   * Consulta o login diretamente pelo ID.
+   *
+   * Mesmo quando o login já vem na O.S. operacional,
+   * precisamos do registro completo para recuperar
+   * latitude e longitude.
+   */
+  const retornoLoginCompleto = await buscar(
+    "radusuarios",
+    "radusuarios.id",
+    loginId,
+    "1"
+  );
+
+  const loginCompleto =
+    retornoLoginCompleto?.registros?.[0] ||
+    loginContrato ||
+    null;
+
+  if (!loginCompleto) {
+    throw new Error(
+      `O login ${loginId} foi identificado, mas não pôde ser consultado no IXC.`
+    );
+  }
+
+  const loginPertenceAoContrato =
+    String(
+      loginCompleto.id_contrato ||
+      ""
+    ) === contratoId;
+
+  const loginPertenceAoCliente =
+    String(
+      loginCompleto.id_cliente ||
+      ""
+    ) === clienteId;
+
+  if (
+    !loginPertenceAoContrato ||
+    !loginPertenceAoCliente
+  ) {
+    throw new Error(
+      `O login ${loginId} não pertence ao contrato e ao cliente da O.S. operacional.`
+    );
+  }
+
+      /*
+    * Consulta o cadastro do cliente para recuperar
+    * a cidade utilizada pelo IXC na abertura manual.
+    */
+    const retornoClienteCompleto = await buscar(
+      "cliente",
+      "cliente.id",
+      clienteId,
+      "1"
+    );
+
+    const clienteCompleto =
+      retornoClienteCompleto?.registros?.[0] ||
+      null;
+
+    if (!clienteCompleto) {
+      throw new Error(
+        `O cliente ${clienteId} não pôde ser consultado no IXC.`
+      );
+    }
+
+    /*
+    * Dependendo da versão/configuração do IXC,
+    * o identificador pode vir como "cidade"
+    * ou como "id_cidade".
+    */
+    const cidadeCliente = String(
+      clienteCompleto.id_cidade ||
+      clienteCompleto.cidade ||
+      ""
+    ).trim();
+
+    const cidadeClienteValida =
+      cidadeCliente &&
+      cidadeCliente !== "0";
+
+  const latitudeLogin = String(
+    loginCompleto.latitude ||
+    ""
+  ).trim();
+
+  const longitudeLogin = String(
+    loginCompleto.longitude ||
+    ""
+  ).trim();
+
+  /*
+   * Cria a O.S. 679 com o payload aceito
+   * pelo endpoint de inserção do IXC.
+   */
+  const payloadCriacao = {
+    id_cliente:
+      clienteId,
+
+    id_contrato_kit:
+      contratoId,
+
+    id_login:
+      loginId,
+
+    id_assunto:
+      "679",
+
+    tipo:
+      "C",
+
+    setor: String(
+      osOperacional.setor ||
+      "22"
+    ),
+
+    id_filial: String(
+      osOperacional.id_filial ||
+      loginCompleto.id_filial ||
+      "1"
+    ),
+
+    id_tecnico:
+      "0",
+
+    status:
+      "A",
+
+    prioridade: String(
+      osOperacional.prioridade ||
+      "N"
+    ),
+
+    melhor_horario_agenda: String(
+      osOperacional.melhor_horario_agenda ||
+      "Q"
+    ),
+
+    gera_comissao:
+      "S",
+
+    origem_endereco:
+      "L",
+
+    mensagem:
+      `ANEXAR TESTE DE VELOCIDADE REFERENTE À O.S. ${osOperacionalId}.`
+  };
+
+  console.log(
+    "[TESTE VELOCIDADE] Criando O.S. 679 inicial:",
+    {
+      os_operacional_id:
+        osOperacionalId,
+
+      contrato_id:
+        contratoId,
+
+      cliente_id:
+        clienteId,
+
+      login_id:
+        loginId,
+
+      possui_latitude:
+        Boolean(latitudeLogin),
+
+      possui_longitude:
+        Boolean(longitudeLogin),
+
+      payload:
+        payloadCriacao
+    }
+  );
+
+  const responseCriacao = await api.post(
+    "/su_oss_chamado",
+    payloadCriacao,
+    {
+      headers: {
+        ixcsoft: "inserir"
+      }
+    }
+  );
+
+  const retornoCriacao =
+    responseCriacao.data || {};
+
+  if (
+    String(retornoCriacao.type || "")
+      .toLowerCase() !== "success"
+  ) {
+    throw new Error(
+      retornoCriacao.message ||
+      "O IXC não confirmou a criação da O.S. 679."
+    );
+  }
+
+  const idCriado = String(
+    retornoCriacao.id ||
+    ""
+  );
+
+  if (!idCriado || idCriado === "0") {
+    throw new Error(
+      "O IXC confirmou a criação, mas não retornou o ID da O.S. 679."
+    );
+  }
+
+  /*
+   * Aguarda a persistência da nova O.S.
+   */
+  for (
+    let tentativa = 1;
+    tentativa <= 5;
+    tentativa += 1
+  ) {
+    await aguardarIXC(500);
+
+    const retornoOSCriada = await buscar(
+      "su_oss_chamado",
+      "su_oss_chamado.id",
+      idCriado,
+      "1"
+    );
+
+    osTeste =
+      retornoOSCriada?.registros?.[0] ||
+      null;
+
+    if (osTeste) {
+      break;
+    }
+
+    console.warn(
+      "[TESTE VELOCIDADE] Aguardando persistência da O.S. 679:",
+      {
+        os_teste_id:
+          idCriado,
+
+        tentativa
+      }
+    );
+  }
+
+  if (!osTeste) {
+    throw new Error(
+      `A O.S. 679 ${idCriado} foi criada, mas não foi localizada para validação.`
+    );
+  }
+
+  /*
+   * Monta o PUT campo por campo.
+   *
+   * Não utiliza "...osTeste".
+   * Também não envia campos vazios de endereço,
+   * cidade, bairro ou complemento.
+   */
   const payloadEdicao = {
-    ...osTeste,
+    id_cliente:
+      clienteId,
 
-    tipo: "C",
+    id_assunto:
+      "679",
 
-    gera_comissao: "S",
+    tipo:
+      "C",
+
+    setor: String(
+      osTeste.setor ||
+      osOperacional.setor ||
+      "22"
+    ),
+
+    id_filial: String(
+      osTeste.id_filial ||
+      osOperacional.id_filial ||
+      loginCompleto.id_filial ||
+      "1"
+    ),
+
+    ...(cidadeClienteValida
+  ? {
+      id_cidade:
+        cidadeCliente
+    }
+  : {}),
+
+    id_tecnico:
+      "0",
+
+    status:
+      "A",
+
+    prioridade: String(
+      osTeste.prioridade ||
+      osOperacional.prioridade ||
+      "N"
+    ),
+
+    melhor_horario_agenda: String(
+      osTeste.melhor_horario_agenda ||
+      osOperacional.melhor_horario_agenda ||
+      "Q"
+    ),
+
+    liberado:
+      "1",
+
+    gera_comissao:
+      "S",
 
     id_login:
       loginId,
@@ -3318,95 +3602,71 @@ async function criarOSAnexoTesteVelocidade({
     id_contrato_kit:
       contratoId,
 
-    liberado: String(
-      osOperacional.liberado ||
-      "1"
-    ),
+    id_ticket:
+      "0",
 
-    origem_os_aberta: String(
-      osOperacional.origem_os_aberta ||
-      "P"
-    ),
-
-    id_ticket: String(
-      osOperacional.id_ticket ||
-      "0"
-    ),
+    origem_os_aberta:
+      "M",
 
     origem_endereco:
       "L",
 
-    origem_endereco_estrutura: String(
-      osOperacional.origem_endereco_estrutura ||
-      "E"
-    ),
+    origem_endereco_estrutura:
+      "E",
 
-    latitude: String(
-      osOperacional.latitude ||
-      ""
-    ),
+    mensagem:
+      `ANEXAR TESTE DE VELOCIDADE REFERENTE À O.S. ${osOperacionalId}.`,
 
-    longitude: String(
-      osOperacional.longitude ||
-      ""
-    ),
+    /*
+     * Latitude e longitude só são incluídas
+     * quando realmente existem no login.
+     */
+    ...(latitudeLogin
+      ? {
+          latitude:
+            latitudeLogin
+        }
+      : {}),
 
-    endereco: String(
-      osOperacional.endereco ||
-      ""
-    ),
-
-    bairro: String(
-      osOperacional.bairro ||
-      ""
-    ),
-
-    id_cidade: String(
-      osOperacional.id_cidade ||
-      "0"
-    ),
-
-    complemento: String(
-      osOperacional.complemento ||
-      ""
-    ),
-
-    referencia: String(
-      osOperacional.referencia ||
-      ""
-    ),
-
-    id_condominio: String(
-      osOperacional.id_condominio ||
-      "0"
-    ),
-
-    bloco: String(
-      osOperacional.bloco ||
-      ""
-    ),
-
-    apartamento: String(
-      osOperacional.apartamento ||
-      ""
-    )
+    ...(longitudeLogin
+      ? {
+          longitude:
+            longitudeLogin
+        }
+      : {})
   };
 
   console.log(
-    "[TESTE VELOCIDADE] Vinculando O.S. 679:",
+    "[TESTE VELOCIDADE] Vinculando dados à O.S. 679:",
     {
       os_operacional_id:
-        osOperacional.id,
+        osOperacionalId,
+
       os_teste_id:
         osTeste.id,
+
       contrato_id:
         contratoId,
+
       cliente_id:
         clienteId,
+
       login_id:
         loginId,
-      criada_agora:
-        criadaAgora
+
+        cidade_cliente:
+        cidadeClienteValida
+          ? cidadeCliente
+          : null,
+
+      possui_latitude:
+        Boolean(latitudeLogin),
+
+      possui_longitude:
+        Boolean(longitudeLogin),
+
+    campos_enviados:
+      Object.keys(payloadEdicao)
     }
   );
 
@@ -3423,6 +3683,17 @@ async function criarOSAnexoTesteVelocidade({
   const retornoEdicao =
     responseEdicao.data || {};
 
+  console.log(
+    "[TESTE VELOCIDADE] Resposta da vinculação da O.S. 679:",
+    {
+      os_teste_id:
+        osTeste.id,
+
+      retorno:
+        retornoEdicao
+    }
+  );
+
   if (
     String(retornoEdicao.type || "")
       .toLowerCase() !== "success"
@@ -3433,104 +3704,345 @@ async function criarOSAnexoTesteVelocidade({
     );
   }
 
-  await aguardarIXC(300);
+  /*
+   * Consulta novamente a O.S. após o PUT.
+   */
+  let osTesteAtualizada = null;
 
-  const retornoValidacao = await buscar(
-    "su_oss_chamado",
-    "su_oss_chamado.id",
-    String(osTeste.id),
-    "1"
-  );
+  for (
+    let tentativa = 1;
+    tentativa <= 5;
+    tentativa += 1
+  ) {
+    await aguardarIXC(500);
 
-  const osValidada =
-    retornoValidacao.registros?.[0] ||
-    null;
+    const retornoOSAtualizada = await buscar(
+      "su_oss_chamado",
+      "su_oss_chamado.id",
+      String(osTeste.id),
+      "1"
+    );
 
-  if (!osValidada) {
-    throw new Error(
-      "A O.S. 679 foi atualizada, mas não pôde ser validada."
+    osTesteAtualizada =
+      retornoOSAtualizada?.registros?.[0] ||
+      null;
+
+    const contratoConfirmado =
+      String(
+        osTesteAtualizada
+          ?.id_contrato_kit ||
+        ""
+      ) === contratoId;
+
+    const loginConfirmado =
+      String(
+        osTesteAtualizada?.id_login ||
+        ""
+      ) === loginId;
+
+    if (
+      osTesteAtualizada &&
+      contratoConfirmado &&
+      loginConfirmado
+    ) {
+      break;
+    }
+
+    console.warn(
+      "[TESTE VELOCIDADE] Aguardando vinculação da O.S. 679:",
+      {
+        os_teste_id:
+          osTeste.id,
+
+        tentativa,
+
+        contrato_retornado:
+          osTesteAtualizada
+            ?.id_contrato_kit ||
+          null,
+
+        login_retornado:
+          osTesteAtualizada?.id_login ||
+          null
+      }
     );
   }
 
-  const vinculacaoCorreta =
-    String(osValidada.id_cliente || "") ===
-      clienteId &&
-    String(osValidada.id_contrato_kit || "") ===
-      contratoId &&
-    String(osValidada.id_login || "") ===
-      loginId &&
-    String(osValidada.liberado || "") ===
-      "1" &&
-      String(osValidada.tipo || "") ===
-        "C" &&
-      String(osValidada.gera_comissao || "") ===
-        "S";
-
-  if (!vinculacaoCorreta) {
+  if (!osTesteAtualizada) {
     throw new Error(
-      "A O.S. 679 foi criada, mas os vínculos não foram confirmados pelo IXC."
+      "A O.S. 679 foi editada, mas não pôde ser consultada novamente."
+    );
+  }
+
+  osTeste = osTesteAtualizada;
+
+  /*
+   * Validação dos campos obrigatórios.
+   */
+  const problemasVinculacao = [];
+
+  if (
+    String(osTeste.id_cliente || "") !==
+    clienteId
+  ) {
+    problemasVinculacao.push(
+      "id_cliente"
+    );
+  }
+
+  if (
+    String(
+      osTeste.id_contrato_kit ||
+      ""
+    ) !== contratoId
+  ) {
+    problemasVinculacao.push(
+      "id_contrato_kit"
+    );
+  }
+
+  if (
+    String(osTeste.id_login || "") !==
+    loginId
+  ) {
+    problemasVinculacao.push(
+      "id_login"
+    );
+  }
+
+  if (
+    String(osTeste.id_assunto || "") !==
+    "679"
+  ) {
+    problemasVinculacao.push(
+      "id_assunto"
+    );
+  }
+
+  if (
+    String(osTeste.tipo || "") !==
+    "C"
+  ) {
+    problemasVinculacao.push(
+      "tipo"
+    );
+  }
+
+  if (
+    String(osTeste.liberado || "") !==
+    "1"
+  ) {
+    problemasVinculacao.push(
+      "liberado"
+    );
+  }
+
+  if (
+    String(
+      osTeste.gera_comissao ||
+      ""
+    ) !== "S"
+  ) {
+    problemasVinculacao.push(
+      "gera_comissao"
+    );
+  }
+
+  if (
+    String(osTeste.id_ticket || "0") !==
+    "0"
+  ) {
+    problemasVinculacao.push(
+      "id_ticket"
+    );
+  }
+
+  if (
+    String(
+      osTeste.origem_endereco ||
+      ""
+    ) !== "L"
+  ) {
+    problemasVinculacao.push(
+      "origem_endereco"
+    );
+  }
+
+  /*
+   * As coordenadas são validadas somente quando
+   * existiam no cadastro do login.
+   */
+  if (
+    latitudeLogin &&
+    String(osTeste.latitude || "") !==
+      latitudeLogin
+  ) {
+    problemasVinculacao.push(
+      "latitude"
+    );
+  }
+
+  if (
+    longitudeLogin &&
+    String(osTeste.longitude || "") !==
+      longitudeLogin
+  ) {
+    problemasVinculacao.push(
+      "longitude"
+    );
+  }
+
+  if (
+    cidadeClienteValida &&
+    String(osTeste.id_cidade || "") !==
+      cidadeCliente
+  ) {
+    problemasVinculacao.push(
+      "id_cidade"
+    );
+  }
+
+  if (problemasVinculacao.length > 0) {
+    console.error(
+      "[TESTE VELOCIDADE] O.S. criada com divergências:",
+      {
+        os_operacional_id:
+          osOperacionalId,
+
+        os_teste_id:
+          idCriado,
+
+        campos_divergentes:
+          problemasVinculacao,
+
+        os_retornada:
+          osTeste
+      }
+    );
+
+    throw new Error(
+      `A O.S. 679 foi criada, mas o IXC não confirmou os campos: ${problemasVinculacao.join(", ")}.`
+    );
+  }
+
+  /*
+   * O protocolo não é copiado de outra O.S.
+   *
+   * Apenas registra um aviso caso o IXC não tenha
+   * gerado um protocolo próprio.
+   */
+  if (!String(osTeste.protocolo || "").trim()) {
+    console.warn(
+      "[TESTE VELOCIDADE] O IXC não gerou protocolo para a O.S. 679 criada pela API:",
+      {
+        os_operacional_id:
+          osOperacionalId,
+
+        os_teste_id:
+          osTeste.id
+      }
     );
   }
 
   console.log(
-    "[TESTE VELOCIDADE] O.S. 679 pronta:",
+    "[TESTE VELOCIDADE] O.S. 679 criada, vinculada e validada:",
     {
       os_operacional_id:
-        osOperacional.id,
+        osOperacionalId,
+
       os_teste_id:
-        osValidada.id,
+        osTeste.id,
+
       cliente_id:
-        osValidada.id_cliente,
+        osTeste.id_cliente,
+
       contrato_id:
-        osValidada.id_contrato_kit,
+        osTeste.id_contrato_kit,
+
       login_id:
-        osValidada.id_login,
+        osTeste.id_login,
+
+        cidade_id:
+        osTeste.id_cidade || null,
+
+      protocolo:
+        osTeste.protocolo || null,
+
+      latitude:
+        osTeste.latitude || null,
+
+      longitude:
+        osTeste.longitude || null,
+
+      status:
+        osTeste.status,
+
+      tipo:
+        osTeste.tipo,
+
       liberado:
-        osValidada.liberado,
-        tipo:
-          osValidada.tipo,
-        gera_comissao:
-          osValidada.gera_comissao,
+        osTeste.liberado,
+
+      gera_comissao:
+        osTeste.gera_comissao,
+
+      id_ticket:
+        osTeste.id_ticket,
+
+      origem_os_aberta:
+        osTeste.origem_os_aberta,
+
       origem_endereco:
-        osValidada.origem_endereco,
-      criada_agora:
-        criadaAgora
+        osTeste.origem_endereco
     }
   );
 
-    return {
-      sucesso: true,
+  return {
+    sucesso: true,
 
-      criada_agora:
-        criadaAgora,
+    criada_agora: true,
 
-      os_operacional_id:
-        String(osOperacional.id),
+    os_operacional_id:
+      osOperacionalId,
 
-      os_teste_velocidade_id:
-        String(osValidada.id),
+    os_teste_velocidade_id:
+      String(osTeste.id),
 
-      cliente_id:
-        String(osValidada.id_cliente),
+    cliente_id:
+      String(osTeste.id_cliente),
 
-      contrato_id:
-        String(osValidada.id_contrato_kit),
+    contrato_id:
+      String(osTeste.id_contrato_kit),
 
-      login_id:
-        String(osValidada.id_login),
+    login_id:
+      String(osTeste.id_login),
 
-      liberado:
-        String(osValidada.liberado),
+      cidade_id:
+      String(osTeste.id_cidade || ""),
 
-      tipo:
-        String(osValidada.tipo),
+    protocolo:
+      String(osTeste.protocolo || ""),
 
-      gera_comissao:
-        String(osValidada.gera_comissao),
+    latitude:
+      String(osTeste.latitude || ""),
 
-      origem_endereco:
-        String(osValidada.origem_endereco)
-    };
+    longitude:
+      String(osTeste.longitude || ""),
+
+    liberado:
+      String(osTeste.liberado),
+
+    tipo:
+      String(osTeste.tipo),
+
+    gera_comissao:
+      String(osTeste.gera_comissao),
+
+    origem_endereco:
+      String(
+        osTeste.origem_endereco
+      )
+  };
 }
 
 function montarPayloadOSTesteVelocidade({
@@ -3669,6 +4181,90 @@ function montarPayloadOSTesteVelocidade({
       `ANEXAR TESTE DE VELOCIDADE REFERENTE À O.S. ${osOperacional.id}.`
   };
 }
+
+
+registrarDebugGet(
+  "/api/debug/comparar-os-teste-velocidade",
+  async (req, res) => {
+    try {
+      const ids = [
+        "2126569", // automática
+        "2126571"  // manual
+      ];
+
+      const resultados = [];
+
+      for (const id of ids) {
+        const retorno = await buscar(
+          "su_oss_chamado",
+          "su_oss_chamado.id",
+          id,
+          "1"
+        );
+
+        resultados.push({
+          id,
+          os: retorno.registros?.[0] || null
+        });
+      }
+
+      return res.json({
+        sucesso: true,
+        resultados
+      });
+    } catch (erro) {
+      console.error(
+        "[DEBUG COMPARAÇÃO O.S.] Erro:",
+        erro
+      );
+
+      return res.status(500).json({
+        erro: true,
+        mensagem:
+          erro?.response?.data?.message ||
+          erro?.message ||
+          "Erro ao consultar as O.S."
+      });
+    }
+  }
+);
+
+registrarDebugGet(
+  "/api/debug/login-teste-velocidade/:id",
+  async (req, res) => {
+    try {
+      const loginId = String(req.params.id || "");
+
+      const retorno = await buscar(
+        "radusuarios",
+        "radusuarios.id",
+        loginId,
+        "1"
+      );
+
+      return res.json({
+        sucesso: true,
+        login:
+          retorno?.registros?.[0] ||
+          null
+      });
+    } catch (erro) {
+      console.error(
+        "[DEBUG LOGIN TESTE VELOCIDADE]",
+        erro
+      );
+
+      return res.status(500).json({
+        sucesso: false,
+        mensagem:
+          erro?.response?.data?.message ||
+          erro?.message ||
+          "Erro ao consultar login."
+      });
+    }
+  }
+);
+
 
 registrarDebugPost(
   "/api/debug/os/:id/criar-teste-velocidade",
@@ -6939,29 +7535,56 @@ async function montarRelatorioChurnComercial(
    * Portanto, buscamos os contratos ativados
    * em cada dia da coorte.
    */
-  for (const data of datas) {
-    const retorno =
-      await buscar(
-        "cliente_contrato",
-        "cliente_contrato.data_ativacao",
-        data,
-        "1000"
-      );
+      const resultadosPorData =
+        await mapearComConcorrencia(
+          datas,
+          3,
+          async data => {
+            try {
+              const retorno =
+                await buscar(
+                  "cliente_contrato",
+                  "cliente_contrato.data_ativacao",
+                  data,
+                  "1000"
+                );
 
-    for (
-      const contrato
-      of retorno.registros || []
-    ) {
-      if (!contrato.id) {
-        continue;
+              return Array.isArray(
+                retorno.registros
+              )
+                ? retorno.registros
+                : [];
+
+            } catch (erro) {
+              console.error(
+                `[CHURN COMERCIAL] Erro ao buscar contratos de ${data}:`,
+                erro.response?.data ||
+                erro.message
+              );
+
+              return [];
+            }
+          }
+        );
+
+      for (
+        const contratosData
+        of resultadosPorData
+      ) {
+        for (
+          const contrato
+          of contratosData
+        ) {
+          if (!contrato.id) {
+            continue;
+          }
+
+          contratosMap.set(
+            String(contrato.id),
+            contrato
+          );
+        }
       }
-
-      contratosMap.set(
-        String(contrato.id),
-        contrato
-      );
-    }
-  }
 
   const contratos =
     [...contratosMap.values()];
@@ -7578,6 +8201,85 @@ const motivosOutros =
     registros
   };
 }
+
+
+registrarDebugGet(
+  "/api/debug/vendedores-nao-mapeados",
+  async (req, res) => {
+    try {
+      const ids = [
+        "1",
+        "13",
+        "47",
+        "124",
+        "132",
+        "146",
+        "313",
+        "315",
+        "335",
+        "355",
+        "365"
+      ];
+
+      const resultados = [];
+
+      for (const id of ids) {
+        try {
+          const retorno = await buscar(
+            "vendedor",
+            "vendedor.id",
+            id,
+            "1"
+          );
+
+          const vendedor =
+            retorno.registros?.[0] ||
+            null;
+
+          resultados.push({
+            id,
+            encontrado:
+              Boolean(vendedor),
+
+            nome:
+              vendedor?.nome ||
+              vendedor?.razao ||
+              vendedor?.descricao ||
+              vendedor?.fantasia ||
+              null,
+
+            registro:
+              vendedor
+          });
+        } catch (erro) {
+          resultados.push({
+            id,
+            encontrado: false,
+            nome: null,
+            erro:
+              erro.response?.data ||
+              erro.message
+          });
+        }
+      }
+
+      return res.json({
+        sucesso: true,
+        total:
+          resultados.length,
+        resultados
+      });
+
+    } catch (erro) {
+      return res.status(500).json({
+        erro: true,
+        mensagem:
+          erro.message
+      });
+    }
+  }
+);
+
 
 app.get(
   "/api/relatorios-comerciais/churn",
@@ -11452,6 +12154,298 @@ registrarDebugGet("/api/debug-os-completo/:id", async (req, res) => {
     });
   }
 });
+
+app.get(
+  "/api/debug-historico-cancelamento/:contratoId",
+  exigirLogin,
+  async (req, res) => {
+    try {
+      const contratoId = String(req.params.contratoId || "").trim();
+
+      if (!contratoId || contratoId === "0") {
+        return res.status(400).json({
+          erro: true,
+          mensagem: "Informe um contrato válido."
+        });
+      }
+
+      const contrato = await buscarContratoCache(contratoId);
+
+      if (!contrato) {
+        return res.status(404).json({
+          erro: true,
+          mensagem: "Contrato não encontrado no IXC."
+        });
+      }
+
+      const clienteId = String(contrato.id_cliente || "");
+
+      const [cliente, retornoOSContrato, retornoOSCliente] =
+        await Promise.all([
+          buscarClienteCache(clienteId),
+
+          buscar(
+            "su_oss_chamado",
+            "su_oss_chamado.id_contrato_kit",
+            contratoId,
+            "200"
+          ),
+
+          clienteId
+            ? buscar(
+                "su_oss_chamado",
+                "su_oss_chamado.id_cliente",
+                clienteId,
+                "200"
+              )
+            : Promise.resolve({ registros: [] })
+        ]);
+
+      const mapaOrdens = new Map();
+
+      for (const os of retornoOSContrato.registros || []) {
+        if (!os.id) continue;
+
+        mapaOrdens.set(String(os.id), {
+          ...os,
+          origem_consulta: "CONTRATO"
+        });
+      }
+
+      for (const os of retornoOSCliente.registros || []) {
+        if (!os.id) continue;
+
+        const osId = String(os.id);
+
+        if (!mapaOrdens.has(osId)) {
+          mapaOrdens.set(osId, {
+            ...os,
+            origem_consulta: "CLIENTE"
+          });
+        }
+      }
+
+      const normalizarData = (valor) => {
+        if (
+          !valor ||
+          valor === "0000-00-00" ||
+          valor === "0000-00-00 00:00:00"
+        ) {
+          return null;
+        }
+
+        return String(valor).slice(0, 19);
+      };
+
+      const obterDataOS = (os) =>
+        normalizarData(
+          os.data_abertura ||
+          os.data_inicio ||
+          os.data_agenda ||
+          os.data_fechamento ||
+          os.data_final ||
+          os.ultima_atualizacao
+        );
+
+      const dataAtivacao = normalizarData(
+        contrato.data_ativacao ||
+        contrato.data_inicio ||
+        contrato.data
+      );
+
+      const dataCancelamento = normalizarData(
+        contrato.data_cancelamento ||
+        contrato.data_acesso_desativado
+      );
+
+      const somenteData = (valor) =>
+        valor ? String(valor).slice(0, 10) : null;
+
+      const calcularDiferencaDias = (inicio, fim) => {
+        if (!inicio || !fim) return null;
+
+        const dataInicio = new Date(
+          `${somenteData(inicio)}T00:00:00`
+        );
+
+        const dataFim = new Date(
+          `${somenteData(fim)}T00:00:00`
+        );
+
+        if (
+          Number.isNaN(dataInicio.getTime()) ||
+          Number.isNaN(dataFim.getTime())
+        ) {
+          return null;
+        }
+
+        return Math.floor(
+          (dataFim.getTime() - dataInicio.getTime()) /
+          (1000 * 60 * 60 * 24)
+        );
+      };
+
+      const ordens = [...mapaOrdens.values()]
+        .map((os) => {
+          const dataReferencia = obterDataOS(os);
+
+          return {
+            os_id: String(os.id || ""),
+            contrato_id: String(os.id_contrato_kit || ""),
+            cliente_id: String(os.id_cliente || ""),
+            origem_consulta: os.origem_consulta,
+
+            setor_id: String(os.setor || os.id_setor || ""),
+            assunto_id: String(os.id_assunto || ""),
+            tarefa_id: String(os.id_wfl_tarefa || ""),
+            tecnico_id: String(os.id_tecnico || ""),
+
+            status_codigo: String(os.status || ""),
+            status_descricao: classificarOS(os),
+
+            data_referencia: dataReferencia,
+            data_abertura: normalizarData(os.data_abertura),
+            data_agenda: normalizarData(os.data_agenda),
+            data_fechamento: normalizarData(
+              os.data_fechamento ||
+              os.data_final
+            ),
+            ultima_atualizacao: normalizarData(
+              os.ultima_atualizacao
+            ),
+
+            dias_apos_ativacao: calcularDiferencaDias(
+              dataAtivacao,
+              dataReferencia
+            ),
+
+            dias_antes_cancelamento: calcularDiferencaDias(
+              dataReferencia,
+              dataCancelamento
+            ),
+
+            mensagem: String(os.mensagem || "").trim(),
+            mensagem_resposta: String(
+              os.mensagem_resposta || ""
+            ).trim()
+          };
+        })
+        .filter((os) => {
+          /*
+           * Mantém:
+           * - O.S. vinculadas diretamente ao contrato;
+           * - O.S. encontradas pelo cliente cujo contrato seja o mesmo;
+           * - O.S. sem contrato informado, para diagnóstico inicial.
+           *
+           * Exclui O.S. claramente vinculadas a outro contrato do cliente.
+           */
+          return (
+            !os.contrato_id ||
+            os.contrato_id === "0" ||
+            os.contrato_id === contratoId
+          );
+        })
+        .sort((a, b) => {
+          const dataA = a.data_referencia
+            ? new Date(a.data_referencia.replace(" ", "T")).getTime()
+            : 0;
+
+          const dataB = b.data_referencia
+            ? new Date(b.data_referencia.replace(" ", "T")).getTime()
+            : 0;
+
+          return dataA - dataB;
+        });
+
+      const ordensDepoisAtivacao = ordens.filter((os) => {
+        if (!dataAtivacao || !os.data_referencia) return true;
+
+        return somenteData(os.data_referencia) >=
+          somenteData(dataAtivacao);
+      });
+
+      const ordensAteCancelamento = ordensDepoisAtivacao.filter(
+        (os) => {
+          if (!dataCancelamento || !os.data_referencia) {
+            return true;
+          }
+
+          return somenteData(os.data_referencia) <=
+            somenteData(dataCancelamento);
+        }
+      );
+
+      const resumoStatus = {};
+
+      for (const os of ordensAteCancelamento) {
+        const status = os.status_descricao || "NÃO IDENTIFICADO";
+
+        resumoStatus[status] =
+          (resumoStatus[status] || 0) + 1;
+      }
+
+      return res.json({
+        sucesso: true,
+
+        contrato: {
+          id: contratoId,
+          cliente_id: clienteId,
+          cliente:
+            cliente?.razao ||
+            cliente?.nome ||
+            cliente?.fantasia ||
+            `Cliente ID ${clienteId}`,
+
+          status: contrato.status || "",
+          status_internet: contrato.status_internet || "",
+
+          plano:
+            contrato.contrato ||
+            contrato.descricao_aux_plano_venda ||
+            "",
+
+          data_ativacao: dataAtivacao,
+          data_cancelamento: dataCancelamento,
+
+          dias_ativo: calcularDiferencaDias(
+            dataAtivacao,
+            dataCancelamento
+          ),
+
+          motivo_cancelamento:
+            contrato.motivo_cancelamento || "",
+
+          observacao_cancelamento:
+            contrato.obs_cancelamento || ""
+        },
+
+        resumo: {
+          total_os_encontradas: ordens.length,
+          total_os_apos_ativacao:
+            ordensDepoisAtivacao.length,
+          total_os_ate_cancelamento:
+            ordensAteCancelamento.length,
+          por_status: resumoStatus
+        },
+
+        ordens_servico: ordensAteCancelamento
+      });
+    } catch (erro) {
+      console.error(
+        "Erro ao consultar histórico do cancelamento:",
+        erro.response?.data || erro.message
+      );
+
+      return res.status(500).json({
+        erro: true,
+        status: erro.response?.status || null,
+        mensagem:
+          erro.response?.data ||
+          erro.message
+      });
+    }
+  }
+);
 
 let cachePagamentosAtivacao = null;
 let cachePagamentosAtivacaoCriadoEm = 0;
