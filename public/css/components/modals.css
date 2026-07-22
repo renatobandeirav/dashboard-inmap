@@ -1,0 +1,219 @@
+/* =========================================================
+   MODAIS
+   ========================================================= */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-card {
+  background: #ffffff;
+  width: 420px;
+  max-width: 90%;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+}
+
+.modal-card h3 {
+  margin: 0 0 12px;
+  color: #0f172a;
+}
+
+.modal-card p {
+  color: #334155;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-nao {
+  background: #e2e8f0;
+  color: #0f172a;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn-sim {
+  background: #0f766e;
+  color: #ffffff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.modal-detalhe-dashboard {
+  width: 92%;
+  max-width: 1200px;
+  max-height: 86vh;
+  overflow: auto;
+}
+
+.modal-detalhe-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 14px;
+}
+
+.modal-detalhe-dashboard table {
+  margin-top: 12px;
+}
+
+#pesquisaModalDetalhe {
+  width: 100%;
+  border: 1px solid #dbe3ec;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+}
+
+#pesquisaModalDetalhe:focus {
+  outline: none;
+  border-color: #0d7b73;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(13, 123, 115, 0.12);
+}
+
+/* =========================================================
+   RESPONSIVIDADE DOS MODAIS
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .modal-card {
+    width: 96%;
+    max-width: 96%;
+    max-height: 88vh;
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .modal-detalhe-dashboard {
+    width: 96%;
+    max-width: 96%;
+    max-height: 88vh;
+  }
+
+  .modal-detalhe-header {
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    z-index: 5;
+  }
+
+  #modalDetalheConteudo {
+    overflow-x: auto;
+  }
+
+  #modalDetalheConteudo table {
+    min-width: 820px;
+  }
+}
+
+/* =========================================================
+   MODAL GRANDE
+   ========================================================= */
+
+.modal-card.modal-detalhe-dashboard.modal-card-grande {
+  width: 96vw;
+  max-width: 1320px;
+  height: 92vh;
+  max-height: 92vh;
+  overflow: hidden;
+}
+
+#modalDetalheConteudo {
+  height: calc(92vh - 135px);
+  overflow: auto;
+  padding-right: 8px;
+}
+
+/* =========================================================
+   RESPONSIVIDADE DOS MODAIS
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .modal,
+  .modal-conteudo,
+  .modal-content {
+    max-width: calc(100vw - 24px);
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-overlay,
+  .modal-fundo {
+    padding: 10px;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .modal,
+  .modal-conteudo,
+  .modal-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100vh - 20px);
+    margin: 0;
+    padding: 16px;
+    border-radius: 12px;
+    overflow-y: auto;
+  }
+
+  .modal-header,
+  .modal-cabecalho {
+    gap: 10px;
+  }
+
+  .modal-footer,
+  .modal-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .modal-footer .btn,
+  .modal-acoes .btn {
+    flex: 1 1 140px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal,
+  .modal-conteudo,
+  .modal-content {
+    padding: 14px;
+  }
+
+  .modal-footer,
+  .modal-acoes {
+    flex-direction: column;
+  }
+
+  .modal-footer .btn,
+  .modal-acoes .btn {
+    width: 100%;
+    flex: none;
+  }
+}

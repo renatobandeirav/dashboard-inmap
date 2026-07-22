@@ -1,0 +1,562 @@
+/* =========================================================
+   CONFIRMAÇÕES / STATUS DE O.S.
+   ========================================================= */
+
+.linha-agendada {
+  background: #dbeafe;
+}
+
+.linha-reagendada {
+  background: #f3e8ff;
+}
+
+.linha-aberta {
+  background: #fff7ed;
+}
+
+.linha-finalizada {
+  background: #e5e7eb;
+  color: #111827;
+  font-weight: 600;
+}
+
+/* =========================================================
+   LISTA E CÓPIA DAS CONFIRMAÇÕES
+   ========================================================= */
+
+.copia-box {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.copia-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.btn-copiar {
+  border: 0;
+  background: #0f766e;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lista-copy {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.grupo-confirmacao {
+  margin-bottom: 18px;
+}
+
+.titulo-turno {
+  text-align: center;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: #0f172a;
+}
+
+.linha-confirmacao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.linha-confirmacao span {
+  flex: 1;
+}
+
+.btn-confirmar-pequeno {
+  border: 0;
+  background: #0f766e;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.historico-alertas {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 18px;
+  margin-top: 16px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.historico-alertas li {
+  list-style: none;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+}
+
+/* Mantidos na ordem original para preservar a cascata. */
+
+.linha-confirmacao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.btn-confirmar-pequeno {
+  border: 0;
+  background: #0f766e;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.linha-confirmacao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.btn-confirmar-pequeno {
+  border: 0;
+  background: #0f766e;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btn-reagendar {
+  background: #0f766e;
+  color: rgb(183, 0, 255);
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* =========================================================
+   TOOLBAR DE CONFIRMAÇÕES
+   ========================================================= */
+
+.confirmacao-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.confirmacao-acoes {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-limpar {
+  border: 0;
+  background: #e2e8f0;
+  color: #0f172a;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* =========================================================
+   PÁGINA ATUAL DE CONFIRMAÇÕES
+   ========================================================= */
+
+/*
+Cole aqui, antes dos demais seletores, o bloco completo
+.confirmacoes-page localizado com o comando sed.
+*/
+
+.confirmacoes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.confirmacoes-header h2 {
+  font-size: 24px;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.confirmacoes-acoes-topo {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.confirmacoes-grid-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.confirmacoes-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.confirmacoes-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.confirmacoes-card-header h3 {
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.confirmacoes-card-header span {
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.confirmacoes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-cliente-confirmacao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.cliente-confirmacao-info strong {
+  display: block;
+  color: #0f172a;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.cliente-confirmacao-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: #475569;
+  font-size: 12px;
+}
+
+.cliente-confirmacao-acoes {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.card-cliente-confirmado {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.card-cliente-confirmado strong {
+  display: block;
+  color: #166534;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.texto-bitrix-card {
+  margin-top: 4px;
+}
+
+.texto-bitrix-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #0f172a;
+  min-height: 160px;
+}
+
+.confirmacoes-vazio {
+  color: #64748b;
+  font-size: 14px;
+}
+
+@media (max-width: 1000px) {
+  .confirmacoes-grid-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .confirmacoes-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .card-cliente-confirmacao {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* =========================================================
+   RESPONSIVIDADE - CONFIRMAÇÕES
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .confirmacoes-page {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .confirmacao-toolbar,
+  .confirmacoes-header {
+    flex-wrap: wrap;
+  }
+
+  .confirmacao-acoes,
+  .confirmacoes-acoes-topo {
+    flex-wrap: wrap;
+  }
+
+  .confirmacoes-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .confirmacoes-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .card-cliente-confirmacao {
+    min-width: 0;
+  }
+
+  .cliente-confirmacao-info {
+    min-width: 0;
+  }
+
+  .cliente-confirmacao-info strong {
+    overflow-wrap: anywhere;
+  }
+
+  .texto-bitrix-box {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 768px) {
+  .confirmacoes-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .confirmacoes-header h2 {
+    font-size: 21px;
+    line-height: 1.25;
+  }
+
+  .confirmacoes-acoes-topo {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .confirmacoes-acoes-topo .btn,
+  .confirmacoes-acoes-topo button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .confirmacao-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .confirmacao-acoes {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .confirmacao-acoes .btn,
+  .confirmacao-acoes button,
+  .btn-limpar,
+  .btn-copiar {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .copia-box,
+  .historico-alertas,
+  .confirmacoes-card {
+    padding: 14px;
+    border-radius: 13px;
+  }
+
+  .copia-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .lista-copy {
+    padding: 12px;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+
+  .linha-confirmacao {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .linha-confirmacao span {
+    width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .btn-confirmar-pequeno,
+  .btn-reagendar {
+    width: 100%;
+    min-height: 38px;
+  }
+
+  .confirmacoes-card-header {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .confirmacoes-card-header h3 {
+    font-size: 16px;
+  }
+
+  .card-cliente-confirmacao {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .cliente-confirmacao-info strong {
+    font-size: 14px;
+  }
+
+  .cliente-confirmacao-meta {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .cliente-confirmacao-acoes {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cliente-confirmacao-acoes .btn,
+  .cliente-confirmacao-acoes button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .card-cliente-confirmado {
+    padding: 10px;
+  }
+
+  .texto-bitrix-box {
+    min-height: 130px;
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .historico-alertas li {
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 480px) {
+  .confirmacoes-header h2 {
+    font-size: 19px;
+  }
+
+  .copia-box,
+  .historico-alertas,
+  .confirmacoes-card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .confirmacoes-card-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .confirmacoes-card-header span {
+    align-self: flex-start;
+  }
+
+  .card-cliente-confirmacao {
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .cliente-confirmacao-meta {
+    font-size: 11px;
+  }
+
+  .texto-bitrix-box {
+    min-height: 110px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}

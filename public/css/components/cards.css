@@ -1,0 +1,136 @@
+.cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+.card{
+
+    background:#fff;
+
+    border-radius:18px;
+
+    padding:22px;
+
+    border-top:5px solid #0d7b73;
+
+    border-left:1px solid #edf2f7;
+    border-right:1px solid #edf2f7;
+    border-bottom:1px solid #edf2f7;
+
+    transition:.20s;
+
+    box-shadow:
+      0 6px 18px rgba(15,23,42,.05);
+
+}
+
+.card:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:
+      0 12px 30px rgba(15,23,42,.10);
+
+}
+
+    .card h2 {
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .card .numero {
+      font-size: 32px;
+      font-weight: 700;
+      color: #0f766e;
+    }
+
+
+          .box{
+
+              background:#fff;
+
+              border-radius:18px;
+
+              padding:22px;
+
+              border:1px solid #E7EDF5;
+
+              box-shadow:
+                0 8px 20px rgba(15,23,42,.05);
+
+          }
+
+    .box h2 {
+      font-size: 18px;
+      margin-bottom: 14px;
+      color: #0f172a;
+    }
+
+    /* =========================================================
+   RESPONSIVIDADE DOS CARDS E BOXES
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .card .numero {
+    font-size: 28px;
+  }
+
+  .box {
+    padding: 14px;
+    border-radius: 14px;
+    overflow-x: auto;
+  }
+}
+
+/* =========================================================
+   RESPONSIVIDADE DOS CARDS
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .cards-grid,
+  .card-grid,
+  .kpis-grid,
+  .grid-kpis,
+  .resumo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .card,
+  .kpi-card,
+  .resumo-card {
+    min-width: 0;
+    padding: 14px;
+  }
+
+  .cards-grid,
+  .card-grid,
+  .kpis-grid,
+  .grid-kpis,
+  .resumo-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .card h2,
+  .card h3,
+  .kpi-card h3 {
+    overflow-wrap: break-word;
+  }
+}
